@@ -5,7 +5,7 @@
  * Tap sur une carte → MissionTracking
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, StatusBar, Animated, RefreshControl,
@@ -314,6 +314,11 @@ export default function OrdersScreen() {
     ...dbOrders.filter(o => !seenIds.has(o.id)),
   ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  // ── Livraisons en attente de validation ──────────────────────────────────
+  const pendingValidation = mergedOrders.filter(
+    o => o.status === 'livre' || o.status === 'delivered'
+  );
+
   // ── Stats ─────────────────────────────────────────────────────────────────
   const totalCount  = mergedOrders.length;
   const activeCount = mergedOrders.filter(o => STATUS_CFG[o.status]?.group === 'active').length;
@@ -448,22 +453,89 @@ export default function OrdersScreen() {
           />
         }
       >
+        {/* ── Banner urgent livraison à valider ── */}
+        {pendingValidation.length > 0 && (
+          <PulsingBanner
+            count={pendingValidation.length}
+            onPress={() => handleOpenOrder(pendingValidation[0])}
+          />
+        )}
+
         {filteredOrders.length === 0 ? (
           <EmptyState tab={activeTab} />
         ) : (
-          filteredOrders.map((order, i) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              index={i}
-              onPress={() => handleOpenOrder(order)}
-              onViewFreelancer={(fd) => fd && setProfileFreelancer(fd)}
-            />
-          ))
+          filteredOrders.map((order, i) => {
+            const needsValidation = order.status === 'livre' || order.status === 'delivered';
+            return (
+              <View key={order.id} style={needsValidation ? styles.urgentCardWrapper : null}>
+                <OrderCard
+                  order={order}
+                  index={i}
+                  onPress={() => handleOpenOrder(order)}
+                  onViewFreelancer={(fd) => fd && setProfileFreelancer(fd)}
+                />
+              </View>
+            );
+          })
         )}
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+// ── PulsingBanner — livraison à valider ────────────────────────────────────────
+function PulsingBanner({ count, onPress }) {
+  const pulse = useRef(new Animated.Value(1)).current;
+  const glow  = useRef(new Animated.Value(0.5)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1.06, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1,    duration: 800, useNativeDriver: true }),
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glow, { toValue: 1,   duration: 900, useNativeDriver: true }),
+        Animated.timing(glow, { toValue: 0.5, duration: 900, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.88} style={{ marginBottom: 12 }}>
+      <Animated.View style={[styles.urgentBanner, { transform: [{ scale: pulse }] }]}>
+        <LinearGradient
+          colors={['#6D28D9', '#8B5CF6', '#A78BFA']}
+          style={StyleSheet.absoluteFill}
+          borderRadius={18}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+        />
+        {/* Halo pulsant */}
+        <Animated.View style={[styles.urgentGlow, { opacity: glow }]} />
+
+        {/* Icône alerte */}
+        <View style={styles.urgentIconBox}>
+          <Ionicons name="alert-circle" size={22} color="#fff" />
+        </View>
+
+        {/* Texte */}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.urgentTitle}>Action requise !</Text>
+          <Text style={styles.urgentSub}>
+            {count} livraison{count > 1 ? 's' : ''} en attente de ta validation
+          </Text>
+        </View>
+
+        {/* CTA */}
+        <View style={styles.urgentCta}>
+          <Text style={styles.urgentCtaText}>Valider</Text>
+          <Ionicons name="chevron-forward" size={14} color="#fff" />
+        </View>
+      </Animated.View>
+    </TouchableOpacity>
   );
 }
 
@@ -636,6 +708,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 3,
   },
   trackCtaText: { fontSize: 9, fontWeight: '800', color: COLORS.primary },
+
+  // ── Urgent banner ──────────────────────────────────────────────────────────
+  urgentBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderRadius: 18, padding: 14, overflow: 'hidden',
+    shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45, shadowRadius: 16, elevation: 10,
+  },
+  urgentGlow: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#C4B5FD',
+  },
+  urgentIconBox: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  urgentTitle: { fontSize: 14, fontWeight: '900', color: '#fff', letterSpacing: -0.2 },
+  urgentSub:   { fontSize: 11, color: 'rgba(255,255,255,0.82)', marginTop: 1 },
+  urgentCta: {
+    flexDirection: 'row', alignItems: 'center', gap: 2,
+    backgroundColor: 'rgba(255,255,255,0.22)', borderRadius: 10,
+    paddingHorizontal: 10, paddingVertical: 6,
+  },
+  urgentCtaText: { fontSize: 12, fontWeight: '800', color: '#fff' },
+
+  // ── Halo carte urgente ──────────────────────────────────────────────────────
+  urgentCardWrapper: {
+    borderRadius: RADIUS.xl + 3,
+    borderWidth: 1.5,
+    borderColor: '#8B5CF6',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 8,
+    marginBottom: 2,
+  },
 
   // Empty
   empty: { alignItems: 'center', paddingTop: 70, paddingHorizontal: SPACING.xl, gap: 12 },
