@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, Dimensions, PanResponder,
-  Animated, TouchableOpacity, SafeAreaView, StatusBar, ScrollView,
+  Animated, TouchableOpacity, StatusBar, ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -35,7 +36,7 @@ const AI_RECS = [
   {
     id: '2',
     category: 'Sous-titres',
-    icon: 'closed-captioning-outline',
+    icon: 'text-outline',
     color: '#3B82F6',
     problem: 'Pas de sous-titres détectés dans ta vidéo',
     solution: 'Active l\'auto-sous-titrage dans CapCut ou TikTok Studio. Personnalise la couleur et la police.',

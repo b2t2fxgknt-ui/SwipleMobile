@@ -7,9 +7,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, StatusBar, ActivityIndicator, Image,
+ StatusBar, ActivityIndicator, Image,
   Switch, Animated, Modal, TextInput, Alert, TouchableWithoutFeedback,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';

@@ -8,9 +8,10 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  SafeAreaView, StatusBar, Animated, TouchableOpacity,
+ StatusBar, Animated, TouchableOpacity,
   TextInput, Platform, KeyboardAvoidingView, Keyboard,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -60,7 +61,7 @@ const COMPLETED_MISSIONS = [
     budget: 120, rating: 4.9, date: 'Il y a 3j', status: 'Livré',
   },
   {
-    id: 'c3', type: 'Sous-titres',icon: 'closed-captioning-outline', color: '#3B82F6',
+    id: 'c3', type: 'Sous-titres',icon: 'text-outline', color: '#3B82F6',
     title: 'Sous-titres Reels mode', client: 'Sarah K.',
     budget: 30, rating: 5.0, date: 'Il y a 5j', status: 'Livré',
   },

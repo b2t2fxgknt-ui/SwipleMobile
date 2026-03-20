@@ -4,11 +4,12 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+
   StatusBar,
   Animated,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SPACING, FONT, RADIUS } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
 

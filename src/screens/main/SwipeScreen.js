@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, Dimensions, PanResponder,
-  Animated, TouchableOpacity, SafeAreaView, StatusBar,
+  Animated, TouchableOpacity, StatusBar,
   ActivityIndicator, Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';

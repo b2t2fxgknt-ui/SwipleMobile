@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
+
   ScrollView,
   TouchableOpacity,
   TextInput,
@@ -11,6 +11,7 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -53,7 +54,7 @@ const MOCK_ISSUES = [
   },
   {
     level: 'critical',
-    icon:  'closed-captioning-outline',
+    icon:  'text-outline',
     title: '80 % de tes viewers regardent sans le son',
     stat:  'Sans sous-titres, tu perds la moitié de ton audience mobile',
     fix:   'Active l\'auto-sous-titrage dans CapCut ou TikTok Studio — 5 minutes suffisent.',

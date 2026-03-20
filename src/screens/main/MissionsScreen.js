@@ -7,8 +7,9 @@
 import React, { useState, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, Dimensions, PanResponder,
-  Animated, TouchableOpacity, SafeAreaView, StatusBar,
+  Animated, TouchableOpacity, StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -73,7 +74,7 @@ const MOCK_MISSIONS = [
     },
   },
   {
-    id: 'm3', type: 'Sous-titres', icon: 'closed-captioning-outline', color: '#3B82F6',
+    id: 'm3', type: 'Sous-titres', icon: 'text-outline', color: '#3B82F6',
     title: 'Sous-titres animés pour un Reel mode',
     problem: '80 % de l\'audience regarde sans son',
     description: 'Reel mode 30s, sous-titres absents. Style à créer : couleur, police, animation, synchronisation parfaite.',

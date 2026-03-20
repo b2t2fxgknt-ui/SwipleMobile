@@ -13,9 +13,10 @@
 import React, { useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Modal, ScrollView, SafeAreaView, Animated,
+  Modal, ScrollView, Animated,
   TouchableWithoutFeedback, Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';

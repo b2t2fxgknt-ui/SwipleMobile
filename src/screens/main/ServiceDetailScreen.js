@@ -2,8 +2,9 @@ import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, Dimensions, StatusBar,
-  SafeAreaView, Image,
+ Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';

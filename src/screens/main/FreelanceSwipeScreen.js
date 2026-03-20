@@ -1,8 +1,9 @@
 import React, { useState, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, Dimensions, PanResponder,
-  Animated, TouchableOpacity, SafeAreaView, StatusBar,
+  Animated, TouchableOpacity, StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';

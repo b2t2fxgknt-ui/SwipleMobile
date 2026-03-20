@@ -9,12 +9,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  SafeAreaView,
+
   StatusBar,
   Animated,
   Easing,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { COLORS, SPACING, FONT, RADIUS } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
