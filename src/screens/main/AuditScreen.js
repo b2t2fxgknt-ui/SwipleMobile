@@ -138,6 +138,51 @@ const RETENTION_CURVE = [
   { sec: 'Fin',  pct: 7,   label: ''                  },
 ];
 
+// ── Experts conversion (cartes dédiées) ──────────────────────────────────────
+const CONVERSION_EXPERTS = [
+  {
+    id: 'cx1', name: 'Thomas G.', initials: 'TG',
+    specialty: 'Hook & Script viral',
+    tagline: 'Réécrit tes 3 premières secondes pour x3 la rétention',
+    solves: 'Hook trop lent',
+    rating: 4.9, reviews: 127, price: 29, deliveryTime: '24h',
+    proof: '2.1M vues en moyenne', color: '#EF4444', icon: 'flash-outline', badge: 'Top Copywriter',
+  },
+  {
+    id: 'cx2', name: 'Léa M.', initials: 'LM',
+    specialty: 'Montage & Sous-titres TikTok',
+    tagline: 'Sous-titres pro + rythme de coupe optimisé',
+    solves: 'Sous-titres manquants',
+    rating: 4.8, reviews: 89, price: 49, deliveryTime: '24h',
+    proof: '1.4M vues en moyenne', color: '#F59E0B', icon: 'text-outline', badge: 'Livraison 24h',
+  },
+  {
+    id: 'cx3', name: 'Noah P.', initials: 'NP',
+    specialty: 'Optimisation TikTok complète',
+    tagline: 'Prend en charge l\'intégralité de l\'optimisation',
+    solves: 'Tous les points critiques',
+    rating: 5.0, reviews: 56, price: 89, deliveryTime: '48h',
+    proof: '3.2M vues en moyenne', color: '#8B5CF6', icon: 'sparkles-outline', badge: 'Expert Swiple',
+  },
+];
+
+const PACK_ITEMS = [
+  { icon: 'flash-outline',        label: 'Hook réécrit (0–3s)' },
+  { icon: 'cut-outline',          label: 'Montage + rythme optimisé' },
+  { icon: 'text-outline',         label: 'Sous-titres animés' },
+  { icon: 'musical-note-outline', label: 'Son trending ajouté' },
+];
+const PACK_PRICE    = 79;
+const PACK_ORIGINAL = 127;
+
+const DIY_CHECKLIST = [
+  'Réécrire les 2 premières secondes avec un hook choc',
+  'Activer les sous-titres auto dans CapCut (5 min)',
+  'Remplacer la musique par un son trending',
+  'Recadrer le sujet dans la zone dorée (15%–55%)',
+  'Ajouter 5–8 hashtags : 2 viraux + niche',
+];
+
 // ── Templates de hooks viraux ─────────────────────────────────────────────────
 const MOCK_HOOKS = [
   { template: '"Personne ne t\'a dit ça sur [sujet]…"',              score: 94, type: 'Curiosité'      },
@@ -219,6 +264,8 @@ export default function AuditScreen() {
   const [expandedIdx,    setExpandedIdx]    = useState(null);
   const [expandedCatIdx, setExpandedCatIdx] = useState(null);
   const [showHooks,      setShowHooks]      = useState(false);
+  const [showDiy,        setShowDiy]        = useState(false);
+  const [diyChecked,     setDiyChecked]     = useState(DIY_CHECKLIST.map(() => false));
 
   // ── Rétention & viralité ─────────────────────────────────────────────────
   const [previousScore,  setPreviousScore]  = useState(null); // score avant re-test
@@ -349,6 +396,9 @@ export default function AuditScreen() {
     setStepIdx(0);
     setDisplayScore(0);
     setExpandedIdx(null);
+    setExpandedCatIdx(null);
+    setShowDiy(false);
+    setDiyChecked(DIY_CHECKLIST.map(() => false));
     progressAnim.setValue(0);
     scoreAnim.setValue(0);
     simulAnim.setValue(0);
@@ -1112,17 +1162,249 @@ export default function AuditScreen() {
                 </ScrollView>
               </View>
 
-              {/* ── CTA experts ── */}
-              <TouchableOpacity onPress={goToExperts} activeOpacity={0.85} style={{ marginTop: 8 }}>
+              {/* ════ SECTION CONVERSION ════════════════════════════════ */}
+
+              {/* ── Transition psychologique ──────────────────────────── */}
+              <View style={styles.transitionBlock}>
                 <LinearGradient
-                  colors={['#7C3AED', '#8B5CF6']}
-                  style={styles.ctaBtn}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  colors={['#EF444418', '#7C3AED10']}
+                  style={StyleSheet.absoluteFill}
+                  borderRadius={16}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                />
+                <View style={styles.transitionTop}>
+                  <View style={styles.transitionIconBox}>
+                    <Ionicons name="warning" size={20} color="#EF4444" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.transitionTitle}>Ne laisse pas cette vidéo flop.</Text>
+                    <Text style={styles.transitionSub}>
+                      {MOCK_ISSUES.filter(i => i.level === 'critical').length} problèmes critiques limitent ta portée. Ils se corrigent en 24h.
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.transitionStats}>
+                  {[
+                    { val: `−${100 - GLOBAL_SCORE} pts`, label: 'de potentiel perdu', color: '#EF4444' },
+                    { val: `+${POTENTIAL_SCORE - GLOBAL_SCORE} pts`, label: 'récupérables', color: '#22C55E' },
+                    { val: '24h', label: 'pour corriger', color: COLORS.primary },
+                  ].map((s, i) => (
+                    <View key={i} style={styles.transitionStat}>
+                      <Text style={[styles.transitionStatVal, { color: s.color }]}>{s.val}</Text>
+                      <Text style={styles.transitionStatLabel}>{s.label}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {/* ── A. Experts recommandés (conversion) ───────────────── */}
+              <View style={styles.convHeader}>
+                <View style={styles.convBadge}>
+                  <Ionicons name="star" size={10} color="#F59E0B" />
+                  <Text style={styles.convBadgeText}>OPTION RECOMMANDÉE</Text>
+                </View>
+                <Text style={styles.convTitle}>On s'en occupe pour toi</Text>
+                <Text style={styles.convSub}>Chaque expert résout un problème précis détecté dans ta vidéo</Text>
+              </View>
+
+              {CONVERSION_EXPERTS.map((expert, i) => (
+                <View key={expert.id} style={[styles.convCard, i === 0 && styles.convCardTop]}>
+                  {i === 0 && (
+                    <LinearGradient
+                      colors={[expert.color + '14', 'transparent']}
+                      style={StyleSheet.absoluteFill}
+                      borderRadius={RADIUS.xl}
+                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 0.6 }}
+                    />
+                  )}
+
+                  {/* Badge */}
+                  {i === 0 && (
+                    <View style={[styles.convCardBadge, { backgroundColor: expert.color + '20', borderColor: expert.color + '40' }]}>
+                      <Ionicons name="flame" size={10} color={expert.color} />
+                      <Text style={[styles.convCardBadgeText, { color: expert.color }]}>Correction prioritaire</Text>
+                    </View>
+                  )}
+
+                  <View style={styles.convExpertRow}>
+                    {/* Avatar */}
+                    <View style={[styles.convAvatar, { backgroundColor: expert.color + '20', borderColor: expert.color + '50' }]}>
+                      <Text style={[styles.convAvatarText, { color: expert.color }]}>{expert.initials}</Text>
+                    </View>
+
+                    {/* Info */}
+                    <View style={{ flex: 1 }}>
+                      <View style={styles.convNameRow}>
+                        <Text style={styles.convName}>{expert.name}</Text>
+                        <View style={[styles.convExpertBadge, { backgroundColor: expert.color + '15', borderColor: expert.color + '30' }]}>
+                          <Text style={[styles.convExpertBadgeText, { color: expert.color }]}>{expert.badge}</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.convSpecialty}>{expert.specialty}</Text>
+                      <View style={styles.convRatingRow}>
+                        <Ionicons name="star" size={11} color="#F59E0B" />
+                        <Text style={styles.convRating}>{expert.rating}</Text>
+                        <Text style={styles.convReviews}>({expert.reviews} avis)</Text>
+                        <View style={styles.convDot} />
+                        <Text style={styles.convProof}>{expert.proof}</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Tagline */}
+                  <View style={[styles.convTaglineRow, { borderLeftColor: expert.color }]}>
+                    <Ionicons name={expert.icon} size={13} color={expert.color} />
+                    <Text style={styles.convTagline}>{expert.tagline}</Text>
+                  </View>
+
+                  {/* Résout / Prix / Délai */}
+                  <View style={styles.convMetaRow}>
+                    <View style={styles.convSolvesRow}>
+                      <Ionicons name="checkmark-circle" size={12} color="#22C55E" />
+                      <Text style={styles.convSolves}>Résout : {expert.solves}</Text>
+                    </View>
+                    <View style={styles.convPricePill}>
+                      <Text style={[styles.convPrice, { color: expert.color }]}>{expert.price}€</Text>
+                      <Text style={styles.convDelivery}> · {expert.deliveryTime}</Text>
+                    </View>
+                  </View>
+
+                  {/* CTA */}
+                  <TouchableOpacity
+                    style={styles.convCtaWrap}
+                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToExperts(); }}
+                    activeOpacity={0.85}
+                  >
+                    <LinearGradient
+                      colors={i === 0 ? ['#7C3AED', '#8B5CF6'] : [expert.color + 'CC', expert.color]}
+                      style={[styles.convCta, i === 0 && styles.convCtaPrimary]}
+                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                    />
+                    <View style={styles.convCtaInner}>
+                      <Text style={styles.convCtaText}>
+                        {i === 0 ? 'Corriger ma vidéo avec cet expert' : 'Choisir cet expert'}
+                      </Text>
+                      <Ionicons name="arrow-forward" size={14} color="#fff" />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              ))}
+
+              {/* Preuve sociale */}
+              <View style={styles.socialProofConv}>
+                <Ionicons name="people" size={13} color="#22C55E" />
+                <Text style={styles.socialProofConvText}>
+                  <Text style={{ fontWeight: '800', color: COLORS.text }}>+2 400 créateurs</Text> ont amélioré leurs vues grâce à ces experts ce mois-ci
+                </Text>
+              </View>
+
+              {/* ── Pack Optimisation Viralité ─────────────────────────── */}
+              <View style={styles.packCard}>
+                <LinearGradient
+                  colors={['#7C3AED22', '#7C3AED08']}
+                  style={StyleSheet.absoluteFill}
+                  borderRadius={RADIUS.xl}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                />
+
+                {/* Header */}
+                <View style={styles.packHeader}>
+                  <View style={styles.packBadge}>
+                    <Ionicons name="sparkles" size={10} color={COLORS.primary} />
+                    <Text style={styles.packBadgeText}>PACK COMPLET</Text>
+                  </View>
+                  <View style={styles.packPriceRow}>
+                    <Text style={styles.packOriginal}>{PACK_ORIGINAL}€</Text>
+                    <Text style={styles.packPrice}>{PACK_PRICE}€</Text>
+                    <View style={styles.packDiscount}>
+                      <Text style={styles.packDiscountText}>-{Math.round((1 - PACK_PRICE/PACK_ORIGINAL)*100)}%</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <Text style={styles.packTitle}>Pack Optimisation Viralité</Text>
+                <Text style={styles.packSub}>Tout ce qu'il faut pour que ta vidéo performe · Livraison 24–48h</Text>
+
+                {/* Items */}
+                <View style={styles.packItems}>
+                  {PACK_ITEMS.map((item, i) => (
+                    <View key={i} style={styles.packItem}>
+                      <View style={styles.packItemCheck}>
+                        <Ionicons name="checkmark" size={11} color="#22C55E" />
+                      </View>
+                      <Ionicons name={item.icon} size={13} color={COLORS.primary} />
+                      <Text style={styles.packItemLabel}>{item.label}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* CTA pack */}
+                <TouchableOpacity
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToExperts(); }}
+                  activeOpacity={0.88}
                 >
-                  <Ionicons name="people" size={17} color="#fff" />
-                  <Text style={styles.ctaText}>Voir mes experts recommandés</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                  <LinearGradient
+                    colors={['#7C3AED', '#8B5CF6']}
+                    style={styles.packCta}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  >
+                    <Ionicons name="rocket" size={16} color="#fff" />
+                    <Text style={styles.packCtaText}>Optimiser ma vidéo maintenant</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <Text style={styles.packNote}>Paiement sécurisé · Fonds libérés après validation · Satisfait ou révision gratuite</Text>
+              </View>
+
+              {/* ── B. Améliorer moi-même ──────────────────────────────── */}
+              <View style={styles.diyCard}>
+                <TouchableOpacity
+                  style={styles.diyToggle}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowDiy(d => !d); }}
+                  activeOpacity={0.8}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.diyTitle}>Préfères-tu te débrouiller seul ?</Text>
+                    <Text style={styles.diySub}>Checklist basée sur ton audit — résultats en quelques jours</Text>
+                  </View>
+                  <Ionicons name={showDiy ? 'chevron-up' : 'chevron-down'} size={16} color={COLORS.textMuted} />
+                </TouchableOpacity>
+
+                {showDiy && (
+                  <View style={styles.diyList}>
+                    {DIY_CHECKLIST.map((item, i) => (
+                      <TouchableOpacity
+                        key={i}
+                        style={styles.diyRow}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          setDiyChecked(prev => { const n = [...prev]; n[i] = !n[i]; return n; });
+                        }}
+                        activeOpacity={0.75}
+                      >
+                        <View style={[styles.diyCheck, diyChecked[i] && styles.diyCheckDone]}>
+                          {diyChecked[i] && <Ionicons name="checkmark" size={11} color="#fff" />}
+                        </View>
+                        <Text style={[styles.diyItem, diyChecked[i] && styles.diyItemDone]}>{item}</Text>
+                      </TouchableOpacity>
+                    ))}
+                    {diyChecked.every(Boolean) && (
+                      <View style={styles.diyComplete}>
+                        <Ionicons name="trophy-outline" size={14} color="#22C55E" />
+                        <Text style={styles.diyCompleteText}>Checklist complétée ! Re-teste ta vidéo pour mesurer l'impact.</Text>
+                      </View>
+                    )}
+                    <TouchableOpacity
+                      style={styles.diyCtaLight}
+                      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); reset(true); }}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="refresh-outline" size={14} color={COLORS.textMuted} />
+                      <Text style={styles.diyCtaLightText}>Appliquer ces changements puis re-tester</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
 
               {/* ── Actions secondaires : Partager + Re-tester ── */}
               <View style={styles.secondaryActions}>
@@ -1158,6 +1440,27 @@ export default function AuditScreen() {
           />
 
         </ScrollView>
+
+        {/* ── Sticky CTA ─────────────────────────────────────────────────── */}
+        {phase === 'results' && (
+          <TouchableOpacity
+            style={styles.stickyCta}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToExperts(); }}
+            activeOpacity={0.9}
+          >
+            <LinearGradient
+              colors={['#7C3AED', '#8B5CF6', '#A78BFA']}
+              style={StyleSheet.absoluteFill}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            />
+            <Ionicons name="flash" size={17} color="#fff" />
+            <Text style={styles.stickyCtaText}>Corriger ma vidéo maintenant</Text>
+            <View style={styles.stickyCtaArrow}>
+              <Ionicons name="arrow-forward" size={14} color="#fff" />
+            </View>
+          </TouchableOpacity>
+        )}
+
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -1168,7 +1471,7 @@ export default function AuditScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   scroll: { flex: 1 },
-  content: { paddingBottom: 48 },
+  content: { paddingBottom: 100 },
 
   // Header
   header: {
@@ -1668,6 +1971,190 @@ const styles = StyleSheet.create({
   hooksNote: {
     fontSize: 11, color: COLORS.textMuted, lineHeight: 16, fontStyle: 'italic',
     borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 10, marginTop: 4,
+  },
+
+  // ── Transition psychologique ───────────────────────────────────────────────
+  transitionBlock: {
+    borderRadius: 16, padding: SPACING.lg, overflow: 'hidden',
+    borderWidth: 1, borderColor: '#EF444428', marginBottom: SPACING.md, gap: 14,
+  },
+  transitionTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  transitionIconBox: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#EF444418', borderWidth: 1, borderColor: '#EF444330',
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  transitionTitle: { fontSize: 16, fontWeight: '900', color: COLORS.text, marginBottom: 4 },
+  transitionSub:   { fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
+  transitionStats: { flexDirection: 'row', gap: 0 },
+  transitionStat: {
+    flex: 1, alignItems: 'center', gap: 2,
+    borderRightWidth: 1, borderRightColor: COLORS.border,
+  },
+  transitionStatVal:   { fontSize: 17, fontWeight: '900' },
+  transitionStatLabel: { fontSize: 9, color: COLORS.textMuted, fontWeight: '600', textAlign: 'center' },
+
+  // ── Conversion section header ──────────────────────────────────────────────
+  convHeader: { marginBottom: SPACING.sm, gap: 4 },
+  convBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: '#F59E0B14', borderColor: '#F59E0B30', borderWidth: 1,
+    borderRadius: RADIUS.full, alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 4,
+  },
+  convBadgeText:   { fontSize: 10, fontWeight: '800', color: '#F59E0B', letterSpacing: 0.6 },
+  convTitle:       { fontSize: 20, fontWeight: '900', color: COLORS.text },
+  convSub:         { fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
+
+  // ── Expert conversion card ──────────────────────────────────────────────────
+  convCard: {
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: RADIUS.xl, padding: SPACING.md, marginBottom: 10, gap: 10, overflow: 'hidden',
+  },
+  convCardTop: {
+    borderWidth: 2, borderColor: COLORS.primary + '50',
+    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2, shadowRadius: 12, elevation: 6,
+  },
+  convCardBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1,
+    borderRadius: RADIUS.full, alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 3,
+  },
+  convCardBadgeText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
+  convExpertRow:     { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  convAvatar: {
+    width: 50, height: 50, borderRadius: 25,
+    borderWidth: 2, alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  convAvatarText: { fontSize: 17, fontWeight: '900' },
+  convNameRow:    { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 },
+  convName:       { fontSize: 15, fontWeight: '800', color: COLORS.text },
+  convExpertBadge: {
+    borderWidth: 1, borderRadius: RADIUS.full, paddingHorizontal: 7, paddingVertical: 2,
+  },
+  convExpertBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.3 },
+  convSpecialty:   { fontSize: 12, color: COLORS.textMuted, marginBottom: 4 },
+  convRatingRow:   { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  convRating:      { fontSize: 12, fontWeight: '800', color: '#F59E0B' },
+  convReviews:     { fontSize: 11, color: COLORS.textMuted },
+  convDot:         { width: 3, height: 3, borderRadius: 1.5, backgroundColor: COLORS.border },
+  convProof:       { fontSize: 11, color: COLORS.textMuted, fontStyle: 'italic' },
+  convTaglineRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 8,
+    borderLeftWidth: 3, paddingLeft: 10,
+  },
+  convTagline: { flex: 1, fontSize: 13, fontWeight: '600', color: COLORS.text, lineHeight: 18 },
+  convMetaRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+  },
+  convSolvesRow: { flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 },
+  convSolves:    { fontSize: 12, color: COLORS.textMuted },
+  convPricePill: { flexDirection: 'row', alignItems: 'baseline' },
+  convPrice:     { fontSize: 18, fontWeight: '900' },
+  convDelivery:  { fontSize: 12, color: COLORS.textMuted, fontWeight: '600' },
+  convCtaWrap:   { borderRadius: RADIUS.lg, overflow: 'hidden' },
+  convCta: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    borderRadius: RADIUS.lg,
+  },
+  convCtaPrimary: {},
+  convCtaInner: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 13,
+  },
+  convCtaText: { fontSize: 14, fontWeight: '800', color: '#fff' },
+
+  // Preuve sociale
+  socialProofConv: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 8,
+    backgroundColor: '#22C55E0C', borderWidth: 1, borderColor: '#22C55E28',
+    borderRadius: RADIUS.lg, padding: 12, marginBottom: SPACING.md,
+  },
+  socialProofConvText: { flex: 1, fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
+
+  // ── Pack Optimisation ──────────────────────────────────────────────────────
+  packCard: {
+    backgroundColor: COLORS.card, borderWidth: 1.5, borderColor: COLORS.primary + '50',
+    borderRadius: RADIUS.xl, padding: SPACING.lg, marginBottom: SPACING.md,
+    overflow: 'hidden', gap: 10,
+    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18, shadowRadius: 16, elevation: 8,
+  },
+  packHeader:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  packBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: COLORS.primary + '18', borderColor: COLORS.primary + '30', borderWidth: 1,
+    borderRadius: RADIUS.full, paddingHorizontal: 9, paddingVertical: 4,
+  },
+  packBadgeText:   { fontSize: 10, fontWeight: '800', color: COLORS.primary, letterSpacing: 0.5 },
+  packPriceRow:    { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  packOriginal:    { fontSize: 14, color: COLORS.textMuted, textDecorationLine: 'line-through' },
+  packPrice:       { fontSize: 22, fontWeight: '900', color: COLORS.primary },
+  packDiscount: {
+    backgroundColor: '#22C55E15', borderWidth: 1, borderColor: '#22C55E35',
+    borderRadius: RADIUS.full, paddingHorizontal: 6, paddingVertical: 2,
+  },
+  packDiscountText: { fontSize: 10, fontWeight: '900', color: '#22C55E' },
+  packTitle:  { fontSize: 18, fontWeight: '900', color: COLORS.text },
+  packSub:    { fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
+  packItems:  { gap: 8 },
+  packItem:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  packItemCheck: {
+    width: 20, height: 20, borderRadius: 10,
+    backgroundColor: '#22C55E20', borderWidth: 1, borderColor: '#22C55E40',
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  packItemLabel: { fontSize: 13, fontWeight: '600', color: COLORS.text },
+  packCta: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, borderRadius: RADIUS.lg, paddingVertical: 15, overflow: 'hidden',
+  },
+  packCtaText: { fontSize: 15, fontWeight: '800', color: '#fff' },
+  packNote: { fontSize: 10, color: COLORS.textMuted, textAlign: 'center', lineHeight: 15 },
+
+  // ── DIY section ────────────────────────────────────────────────────────────
+  diyCard: {
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: RADIUS.xl, padding: SPACING.md, marginBottom: SPACING.md,
+  },
+  diyToggle:  { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  diyTitle:   { fontSize: 14, fontWeight: '700', color: COLORS.text },
+  diySub:     { fontSize: 11, color: COLORS.textMuted, marginTop: 2 },
+  diyList:    { marginTop: 14, gap: 10 },
+  diyRow:     { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  diyCheck: {
+    width: 22, height: 22, borderRadius: 11,
+    borderWidth: 1.5, borderColor: COLORS.border,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1,
+  },
+  diyCheckDone: { backgroundColor: '#22C55E', borderColor: '#22C55E' },
+  diyItem:      { flex: 1, fontSize: 13, color: COLORS.text, lineHeight: 18 },
+  diyItemDone:  { color: COLORS.textMuted, textDecorationLine: 'line-through' },
+  diyComplete: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#22C55E10', borderWidth: 1, borderColor: '#22C55E30',
+    borderRadius: RADIUS.md, padding: 10,
+  },
+  diyCompleteText: { flex: 1, fontSize: 12, color: '#22C55E', fontWeight: '600' },
+  diyCtaLight: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7,
+    borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 12, marginTop: 4,
+  },
+  diyCtaLightText: { fontSize: 12, fontWeight: '600', color: COLORS.textMuted },
+
+  // ── Sticky CTA ─────────────────────────────────────────────────────────────
+  stickyCta: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 10, paddingVertical: 16, paddingHorizontal: SPACING.lg,
+    overflow: 'hidden',
+    shadowColor: '#7C3AED', shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.25, shadowRadius: 12, elevation: 12,
+    borderTopWidth: 1, borderTopColor: COLORS.primary + '30',
+  },
+  stickyCtaText: { fontSize: 15, fontWeight: '800', color: '#fff', flex: 1 },
+  stickyCtaArrow: {
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center', justifyContent: 'center',
   },
 
   // Reset
