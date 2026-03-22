@@ -1088,12 +1088,16 @@ export default function AuditScreen() {
                   onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowHooks(h => !h); }}
                   activeOpacity={0.8}
                 >
-                  <View style={styles.hooksBadge}>
-                    <Ionicons name="flash" size={11} color="#F59E0B" />
-                    <Text style={styles.hooksBadgeText}>HOOKS VIRAUX</Text>
+                  <View style={{ flex: 1, gap: 5 }}>
+                    <View style={styles.hooksBadge}>
+                      <Ionicons name="flash" size={11} color="#F59E0B" />
+                      <Text style={styles.hooksBadgeText}>HOOKS VIRAUX</Text>
+                    </View>
+                    <Text style={styles.hooksTitle}>5 templates prêts à copier</Text>
                   </View>
-                  <Text style={styles.hooksTitle}>5 templates prêts à copier</Text>
-                  <Ionicons name={showHooks ? 'chevron-up' : 'chevron-down'} size={16} color={COLORS.textMuted} style={{ marginLeft: 'auto' }} />
+                  <View style={styles.hooksChevron}>
+                    <Ionicons name={showHooks ? 'chevron-up' : 'chevron-down'} size={16} color={COLORS.textMuted} />
+                  </View>
                 </TouchableOpacity>
 
                 {showHooks && (
@@ -1356,54 +1360,81 @@ export default function AuditScreen() {
                 <Text style={styles.packNote}>Paiement sécurisé · Fonds libérés après validation · Satisfait ou révision gratuite</Text>
               </View>
 
-              {/* ── B. Améliorer moi-même ──────────────────────────────── */}
+              {/* ── B. Je préfère avancer seul ────────────────────────── */}
               <View style={styles.diyCard}>
-                <TouchableOpacity
-                  style={styles.diyToggle}
-                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowDiy(d => !d); }}
-                  activeOpacity={0.8}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.diyTitle}>Préfères-tu te débrouiller seul ?</Text>
-                    <Text style={styles.diySub}>Checklist basée sur ton audit — résultats en quelques jours</Text>
+                {/* En-tête section */}
+                <View style={styles.diyHeader}>
+                  <View style={styles.diyHeaderLeft}>
+                    <View style={styles.diyIconBox}>
+                      <Ionicons name="person-outline" size={18} color={COLORS.textMuted} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.diyTitle}>Je préfère avancer seul</Text>
+                      <Text style={styles.diySub}>Plan d'action basé sur ton audit · coche chaque étape au fur et à mesure</Text>
+                    </View>
                   </View>
-                  <Ionicons name={showDiy ? 'chevron-up' : 'chevron-down'} size={16} color={COLORS.textMuted} />
-                </TouchableOpacity>
+                  <View style={styles.diyProgressBadge}>
+                    <Text style={styles.diyProgressText}>
+                      {diyChecked.filter(Boolean).length}/{DIY_CHECKLIST.length}
+                    </Text>
+                  </View>
+                </View>
 
-                {showDiy && (
-                  <View style={styles.diyList}>
-                    {DIY_CHECKLIST.map((item, i) => (
-                      <TouchableOpacity
-                        key={i}
-                        style={styles.diyRow}
-                        onPress={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          setDiyChecked(prev => { const n = [...prev]; n[i] = !n[i]; return n; });
-                        }}
-                        activeOpacity={0.75}
-                      >
-                        <View style={[styles.diyCheck, diyChecked[i] && styles.diyCheckDone]}>
-                          {diyChecked[i] && <Ionicons name="checkmark" size={11} color="#fff" />}
-                        </View>
-                        <Text style={[styles.diyItem, diyChecked[i] && styles.diyItemDone]}>{item}</Text>
-                      </TouchableOpacity>
-                    ))}
-                    {diyChecked.every(Boolean) && (
-                      <View style={styles.diyComplete}>
-                        <Ionicons name="trophy-outline" size={14} color="#22C55E" />
-                        <Text style={styles.diyCompleteText}>Checklist complétée ! Re-teste ta vidéo pour mesurer l'impact.</Text>
-                      </View>
-                    )}
+                {/* Barre de progression */}
+                <View style={styles.diyProgressTrack}>
+                  <View style={[styles.diyProgressFill, {
+                    width: `${Math.round(diyChecked.filter(Boolean).length / DIY_CHECKLIST.length * 100)}%`,
+                  }]} />
+                </View>
+
+                {/* Checklist toujours visible */}
+                <View style={styles.diyList}>
+                  {DIY_CHECKLIST.map((item, i) => (
                     <TouchableOpacity
-                      style={styles.diyCtaLight}
-                      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); reset(true); }}
-                      activeOpacity={0.8}
+                      key={i}
+                      style={[styles.diyRow, diyChecked[i] && styles.diyRowDone]}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setDiyChecked(prev => { const n = [...prev]; n[i] = !n[i]; return n; });
+                      }}
+                      activeOpacity={0.75}
                     >
-                      <Ionicons name="refresh-outline" size={14} color={COLORS.textMuted} />
-                      <Text style={styles.diyCtaLightText}>Appliquer ces changements puis re-tester</Text>
+                      <View style={[styles.diyCheck, diyChecked[i] && styles.diyCheckDone]}>
+                        {diyChecked[i] && <Ionicons name="checkmark" size={11} color="#fff" />}
+                      </View>
+                      <Text style={[styles.diyItem, diyChecked[i] && styles.diyItemDone]}>{item}</Text>
+                      {diyChecked[i] && <Ionicons name="checkmark-circle" size={14} color="#22C55E" style={{ flexShrink: 0 }} />}
                     </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Message félicitations si tout coché */}
+                {diyChecked.every(Boolean) ? (
+                  <View style={styles.diyComplete}>
+                    <Ionicons name="trophy" size={18} color="#F59E0B" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.diyCompleteTitle}>Checklist complétée ! 🎉</Text>
+                      <Text style={styles.diyCompleteText}>Re-teste ta vidéo pour mesurer l'impact de tes corrections.</Text>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.diyTip}>
+                    <Ionicons name="bulb-outline" size={13} color="#F59E0B" />
+                    <Text style={styles.diyTipText}>
+                      Temps estimé : <Text style={{ fontWeight: '700', color: COLORS.text }}>~20 min</Text> · Tu peux voir les résultats dès la prochaine vidéo
+                    </Text>
                   </View>
                 )}
+
+                {/* CTA re-tester */}
+                <TouchableOpacity
+                  style={styles.diyCtaBtn}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); reset(true); }}
+                  activeOpacity={0.82}
+                >
+                  <Ionicons name="refresh-circle-outline" size={16} color={COLORS.primary} />
+                  <Text style={styles.diyCtaBtnText}>Appliquer les changements et re-tester</Text>
+                </TouchableOpacity>
               </View>
 
               {/* ── Actions secondaires : Partager + Re-tester ── */}
@@ -1441,27 +1472,28 @@ export default function AuditScreen() {
 
         </ScrollView>
 
-        {/* ── Sticky CTA ─────────────────────────────────────────────────── */}
-        {phase === 'results' && (
-          <TouchableOpacity
-            style={styles.stickyCta}
-            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToExperts(); }}
-            activeOpacity={0.9}
-          >
-            <LinearGradient
-              colors={['#7C3AED', '#8B5CF6', '#A78BFA']}
-              style={StyleSheet.absoluteFill}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-            />
-            <Ionicons name="flash" size={17} color="#fff" />
-            <Text style={styles.stickyCtaText}>Corriger ma vidéo maintenant</Text>
-            <View style={styles.stickyCtaArrow}>
-              <Ionicons name="arrow-forward" size={14} color="#fff" />
-            </View>
-          </TouchableOpacity>
-        )}
-
       </KeyboardAvoidingView>
+
+      {/* ── Sticky CTA — en dehors du KeyboardAvoidingView pour éviter la bande noire ── */}
+      {phase === 'results' && (
+        <TouchableOpacity
+          style={styles.stickyCta}
+          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToExperts(); }}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={['#7C3AED', '#8B5CF6', '#A78BFA']}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+          />
+          <Ionicons name="flash" size={17} color="#fff" />
+          <Text style={styles.stickyCtaText}>Corriger ma vidéo maintenant</Text>
+          <View style={styles.stickyCtaArrow}>
+            <Ionicons name="arrow-forward" size={14} color="#fff" />
+          </View>
+        </TouchableOpacity>
+      )}
+
     </SafeAreaView>
   );
 }
@@ -1950,7 +1982,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
     borderRadius: RADIUS.xl, padding: SPACING.lg, marginBottom: SPACING.md,
   },
-  hooksToggle: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  hooksToggle: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  hooksChevron: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: COLORS.bg, borderWidth: 1, borderColor: COLORS.border,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
   hooksBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: '#F59E0B15', borderColor: '#F59E0B30', borderWidth: 1,
@@ -2114,41 +2151,68 @@ const styles = StyleSheet.create({
   // ── DIY section ────────────────────────────────────────────────────────────
   diyCard: {
     backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
-    borderRadius: RADIUS.xl, padding: SPACING.md, marginBottom: SPACING.md,
+    borderRadius: RADIUS.xl, padding: SPACING.lg, marginBottom: SPACING.md, gap: 14,
   },
-  diyToggle:  { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  diyTitle:   { fontSize: 14, fontWeight: '700', color: COLORS.text },
-  diySub:     { fontSize: 11, color: COLORS.textMuted, marginTop: 2 },
-  diyList:    { marginTop: 14, gap: 10 },
-  diyRow:     { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  diyHeader:      { flexDirection: 'row', alignItems: 'flex-start', gap: 0 },
+  diyHeaderLeft:  { flexDirection: 'row', alignItems: 'flex-start', gap: 12, flex: 1 },
+  diyIconBox: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: COLORS.bg, borderWidth: 1, borderColor: COLORS.border,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  diyTitle:          { fontSize: 15, fontWeight: '800', color: COLORS.text },
+  diySub:            { fontSize: 12, color: COLORS.textMuted, marginTop: 3, lineHeight: 17 },
+  diyProgressBadge: {
+    backgroundColor: COLORS.primary + '15', borderWidth: 1, borderColor: COLORS.primary + '30',
+    borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 4,
+    alignSelf: 'flex-start',
+  },
+  diyProgressText: { fontSize: 13, fontWeight: '900', color: COLORS.primary },
+  diyProgressTrack: {
+    height: 5, backgroundColor: COLORS.border, borderRadius: 3, overflow: 'hidden',
+  },
+  diyProgressFill: {
+    height: '100%', backgroundColor: '#22C55E', borderRadius: 3,
+    minWidth: 5,
+  },
+  diyList:    { gap: 8 },
+  diyRow:     { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: RADIUS.md },
+  diyRowDone: { backgroundColor: '#22C55E08' },
   diyCheck: {
-    width: 22, height: 22, borderRadius: 11,
+    width: 24, height: 24, borderRadius: 12,
     borderWidth: 1.5, borderColor: COLORS.border,
-    alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   diyCheckDone: { backgroundColor: '#22C55E', borderColor: '#22C55E' },
-  diyItem:      { flex: 1, fontSize: 13, color: COLORS.text, lineHeight: 18 },
+  diyItem:      { flex: 1, fontSize: 13, color: COLORS.text, lineHeight: 18, fontWeight: '500' },
   diyItemDone:  { color: COLORS.textMuted, textDecorationLine: 'line-through' },
   diyComplete: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#22C55E10', borderWidth: 1, borderColor: '#22C55E30',
-    borderRadius: RADIUS.md, padding: 10,
+    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
+    backgroundColor: '#F59E0B10', borderWidth: 1, borderColor: '#F59E0B30',
+    borderRadius: RADIUS.lg, padding: 12,
   },
-  diyCompleteText: { flex: 1, fontSize: 12, color: '#22C55E', fontWeight: '600' },
-  diyCtaLight: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7,
-    borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 12, marginTop: 4,
+  diyCompleteTitle: { fontSize: 14, fontWeight: '800', color: COLORS.text, marginBottom: 2 },
+  diyCompleteText:  { fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
+  diyTip: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 8,
+    backgroundColor: '#F59E0B0C', borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: '#F59E0B25', padding: 10,
   },
-  diyCtaLightText: { fontSize: 12, fontWeight: '600', color: COLORS.textMuted },
+  diyTipText: { flex: 1, fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
+  diyCtaBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: COLORS.primary + '12', borderWidth: 1.5, borderColor: COLORS.primary + '35',
+    borderRadius: RADIUS.lg, paddingVertical: 13,
+  },
+  diyCtaBtnText: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
 
   // ── Sticky CTA ─────────────────────────────────────────────────────────────
   stickyCta: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 10, paddingVertical: 16, paddingHorizontal: SPACING.lg,
-    overflow: 'hidden',
+    overflow: 'hidden', backgroundColor: '#7C3AED',
     shadowColor: '#7C3AED', shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.25, shadowRadius: 12, elevation: 12,
-    borderTopWidth: 1, borderTopColor: COLORS.primary + '30',
   },
   stickyCtaText: { fontSize: 15, fontWeight: '800', color: '#fff', flex: 1 },
   stickyCtaArrow: {
