@@ -25,7 +25,8 @@ import MissionBriefScreen        from '../screens/transaction/MissionBriefScreen
 import DeliveryScreen            from '../screens/transaction/DeliveryScreen';
 import ValidationScreen          from '../screens/transaction/ValidationScreen';
 import RevisionRequestScreen     from '../screens/transaction/RevisionRequestScreen';
-import DisputeScreen             from '../screens/transaction/DisputeScreen';
+import DisputeScreen                from '../screens/transaction/DisputeScreen';
+import PendingValidationsScreen     from '../screens/transaction/PendingValidationsScreen';
 import ReviewScreen              from '../screens/transaction/ReviewScreen';
 import MessagerieScreen          from '../screens/main/MessagerieScreen';
 import NotificationsScreen       from '../screens/main/NotificationsScreen';
@@ -156,6 +157,12 @@ export default function AppNavigator() {
               name="Dispute"
               component={DisputeScreen}
               options={{ animation: 'slide_from_right' }}
+            />
+            {/* 8b. Actions requises — liste validations en attente */}
+            <Stack.Screen
+              name="PendingValidations"
+              component={PendingValidationsScreen}
+              options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
             />
             {/* 9. Messagerie */}
             <Stack.Screen

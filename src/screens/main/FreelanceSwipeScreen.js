@@ -15,7 +15,7 @@ const { width, height } = Dimensions.get('window');
 
 const SWIPE_THRESHOLD = width * 0.30;
 const CARD_W          = width - SPACING.lg * 2;
-const CARD_H          = height * 0.62;
+const CARD_H          = height * 0.56;
 
 import { FREELANCERS, CATEGORY_ACCENT, CATEGORY_ICON } from '../../data/freelancers';
 
@@ -278,10 +278,11 @@ export default function FreelanceSwipeScreen() {
             <Text style={styles.headerTitle}>Talents</Text>
             <Text style={styles.headerSub}>{deck.length} freelances disponibles</Text>
           </View>
-          <View style={styles.likeCountBadge}>
-            <Ionicons name="heart" size={13} color="#EF4444" />
-            <Text style={styles.likeCount}>{likedIds.length}</Text>
-          </View>
+          {likedIds.length > 0 && (
+            <View style={styles.likeCountBadge}>
+              <Ionicons name="heart" size={13} color="#EF4444" />
+            </View>
+          )}
         </View>
       </SafeAreaView>
 
@@ -416,7 +417,7 @@ const styles = StyleSheet.create({
   likeCount: { fontSize: 14, ...FONT.bold, color: '#EF4444' },
 
   // Deck
-  deck: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  deck: { flex: 1, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   cardWrapper: { position: 'absolute', width: CARD_W },
 
   // Card

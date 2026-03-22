@@ -7,7 +7,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
- StatusBar, TextInput, KeyboardAvoidingView, Platform, Animated,
+  StatusBar, TextInput, KeyboardAvoidingView, Platform, Animated, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -85,8 +85,18 @@ export default function MissionTrackingScreen() {
 
   const { mission: routeMission, freelancer } = route.params ?? {};
 
-  // Priorité : données live depuis le contexte (si disponibles)
-  const liveMission = acceptedMissions.find(m => m.id === routeMission?.id) ?? routeMission;
+  // Priorité : données live → params navigation → mock de démonstration
+  const liveMission = acceptedMissions.find(m => m.id === routeMission?.id) ?? routeMission ?? {
+    id:              'demo_mission',
+    status:          'livre',
+    title:           'Logo identité visuelle',
+    budget:          45,
+    deadline:        '24h',
+    deliveryUrl:     'https://drive.google.com/file/demo-livraison',
+    deliveryMessage: 'Bonjour ! Voici la livraison finale, j\'espère qu\'elle vous convient. N\'hésitez pas à me faire un retour.',
+    revisionCount:   0,
+    color:           COLORS.primary,
+  };
 
   const [activeStep, setActiveStep] = useState(
     STATUS_TO_STEP[liveMission?.status] ?? 1
@@ -120,7 +130,7 @@ export default function MissionTrackingScreen() {
     setActiveStep(STATUS_TO_STEP[status] ?? 1);
 
     // Injecter la DeliveryCard dans le chat quand livré ou validé
-    if ((status === 'livre' || status === 'valide') && liveMission.deliveryUrl && liveMission.id) {
+    if ((status === 'livre' || status === 'valide') && liveMission.id) {
       const current = conversations[liveMission.id]?.messages ?? [];
       if (!current.find(m => m.type === 'delivery')) {
         pushMessage(liveMission.id, {
@@ -183,13 +193,7 @@ export default function MissionTrackingScreen() {
               );
             })()}
           </View>
-          <TouchableOpacity
-            style={styles.disputeBtn}
-            onPress={() => navigation.navigate('Dispute', { mission: routeMission, freelancer })}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="alert-circle-outline" size={20} color={COLORS.textMuted} />
-          </TouchableOpacity>
+          <View style={{ width: 40 }} />
         </View>
 
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -263,38 +267,152 @@ export default function MissionTrackingScreen() {
                 <LinearGradient colors={[COLORS.primary + '14', COLORS.primary + '04']} style={StyleSheet.absoluteFill} borderRadius={RADIUS.lg} />
                 <Ionicons name="refresh-outline" size={20} color={COLORS.primary} />
                 <Text style={[styles.infoCardNum, { color: COLORS.primary }]}>
-                  {liveMission?.revisions ?? 2}
+                  1
                 </Text>
-                <Text style={styles.infoCardLabel}>révisions</Text>
+                <Text style={styles.infoCardLabel}>révision</Text>
               </View>
             </View>
+
+            {/* ── VALIDATION HÉRO (élément central, hors card) ── */}
+            {(liveMission?.status === 'livre' || liveMission?.status === 'valide') && (() => {
+              const deliveryMsg = messages.find(m => m.type === 'delivery') ?? {
+                deliveryUrl:     liveMission?.deliveryUrl     ?? null,
+                deliveryMessage: liveMission?.deliveryMessage ?? null,
+                revisionCount:   liveMission?.revisionCount   ?? 0,
+              };
+              const isValidated = liveMission?.status === 'valide';
+              const revCount    = deliveryMsg.revisionCount ?? 0;
+              const canRevise   = revCount < 1 && !isValidated;
+
+              return (
+                <View style={styles.validationHero}>
+                  {/* ── Bande de statut ── */}
+                  <View style={[styles.validationStatusBar, { backgroundColor: isValidated ? '#22C55E18' : '#3B82F618', borderColor: isValidated ? '#22C55E35' : '#3B82F635' }]}>
+                    <View style={[styles.validationIconBig, { backgroundColor: isValidated ? '#22C55E20' : '#3B82F620' }]}>
+                      <Ionicons name={isValidated ? 'checkmark-circle' : 'cloud-download'} size={24} color={isValidated ? '#22C55E' : '#3B82F6'} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.validationTitle, { color: isValidated ? '#22C55E' : '#3B82F6' }]}>
+                        {isValidated ? 'Mission validée' : 'Livraison reçue'}
+                      </Text>
+                      <Text style={styles.validationSub}>
+                        {isValidated ? 'Paiement libéré au freelance' : 'Examinez le fichier avant de valider'}
+                      </Text>
+                    </View>
+                    {isValidated && (
+                      <View style={styles.validationCheckCircle}>
+                        <Ionicons name="checkmark" size={14} color="#fff" />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* ── Bouton fichier ── */}
+                  {deliveryMsg.deliveryUrl ? (
+                    <TouchableOpacity
+                      style={styles.validationFileBtn}
+                      onPress={() => Linking.openURL(deliveryMsg.deliveryUrl).catch(() => {})}
+                      activeOpacity={0.78}
+                    >
+                      <View style={styles.validationFileBtnIcon}>
+                        <Ionicons name="document-attach-outline" size={18} color="#3B82F6" />
+                      </View>
+                      <Text style={styles.validationFileBtnText} numberOfLines={1} ellipsizeMode="middle">
+                        Voir la livraison
+                      </Text>
+                      <Ionicons name="arrow-forward-outline" size={15} color="#3B82F680" />
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={[styles.validationFileBtn, { opacity: 0.45 }]}>
+                      <View style={styles.validationFileBtnIcon}>
+                        <Ionicons name="document-attach-outline" size={18} color="#3B82F6" />
+                      </View>
+                      <Text style={styles.validationFileBtnText}>Fichier en attente</Text>
+                    </View>
+                  )}
+
+                  {/* ── Message du freelance ── */}
+                  {!!deliveryMsg.deliveryMessage && (
+                    <View style={styles.validationMsgBox}>
+                      <Ionicons name="chatbubble-ellipses-outline" size={13} color={COLORS.textMuted} style={{ marginTop: 1 }} />
+                      <Text style={styles.validationMsgText}>"{deliveryMsg.deliveryMessage}"</Text>
+                    </View>
+                  )}
+
+                  {/* ── Actions (plusieurs actions visibles) ── */}
+                  {!isValidated && (
+                    <View style={styles.validationActions}>
+
+                      {/* Retouche gratuite */}
+                      <TouchableOpacity
+                        style={[styles.validationActionBtn, styles.revisionActionBtn, !canRevise && { opacity: 0.38 }]}
+                        onPress={() => {
+                          if (!canRevise) return;
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          navigation.navigate('RevisionRequest', { mission: liveMission, freelancer });
+                        }}
+                        activeOpacity={canRevise ? 0.78 : 1}
+                      >
+                        <View style={styles.revisionActionIcon}>
+                          <Ionicons name="refresh-outline" size={18} color="#F59E0B" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.revisionActionTitle}>Demander une retouche</Text>
+                          <Text style={styles.revisionActionSub}>
+                            {canRevise ? `Gratuit · ${revCount}/1 utilisée` : '1/1 retouche utilisée'}
+                          </Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={14} color="#F59E0B60" />
+                      </TouchableOpacity>
+
+                      {/* Divider */}
+                      <View style={styles.validationDivider} />
+
+                      {/* Valider — CTA principal */}
+                      <TouchableOpacity
+                        style={styles.validateMainBtn}
+                        onPress={() => {
+                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                          navigation.navigate('Delivery', { mission: liveMission, freelancer });
+                        }}
+                        activeOpacity={0.88}
+                      >
+                        <LinearGradient
+                          colors={['#22C55E', '#16A34A']}
+                          style={StyleSheet.absoluteFill}
+                          borderRadius={RADIUS.xl}
+                          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                        />
+                        <Ionicons name="checkmark-circle" size={22} color="#fff" />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.validateMainBtnText}>Valider la livraison</Text>
+                          <Text style={styles.validateMainBtnSub}>Libère le paiement de {liveMission?.budget ?? 45}€</Text>
+                        </View>
+                        <Ionicons name="arrow-forward" size={16} color="rgba(255,255,255,0.6)" />
+                      </TouchableOpacity>
+
+                    </View>
+                  )}
+
+                  {/* ── Validé : confirmation ── */}
+                  {isValidated && (
+                    <View style={styles.validatedConfirm}>
+                      <Ionicons name="shield-checkmark-outline" size={16} color="#22C55E" />
+                      <Text style={styles.validatedConfirmText}>
+                        {liveMission?.budget ?? 45}€ libérés · Mission clôturée
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })()}
 
             {/* ── Chat ── */}
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Messages</Text>
               <View style={styles.chatMessages}>
                 {messages.map(msg => {
-                  // ── Carte livraison ──
-                  if (msg.type === 'delivery') {
-                    return (
-                      <DeliveryCard
-                        key="delivery"
-                        url={msg.deliveryUrl}
-                        message={msg.deliveryMessage}
-                        revisionCount={msg.revisionCount ?? 0}
-                        maxRevisions={liveMission?.revisions ?? 2}
-                        isValidated={liveMission?.status === 'valide'}
-                        onRevision={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          navigation.navigate('RevisionRequest', { mission: liveMission, freelancer });
-                        }}
-                        onValidate={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                          navigation.navigate('Delivery', { mission: liveMission, freelancer });
-                        }}
-                      />
-                    );
-                  }
+                  // Carte livraison maintenant affichée hors chat
+                  if (msg.type === 'delivery') return null;
                   // ── Bulles normales ──
                   return (
                     <View
@@ -359,7 +477,7 @@ export default function MissionTrackingScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.paidRevTitle}>Retouche supplémentaire</Text>
                     <Text style={styles.paidRevSub}>
-                      Commandez une modification payante au-delà des révisions incluses
+                      1 révision gratuite incluse · Au-delà : 5€/retouche
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -473,6 +591,81 @@ const styles = StyleSheet.create({
     fontSize: 13, color: COLORS.text,
   },
   sendBtn: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+
+  // Validation héro
+  validationHero: {
+    marginBottom: SPACING.sm,
+    gap: SPACING.sm,
+  },
+  validationStatusBar: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderRadius: RADIUS.xl, borderWidth: 1,
+    padding: SPACING.md,
+  },
+  validationIconBig: {
+    width: 46, height: 46, borderRadius: 23,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  validationTitle: { fontSize: 15, fontWeight: '800' },
+  validationSub:   { fontSize: 11, color: COLORS.textMuted, marginTop: 2, fontWeight: '500' },
+  validationCheckCircle: {
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: '#22C55E', alignItems: 'center', justifyContent: 'center',
+  },
+
+  validationFileBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: COLORS.card, borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: '#3B82F625',
+    paddingHorizontal: SPACING.md, paddingVertical: 12,
+  },
+  validationFileBtnIcon: {
+    width: 34, height: 34, borderRadius: 10,
+    backgroundColor: '#3B82F618', alignItems: 'center', justifyContent: 'center',
+  },
+  validationFileBtnText: { flex: 1, fontSize: 13, fontWeight: '700', color: '#3B82F6' },
+
+  validationMsgBox: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 9,
+    backgroundColor: COLORS.card, borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: COLORS.border,
+    paddingHorizontal: SPACING.md, paddingVertical: 11,
+  },
+  validationMsgText: { flex: 1, fontSize: 12, color: COLORS.textMuted, lineHeight: 17, fontStyle: 'italic' },
+
+  validationActions: {
+    backgroundColor: COLORS.card, borderRadius: RADIUS.xl,
+    borderWidth: 1, borderColor: COLORS.border,
+    overflow: 'hidden', ...SHADOW.sm,
+  },
+  validationActionBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingHorizontal: SPACING.md, paddingVertical: 14,
+  },
+  revisionActionBtn:   { backgroundColor: '#F59E0B08' },
+  revisionActionIcon:  {
+    width: 38, height: 38, borderRadius: 12,
+    backgroundColor: '#F59E0B15', alignItems: 'center', justifyContent: 'center',
+  },
+  revisionActionTitle: { fontSize: 13, fontWeight: '700', color: COLORS.text },
+  revisionActionSub:   { fontSize: 11, color: COLORS.textMuted, marginTop: 2 },
+
+  validationDivider:   { height: StyleSheet.hairlineWidth, backgroundColor: COLORS.border, marginHorizontal: SPACING.md },
+
+  validateMainBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingHorizontal: SPACING.md, paddingVertical: 16,
+    overflow: 'hidden', position: 'relative',
+  },
+  validateMainBtnText: { fontSize: 15, fontWeight: '900', color: '#fff' },
+  validateMainBtnSub:  { fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+
+  validatedConfirm: {
+    flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center',
+    backgroundColor: '#22C55E0C', borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: '#22C55E25', paddingVertical: 12,
+  },
+  validatedConfirmText: { fontSize: 13, fontWeight: '700', color: '#22C55E' },
 
   // Retouche payante
   paidRevRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: SPACING.md },

@@ -519,14 +519,15 @@ const styles = StyleSheet.create({
   // Header
   header: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    paddingHorizontal: SPACING.lg, paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.bg,
   },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: COLORS.text, letterSpacing: -0.3 },
-  headerSub:   { fontSize: 11, color: COLORS.textMuted, fontWeight: '500', marginTop: 1 },
+  headerTitle: { fontSize: 22, fontWeight: '900', color: COLORS.text, letterSpacing: -0.5 },
+  headerSub:   { fontSize: 12, color: COLORS.textMuted, fontWeight: '500', marginTop: 2 },
   headerUnread: {
-    backgroundColor: COLORS.primary + '18', borderRadius: RADIUS.full,
-    paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: COLORS.primary + '30',
+    backgroundColor: COLORS.primary + '15', borderRadius: RADIUS.full,
+    paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1, borderColor: COLORS.primary + '35',
   },
   headerUnreadText: { fontSize: 11, fontWeight: '800', color: COLORS.primary },
 
@@ -534,23 +535,23 @@ const styles = StyleSheet.create({
   scrollContent: { paddingTop: SPACING.md, paddingBottom: 20 },
 
   // Sections
-  section: { marginBottom: SPACING.md },
+  section: { marginBottom: SPACING.sm },
 
   sectionHeader: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingHorizontal: SPACING.lg, paddingVertical: 10,
-    marginBottom: 6,
+    paddingHorizontal: SPACING.lg, paddingVertical: 12,
+    marginBottom: 4,
   },
   sectionDot: {
-    width: 6, height: 6, borderRadius: 3,
+    width: 7, height: 7, borderRadius: 4,
   },
   sectionTitle: {
-    fontSize: 11, fontWeight: '800', color: COLORS.textMuted,
-    letterSpacing: 0.9, textTransform: 'uppercase',
+    fontSize: 12, fontWeight: '800', color: COLORS.text,
+    letterSpacing: 0.6, textTransform: 'uppercase',
   },
   sectionBadge: {
-    minWidth: 18, height: 18, borderRadius: 9,
-    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5,
+    minWidth: 20, height: 20, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6,
   },
   sectionBadgeText: { fontSize: 10, fontWeight: '800', color: '#fff' },
   sectionChevron: {
@@ -562,7 +563,7 @@ const styles = StyleSheet.create({
   // Card container for section rows
   sectionCard: {
     marginHorizontal: SPACING.md,
-    borderRadius: 18,
+    borderRadius: 20,
     borderWidth: 1,
     overflow: 'hidden',
     backgroundColor: COLORS.card,
@@ -575,7 +576,7 @@ const styles = StyleSheet.create({
   // Conversation card row
   convCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingVertical: 14, paddingRight: SPACING.md,
+    paddingVertical: 15, paddingRight: SPACING.md,
     backgroundColor: COLORS.card,
   },
   convCardDivider: {
@@ -585,22 +586,22 @@ const styles = StyleSheet.create({
   convAccentStrip: { width: 3, alignSelf: 'stretch', borderRadius: 2, marginLeft: 14 },
 
   listAvatar: {
-    width: 44, height: 44, borderRadius: 14,
+    width: 46, height: 46, borderRadius: 15,
     alignItems: 'center', justifyContent: 'center',
     position: 'relative',
   },
-  listAvatarText:   { fontSize: 15, fontWeight: '800' },
+  listAvatarText:   { fontSize: 16, fontWeight: '800' },
   listAvatarOnline: {
     position: 'absolute', top: -2, right: -2,
     width: 11, height: 11, borderRadius: 6,
     backgroundColor: '#22C55E', borderWidth: 2, borderColor: COLORS.card,
   },
-  convRowTop:             { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 1 },
-  convRowName:            { fontSize: 14, fontWeight: '700', color: COLORS.textMuted },
-  convRowTime:            { fontSize: 10, color: COLORS.textLight },
-  convRowMission:         { fontSize: 11, fontWeight: '600', marginBottom: 2 },
-  convRowPreview:         { fontSize: 12, color: COLORS.textMuted },
-  convRowPreviewUnread:   { color: COLORS.text, fontWeight: '600' },
+  convRowTop:             { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
+  convRowName:            { fontSize: 14, fontWeight: '800', color: COLORS.text },
+  convRowTime:            { fontSize: 11, color: COLORS.textMuted },
+  convRowMission:         { fontSize: 11, fontWeight: '600', marginBottom: 3 },
+  convRowPreview:         { fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
+  convRowPreviewUnread:   { color: COLORS.text, fontWeight: '700' },
 
   unreadBadge: {
     minWidth: 20, height: 20, borderRadius: 10,
@@ -611,17 +612,18 @@ const styles = StyleSheet.create({
   // ── Conversation ouverte ─────────────────────────────────────────────────────
   convTopBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    paddingHorizontal: SPACING.md, paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.bg,
   },
-  convAvatar:     { width: 38, height: 38, borderRadius: 12, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
-  convAvatarText: { fontSize: 13, fontWeight: '800' },
-  convTopName:    { fontSize: 14, fontWeight: '800', color: COLORS.text },
-  convTopMission: { fontSize: 11, fontWeight: '600' },
+  convAvatar:     { width: 40, height: 40, borderRadius: 13, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  convAvatarText: { fontSize: 14, fontWeight: '800' },
+  convTopName:    { fontSize: 15, fontWeight: '800', color: COLORS.text },
+  convTopMission: { fontSize: 11, fontWeight: '600', marginTop: 1 },
   onlineDot:      { width: 8, height: 8, borderRadius: 4, backgroundColor: '#22C55E' },
 
   chatScroll:  { flex: 1 },
-  chatContent: { paddingHorizontal: SPACING.md, paddingTop: SPACING.md, gap: 10 },
+  chatContent: { paddingHorizontal: SPACING.md, paddingTop: SPACING.lg, gap: 10 },
 
   systemMsg: {
     flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'center',
@@ -631,25 +633,25 @@ const styles = StyleSheet.create({
   systemText: { fontSize: 11, fontWeight: '600', color: '#22C55E' },
 
   bubbleWrap:           { flexDirection: 'row', alignItems: 'flex-end', gap: 7 },
-  bubbleMiniAvatar:     { width: 26, height: 26, borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  bubbleMiniAvatarText: { fontSize: 10, fontWeight: '800' },
-  bubble:    { maxWidth: '72%', borderRadius: RADIUS.lg, padding: 10 },
+  bubbleMiniAvatar:     { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  bubbleMiniAvatarText: { fontSize: 11, fontWeight: '800' },
+  bubble:    { maxWidth: '74%', borderRadius: RADIUS.lg, padding: 11 },
   bubbleMe:  { borderBottomRightRadius: 4 },
-  bubbleThem:{ backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border, borderBottomLeftRadius: 4 },
-  bubbleText:{ fontSize: 13, color: COLORS.text, lineHeight: 18 },
-  bubbleTs:  { fontSize: 10, color: COLORS.textMuted, marginTop: 3, textAlign: 'right' },
+  bubbleThem:{ backgroundColor: COLORS.cardElevated, borderWidth: 1, borderColor: COLORS.border, borderBottomLeftRadius: 4 },
+  bubbleText:{ fontSize: 14, color: COLORS.text, lineHeight: 19 },
+  bubbleTs:  { fontSize: 10, color: COLORS.textMuted, marginTop: 4, textAlign: 'right' },
 
   inputBar: {
     flexDirection: 'row', gap: 10, alignItems: 'flex-end',
-    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    borderTopWidth: 1, borderTopColor: COLORS.border,
+    paddingHorizontal: SPACING.md, paddingTop: 10, paddingBottom: 12,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: COLORS.border,
     backgroundColor: COLORS.bg,
   },
   chatInput: {
     flex: 1, backgroundColor: COLORS.card,
     borderRadius: RADIUS.lg, borderWidth: 1, borderColor: COLORS.border,
-    paddingHorizontal: SPACING.md, paddingVertical: 10,
-    fontSize: 13, color: COLORS.text, maxHeight: 100,
+    paddingHorizontal: SPACING.md, paddingVertical: 11,
+    fontSize: 14, color: COLORS.text, maxHeight: 100,
   },
-  sendBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  sendBtn: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
 });

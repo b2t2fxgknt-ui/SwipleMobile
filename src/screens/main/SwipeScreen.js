@@ -401,23 +401,25 @@ export default function SwipeScreen() {
       </View>
 
       {/* Boutons */}
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.passBtn]}
-          onPress={() => triggerSwipe.current('left')}
-          activeOpacity={0.72}
-        >
-          <Text style={styles.passBtnText}>✕</Text>
-        </TouchableOpacity>
+      <SafeAreaView edges={['bottom']}>
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.passBtn]}
+            onPress={() => triggerSwipe.current('left')}
+            activeOpacity={0.72}
+          >
+            <Text style={styles.passBtnText}>✕</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.likeBtn]}
-          onPress={() => triggerSwipe.current('right')}
-          activeOpacity={0.72}
-        >
-          <Text style={styles.likeBtnText}>♥</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.likeBtn]}
+            onPress={() => triggerSwipe.current('right')}
+            activeOpacity={0.72}
+          >
+            <Text style={styles.likeBtnText}>♥</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
@@ -528,17 +530,17 @@ const styles = StyleSheet.create({
 
   actions: {
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
-    gap: SPACING.xl + 8, paddingBottom: 20, paddingTop: SPACING.sm,
+    gap: SPACING.xl + 12, paddingVertical: SPACING.md,
   },
   actionBtn: { alignItems: 'center', justifyContent: 'center' },
   passBtn: {
-    width: 62, height: 62, borderRadius: 31,
+    width: 64, height: 64, borderRadius: 32,
     backgroundColor: COLORS.card, borderWidth: 1.5, borderColor: COLORS.error + '55',
   },
   passBtnText: { fontSize: 24, color: COLORS.error },
   likeBtn: {
-    width: 72, height: 72, borderRadius: 36,
+    width: 64, height: 64, borderRadius: 32,
     backgroundColor: COLORS.primary, ...SHADOW.md,
   },
-  likeBtnText: { fontSize: 30, color: '#fff' },
+  likeBtnText: { fontSize: 28, color: '#fff' },
 });

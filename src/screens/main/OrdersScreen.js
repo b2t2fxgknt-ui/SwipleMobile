@@ -81,6 +81,78 @@ const MOCK_ORDERS = [
     },
   },
   {
+    id: 'mock_livre_2',
+    title: 'Montage vidéo TikTok — Hook 0–3s',
+    type: 'Montage',
+    freelancerName: 'Sophie L.',
+    status: 'livre',
+    amount: 149,
+    date: new Date(Date.now() - 1 * 86400000).toISOString(),
+    color: '#8B5CF6',
+    icon: 'videocam-outline',
+    source: 'mock',
+    deliveryUrl: 'https://example.com/montage-delivered',
+    deliveryMessage: 'Montage finalisé avec 5 hooks différents testables. Les transitions sont optimisées pour le format 9:16.',
+    freelancerData: {
+      name: 'Sophie Laurent', initials: 'SL',
+      specialty: 'Montage TikTok viral', price: 149, rating: 4.9, reviewCount: 89, level: 'Top vendeur',
+      color: '#8B5CF6', icon: 'videocam-outline',
+      bio: 'Monteuse vidéo spécialisée contenu court.',
+      deliveryTime: '24h', responseTime: '< 1h',
+      before: { metric: '0.9% ER', views: '1K vues' },
+      after:  { metric: '3.8% ER', views: '2.2M vues' },
+      skills: ['Hook 0–3s', 'Captions animées', 'Transitions'],
+    },
+  },
+  {
+    id: 'mock_livre_3',
+    title: 'Identité visuelle complète — Logo + charte',
+    type: 'Design',
+    freelancerName: 'Théo B.',
+    status: 'livre',
+    amount: 229,
+    date: new Date(Date.now() - 3 * 86400000).toISOString(),
+    color: '#EC4899',
+    icon: 'color-palette-outline',
+    source: 'mock',
+    deliveryUrl: 'https://example.com/design-delivered',
+    deliveryMessage: 'Voici l\'identité complète : logo en 4 variantes, charte couleurs, typographies. Fichiers AI + PNG fournis.',
+    freelancerData: {
+      name: 'Théo Blanchet', initials: 'TB',
+      specialty: 'Branding & Identité visuelle', price: 229, rating: 4.8, reviewCount: 42, level: 'Expert',
+      color: '#EC4899', icon: 'color-palette-outline',
+      bio: 'Directeur artistique freelance. Spécialisé en branding pour startups.',
+      deliveryTime: '5 jours', responseTime: '< 2h',
+      before: { metric: 'Pas de logo', views: '0 cohérence' },
+      after:  { metric: 'Identité forte', views: '+40% mémorisation' },
+      skills: ['Logo', 'Charte graphique', 'Figma'],
+    },
+  },
+  {
+    id: 'mock_livre_4',
+    title: 'Pack 20 sous-titres animés Premiere Pro',
+    type: 'Effets',
+    freelancerName: 'Camille R.',
+    status: 'livre',
+    amount: 69,
+    date: new Date(Date.now() - 4 * 86400000).toISOString(),
+    color: '#3B82F6',
+    icon: 'text-outline',
+    source: 'mock',
+    deliveryUrl: 'https://example.com/subtitles-delivered',
+    deliveryMessage: '20 templates de sous-titres animés en MOGRT, compatibles Premiere Pro CC 2022+. Couleurs éditables.',
+    freelancerData: {
+      name: 'Camille Roux', initials: 'CR',
+      specialty: 'Motion Design & After Effects', price: 69, rating: 4.6, reviewCount: 28, level: 'Pro',
+      color: '#3B82F6', icon: 'text-outline',
+      bio: 'Motion designer spécialisé sous-titres et captions pour créateurs YouTube et TikTok.',
+      deliveryTime: '48h', responseTime: '< 4h',
+      before: { metric: 'Sous-titres basiques', views: 'Peu engageants' },
+      after:  { metric: 'Sous-titres animés', views: '+60% rétention' },
+      skills: ['Motion design', 'Premiere Pro', 'MOGRT'],
+    },
+  },
+  {
     id: 'mock_valide_1',
     title: 'Montage vidéo TikTok × 5 hooks',
     type: 'Montage',
@@ -457,7 +529,10 @@ export default function OrdersScreen() {
         {pendingValidation.length > 0 && (
           <PulsingBanner
             count={pendingValidation.length}
-            onPress={() => handleOpenOrder(pendingValidation[0])}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              navigation.navigate('PendingValidations', { orders: pendingValidation });
+            }}
           />
         )}
 
