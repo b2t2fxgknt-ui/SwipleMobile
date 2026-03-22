@@ -172,7 +172,7 @@ const PACK_ITEMS = [
   { icon: 'text-outline',         label: 'Sous-titres animés' },
   { icon: 'musical-note-outline', label: 'Son trending ajouté' },
 ];
-const PACK_PRICE    = 79;
+const PACK_PRICE    = 60;
 const PACK_ORIGINAL = 127;
 
 const DIY_CHECKLIST = [
@@ -416,6 +416,10 @@ export default function AuditScreen() {
   }, []);
 
   const goToExperts = useCallback(() => navigation.navigate('Experts'), [navigation]);
+  const goToOffer   = useCallback(() => navigation.navigate('AuditOffer', {
+    score: GLOBAL_SCORE,
+    criticalCount: MOCK_ISSUES.filter(x => x.level === 'critical').length,
+  }), [navigation]);
 
   const accentColor = globalColor(GLOBAL_SCORE);
 
@@ -1277,7 +1281,7 @@ export default function AuditScreen() {
                   {/* CTA */}
                   <TouchableOpacity
                     style={styles.convCtaWrap}
-                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToExperts(); }}
+                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToOffer(); }}
                     activeOpacity={0.85}
                   >
                     <LinearGradient
@@ -1345,7 +1349,7 @@ export default function AuditScreen() {
 
                 {/* CTA pack */}
                 <TouchableOpacity
-                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToExperts(); }}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToOffer(); }}
                   activeOpacity={0.88}
                 >
                   <LinearGradient
@@ -1479,24 +1483,26 @@ export default function AuditScreen() {
 
       </KeyboardAvoidingView>
 
-      {/* ── Sticky CTA — remplit jusqu'au bord physique via insets.bottom ── */}
+      {/* ── Sticky CTA ── */}
       {phase === 'results' && (
-        <TouchableOpacity
-          style={[styles.stickyCta, { paddingBottom: (insets.bottom || 0) + 14 }]}
-          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToExperts(); }}
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={['#7C3AED', '#8B5CF6', '#A78BFA']}
-            style={StyleSheet.absoluteFill}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-          />
-          <Ionicons name="flash" size={17} color="#fff" />
-          <Text style={styles.stickyCtaText}>Corriger ma vidéo maintenant</Text>
-          <View style={styles.stickyCtaArrow}>
-            <Ionicons name="arrow-forward" size={14} color="#fff" />
-          </View>
-        </TouchableOpacity>
+        <View style={[styles.stickyCtaWrap, { paddingBottom: insets.bottom || 0 }]}>
+          <TouchableOpacity
+            style={styles.stickyCta}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); navigation.navigate('AuditOffer', { score: GLOBAL_SCORE, criticalCount: MOCK_ISSUES.filter(x => x.level === 'critical').length }); }}
+            activeOpacity={0.9}
+          >
+            <LinearGradient
+              colors={['#7C3AED', '#8B5CF6', '#A78BFA']}
+              style={StyleSheet.absoluteFill}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            />
+            <Ionicons name="flash" size={15} color="#fff" />
+            <Text style={styles.stickyCtaText}>Corriger ma vidéo maintenant</Text>
+            <View style={styles.stickyCtaArrow}>
+              <Ionicons name="arrow-forward" size={13} color="#fff" />
+            </View>
+          </TouchableOpacity>
+        </View>
       )}
 
     </SafeAreaView>
@@ -2213,16 +2219,19 @@ const styles = StyleSheet.create({
   diyCtaBtnSub:  { fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
 
   // ── Sticky CTA ─────────────────────────────────────────────────────────────
-  stickyCta: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 10, paddingTop: 16, paddingHorizontal: SPACING.lg,
-    overflow: 'hidden', backgroundColor: '#7C3AED',
+  stickyCtaWrap: {
+    backgroundColor: '#7C3AED',
     shadowColor: '#7C3AED', shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.25, shadowRadius: 12, elevation: 12,
   },
-  stickyCtaText: { fontSize: 15, fontWeight: '800', color: '#fff', flex: 1 },
+  stickyCta: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, paddingVertical: 10, paddingHorizontal: SPACING.lg,
+    overflow: 'hidden',
+  },
+  stickyCtaText: { fontSize: 13, fontWeight: '800', color: '#fff', flex: 1 },
   stickyCtaArrow: {
-    width: 28, height: 28, borderRadius: 14,
+    width: 24, height: 24, borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center', justifyContent: 'center',
   },

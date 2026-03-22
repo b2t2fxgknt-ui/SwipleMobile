@@ -27,6 +27,7 @@ import ValidationScreen          from '../screens/transaction/ValidationScreen';
 import RevisionRequestScreen     from '../screens/transaction/RevisionRequestScreen';
 import DisputeScreen                from '../screens/transaction/DisputeScreen';
 import PendingValidationsScreen     from '../screens/transaction/PendingValidationsScreen';
+import AuditOfferScreen            from '../screens/transaction/AuditOfferScreen';
 import ReviewScreen              from '../screens/transaction/ReviewScreen';
 import MessagerieScreen          from '../screens/main/MessagerieScreen';
 import NotificationsScreen       from '../screens/main/NotificationsScreen';
@@ -162,6 +163,12 @@ export default function AppNavigator() {
             <Stack.Screen
               name="PendingValidations"
               component={PendingValidationsScreen}
+              options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
+            />
+            {/* 8c. Hub conversion post-audit */}
+            <Stack.Screen
+              name="AuditOffer"
+              component={AuditOfferScreen}
               options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
             />
             {/* 9. Messagerie */}
