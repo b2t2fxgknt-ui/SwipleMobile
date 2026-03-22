@@ -11,7 +11,7 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -255,6 +255,7 @@ const MATCHED_FREELANCERS = matchFreelancers(
 
 export default function AuditScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   const [phase, setPhase]               = useState('idle');
   const [mockFile, setMockFile]         = useState(null);
@@ -420,7 +421,7 @@ export default function AuditScreen() {
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <BubbleBackground variant="acheteur" />
       </View>
@@ -1432,8 +1433,12 @@ export default function AuditScreen() {
                   onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); reset(true); }}
                   activeOpacity={0.82}
                 >
-                  <Ionicons name="refresh-circle-outline" size={16} color={COLORS.primary} />
-                  <Text style={styles.diyCtaBtnText}>Appliquer les changements et re-tester</Text>
+                  <Ionicons name="refresh-outline" size={15} color={COLORS.primary} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.diyCtaBtnText}>Re-tester ma vidéo</Text>
+                    <Text style={styles.diyCtaBtnSub}>Une fois tes corrections appliquées</Text>
+                  </View>
+                  <Ionicons name="arrow-forward" size={14} color={COLORS.primary} />
                 </TouchableOpacity>
               </View>
 
@@ -1474,10 +1479,10 @@ export default function AuditScreen() {
 
       </KeyboardAvoidingView>
 
-      {/* ── Sticky CTA — en dehors du KeyboardAvoidingView pour éviter la bande noire ── */}
+      {/* ── Sticky CTA — remplit jusqu'au bord physique via insets.bottom ── */}
       {phase === 'results' && (
         <TouchableOpacity
-          style={styles.stickyCta}
+          style={[styles.stickyCta, { paddingBottom: (insets.bottom || 0) + 14 }]}
           onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToExperts(); }}
           activeOpacity={0.9}
         >
@@ -2200,16 +2205,17 @@ const styles = StyleSheet.create({
   },
   diyTipText: { flex: 1, fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
   diyCtaBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: COLORS.primary + '12', borderWidth: 1.5, borderColor: COLORS.primary + '35',
-    borderRadius: RADIUS.lg, paddingVertical: 13,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#7C3AED14', borderWidth: 1.5, borderColor: '#7C3AED40',
+    borderRadius: RADIUS.lg, paddingVertical: 12, paddingHorizontal: SPACING.md,
   },
-  diyCtaBtnText: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
+  diyCtaBtnText: { fontSize: 14, fontWeight: '800', color: COLORS.primary },
+  diyCtaBtnSub:  { fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
 
   // ── Sticky CTA ─────────────────────────────────────────────────────────────
   stickyCta: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 10, paddingVertical: 16, paddingHorizontal: SPACING.lg,
+    gap: 10, paddingTop: 16, paddingHorizontal: SPACING.lg,
     overflow: 'hidden', backgroundColor: '#7C3AED',
     shadowColor: '#7C3AED', shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.25, shadowRadius: 12, elevation: 12,
