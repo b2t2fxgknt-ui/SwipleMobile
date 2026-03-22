@@ -33,57 +33,118 @@ const ANALYSIS_STEPS = [
 
 const STEP_DURATION = 900;
 
-// Score par catégorie (sur 100)
+// Score par catégorie (sur 100) — enrichi avec problem + tip
 const MOCK_CATEGORIES = [
-  { key: 'hook',     label: 'Hook',      score: 42, icon: 'flash-outline'          },
-  { key: 'son',      label: 'Son',       score: 58, icon: 'musical-note-outline'   },
-  { key: 'texte',    label: 'Texte',     score: 35, icon: 'text-outline'           },
-  { key: 'visuel',   label: 'Visuel',    score: 82, icon: 'image-outline'          },
-  { key: 'format',   label: 'Format',    score: 67, icon: 'crop-outline'           },
+  { key: 'hook',   label: 'Hook',   score: 42, icon: 'flash-outline',       problem: 'Accroche absente — les viewers quittent avant 3s',              tip: 'Commence par un résultat choc ou une question directe. Zéro intro.' },
+  { key: 'son',    label: 'Son',    score: 58, icon: 'musical-note-outline', problem: 'Aucun son trending détecté — portée organique limitée',         tip: 'Choisis un son en courbe montante dans TikTok Studio → Sons → Trending.' },
+  { key: 'texte',  label: 'Texte',  score: 35, icon: 'text-outline',        problem: 'Pas de sous-titres — 80% regardent sans son',                   tip: 'Active le sous-titrage auto dans CapCut en 5 min. Augmente la rétention +20%.' },
+  { key: 'visuel', label: 'Visuel', score: 82, icon: 'image-outline',       problem: null,                                                            tip: 'Bonne qualité d\'image. Maintiens cet standard pour la crédibilité.' },
+  { key: 'format', label: 'Format', score: 67, icon: 'crop-outline',        problem: 'Sujet cadré trop bas — masqué par les boutons TikTok',           tip: 'Zone dorée : place ton sujet entre 15% et 55% du haut de l\'écran.' },
 ];
 
-// Issues style "Grammarly" : niveau + titre + explication + fix
+// Issues style "Grammarly" : niveau + titre + explication + fix + freelance
 const MOCK_ISSUES = [
   {
-    level: 'critical',
-    icon:  'timer-outline',
+    level: 'critical', icon: 'timer-outline',
     title: 'Tu perds l\'attention dès les 2 premières secondes',
     stat:  '78 % des viewers quittent avant la 3ᵉ seconde',
     fix:   'Commence par une question choc ou un résultat surprenant — aucune intro, aucune présentation.',
     issueCategory: 'hook',
+    freelanceType: 'Copywriter', freelanceLabel: 'Faire réécrire le hook',
   },
   {
-    level: 'critical',
-    icon:  'text-outline',
+    level: 'critical', icon: 'text-outline',
     title: '80 % de tes viewers regardent sans le son',
     stat:  'Sans sous-titres, tu perds la moitié de ton audience mobile',
     fix:   'Active l\'auto-sous-titrage dans CapCut ou TikTok Studio — 5 minutes suffisent.',
     issueCategory: 'subtitle',
+    freelanceType: 'Monteur', freelanceLabel: 'Déléguer les sous-titres',
   },
   {
-    level: 'warning',
-    icon:  'volume-mute-outline',
+    level: 'warning', icon: 'volume-mute-outline',
     title: 'Ton audio ne donne pas envie de rester',
     stat:  'Aucun son trending détecté — la portée organique en souffre',
     fix:   'Ajoute un son en courbe montante depuis l\'onglet "Sons" TikTok.',
     issueCategory: 'sound',
+    freelanceType: null, freelanceLabel: null,
   },
   {
-    level: 'warning',
-    icon:  'crop-outline',
+    level: 'warning', icon: 'crop-outline',
     title: 'Ton sujet est masqué par l\'interface TikTok',
     stat:  'Le sujet cadré trop bas disparaît derrière les boutons d\'action',
     fix:   'Place le sujet dans le tiers supérieur de l\'écran — zone dorée 9:16.',
     issueCategory: 'framing',
+    freelanceType: 'Monteur', freelanceLabel: 'Recadrer la vidéo',
   },
   {
-    level: 'tip',
-    icon:  'pricetag-outline',
+    level: 'tip', icon: 'pricetag-outline',
     title: 'Ta vidéo n\'est pas distribuée à assez de comptes',
     stat:  '3 hashtags détectés — idéal : 5 à 8 hashtags ciblés',
     fix:   'Mixe 2 hashtags viraux (#fyp, #viral) + 3 hashtags de niche liés à ton sujet.',
     issueCategory: 'hashtags',
+    freelanceType: null, freelanceLabel: null,
   },
+];
+
+// ── Diagnostic rapide ──────────────────────────────────────────────────────────
+const MOCK_QUICK_DIAG = [
+  { emoji: '❌', type: 'critical', text: 'Hook trop lent — 78% quittent avant 3s'             },
+  { emoji: '❌', type: 'critical', text: 'Aucun sous-titre — 80% regardent sans son'           },
+  { emoji: '⚠️', type: 'warning',  text: 'Audio non-trending — portée organique limitée'      },
+  { emoji: '⚠️', type: 'warning',  text: 'Sujet masqué par les boutons TikTok'                },
+  { emoji: '✅', type: 'ok',       text: 'Qualité visuelle excellente · Format 9:16 respecté' },
+];
+
+// ── Actions concrètes numérotées ──────────────────────────────────────────────
+const MOCK_ACTIONS = [
+  {
+    priority: 1, icon: 'flash-outline', color: '#EF4444',
+    action: 'Réécris les 2 premières secondes',
+    copy:   '"Personne ne t\'a dit ça sur [sujet]…"',
+    impact: '+18 pts', time: '5 min',
+    freelanceType: 'Copywriter',
+  },
+  {
+    priority: 2, icon: 'text-outline', color: '#F59E0B',
+    action: 'Active les sous-titres automatiques',
+    copy:   'CapCut → Auto-captions → Exporter',
+    impact: '+9 pts', time: '5 min',
+    freelanceType: 'Monteur',
+  },
+  {
+    priority: 3, icon: 'musical-note-outline', color: '#F59E0B',
+    action: 'Remplace la musique par un son trending',
+    copy:   'TikTok Studio → Sons → Trending → courbe montante',
+    impact: '+7 pts', time: '2 min',
+    freelanceType: null,
+  },
+  {
+    priority: 4, icon: 'crop-outline', color: '#8B5CF6',
+    action: 'Recadre ton sujet dans la zone dorée',
+    copy:   'Tiers supérieur (15%–55%) — loin des boutons TikTok',
+    impact: '+5 pts', time: '3 min',
+    freelanceType: 'Monteur',
+  },
+];
+
+// ── Rétention estimée (drop-off simulé) ───────────────────────────────────────
+const RETENTION_CURVE = [
+  { sec: '0s',   pct: 100, label: 'Début'            },
+  { sec: '2s',   pct: 52,  label: '⚠️ Drop hook'      },
+  { sec: '5s',   pct: 38,  label: ''                  },
+  { sec: '10s',  pct: 28,  label: ''                  },
+  { sec: '20s',  pct: 18,  label: ''                  },
+  { sec: '30s',  pct: 11,  label: '↑ Moyenne : 22%'   },
+  { sec: 'Fin',  pct: 7,   label: ''                  },
+];
+
+// ── Templates de hooks viraux ─────────────────────────────────────────────────
+const MOCK_HOOKS = [
+  { template: '"Personne ne t\'a dit ça sur [sujet]…"',              score: 94, type: 'Curiosité'      },
+  { template: '"J\'ai fait [résultat] en [durée]. Voici comment."',  score: 91, type: 'Preuve sociale'  },
+  { template: '"Arrête de faire [erreur] si tu veux [objectif]"',    score: 88, type: 'Douleur'         },
+  { template: '"[Chiffre] choses que [cible] ignore encore"',        score: 85, type: 'Liste'           },
+  { template: '"POV : tu découvres que [fait surprenant]"',          score: 82, type: 'Identification'  },
 ];
 
 // Config niveaux
@@ -109,6 +170,13 @@ function globalLabel(score) {
   if (score >= 80) return 'Excellent potentiel';
   if (score >= 60) return 'Bon potentiel';
   return 'À améliorer';
+}
+
+function globalInsight(score) {
+  if (score >= 80) return 'Ta vidéo a les bases pour performer — optimise le hook pour viser le Top.';
+  if (score >= 60) return '2 problèmes critiques limitent ta portée. Corrections rapides disponibles.';
+  if (score >= 40) return 'Hook et sous-titres coûtent 27 points — corrigibles en moins d\'1h.';
+  return '3 corrections simples = +25 pts estimés. Commence par le hook.';
 }
 
 const GLOBAL_SCORE = Math.round(
@@ -148,7 +216,9 @@ export default function AuditScreen() {
   const [link, setLink]                 = useState('');
   const [stepIdx, setStepIdx]           = useState(0);
   const [displayScore, setDisplayScore] = useState(0);
-  const [expandedIdx, setExpandedIdx]   = useState(null);
+  const [expandedIdx,    setExpandedIdx]    = useState(null);
+  const [expandedCatIdx, setExpandedCatIdx] = useState(null);
+  const [showHooks,      setShowHooks]      = useState(false);
 
   // ── Rétention & viralité ─────────────────────────────────────────────────
   const [previousScore,  setPreviousScore]  = useState(null); // score avant re-test
@@ -163,6 +233,7 @@ export default function AuditScreen() {
   const catAnims       = useRef(MOCK_CATEGORIES.map(() => new Animated.Value(0))).current;
   const glowAnim       = useRef(new Animated.Value(0)).current;  // glow on high score
   const deltaAnim      = useRef(new Animated.Value(0)).current;  // banner delta re-test
+  const retentionAnim  = useRef(new Animated.Value(0)).current;  // drop-off curve
 
   // ── Simulated file pick ───────────────────────────────────────────────────
   const handlePickFile = useCallback(() => {
@@ -252,6 +323,10 @@ export default function AuditScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
 
+    // Rétention drop-off curve
+    retentionAnim.setValue(0);
+    Animated.timing(retentionAnim, { toValue: 1, duration: 1100, delay: 400, useNativeDriver: false }).start();
+
     // Delta banner si re-test
     if (previousScore !== null) {
       deltaAnim.setValue(0);
@@ -280,6 +355,7 @@ export default function AuditScreen() {
     optAnim.setValue(0);
     glowAnim.setValue(0);
     deltaAnim.setValue(0);
+    retentionAnim.setValue(0);
     catAnims.forEach(a => a.setValue(0));
   }, [progressAnim, scoreAnim, catAnims]);
 
@@ -623,6 +699,12 @@ export default function AuditScreen() {
                   {globalLabel(GLOBAL_SCORE)}
                 </Text>
 
+                {/* Insight phrase */}
+                <View style={styles.scoreInsightRow}>
+                  <Ionicons name="information-circle-outline" size={13} color={COLORS.textMuted} />
+                  <Text style={styles.scoreInsightText}>{globalInsight(GLOBAL_SCORE)}</Text>
+                </View>
+
                 {/* Bar sous le ring */}
                 <View style={styles.scoreBarTrack}>
                   <Animated.View style={[styles.scoreBarFill, {
@@ -647,6 +729,23 @@ export default function AuditScreen() {
                   ))}
                 </View>
               )}
+
+              {/* ── Diagnostic rapide ─────────────────────────────────── */}
+              <View style={styles.diagCard}>
+                <View style={styles.diagHeader}>
+                  <Ionicons name="scan-outline" size={13} color={COLORS.textMuted} />
+                  <Text style={styles.diagHeaderText}>DIAGNOSTIC RAPIDE</Text>
+                </View>
+                {MOCK_QUICK_DIAG.map((d, i) => {
+                  const color = d.type === 'critical' ? '#EF4444' : d.type === 'warning' ? '#F59E0B' : '#22C55E';
+                  return (
+                    <View key={i} style={[styles.diagRow, { borderLeftColor: color }]}>
+                      <Text style={styles.diagEmoji}>{d.emoji}</Text>
+                      <Text style={styles.diagText}>{d.text}</Text>
+                    </View>
+                  );
+                })}
+              </View>
 
               {/* ── Simulation de viralité ────────────────────────────── */}
               <View style={styles.simulCard}>
@@ -727,6 +826,47 @@ export default function AuditScreen() {
                 <Text style={styles.optSub}>Applique les corrections pour atteindre 100 %</Text>
               </View>
 
+              {/* ── Rétention estimée ─────────────────────────────────── */}
+              <View style={styles.retentionCard}>
+                <View style={styles.retentionHeader}>
+                  <View style={styles.retentionBadge}>
+                    <Ionicons name="trending-down-outline" size={11} color="#EF4444" />
+                    <Text style={styles.retentionBadgeText}>Rétention estimée</Text>
+                  </View>
+                  <Text style={styles.retentionSub}>Simulation basée sur ton score de hook</Text>
+                </View>
+
+                {/* Courbe drop-off */}
+                <View style={styles.retentionBars}>
+                  {RETENTION_CURVE.map((pt, i) => (
+                    <View key={i} style={styles.retentionBarCol}>
+                      <View style={styles.retentionBarTrack}>
+                        <Animated.View style={[
+                          styles.retentionBarFill,
+                          {
+                            height: retentionAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: ['0%', `${pt.pct}%`],
+                            }),
+                            backgroundColor: pt.pct >= 50 ? '#22C55E' : pt.pct >= 25 ? '#F59E0B' : '#EF4444',
+                          },
+                        ]} />
+                      </View>
+                      <Text style={styles.retentionPct}>{pt.pct}%</Text>
+                      <Text style={styles.retentionSec}>{pt.sec}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Annotation */}
+                <View style={styles.retentionAlert}>
+                  <Ionicons name="alert-circle-outline" size={13} color="#EF4444" />
+                  <Text style={styles.retentionAlertText}>
+                    <Text style={{ fontWeight: '800', color: '#EF4444' }}>48% de drop</Text> à 2s · La moyenne des top créateurs est &lt;15%
+                  </Text>
+                </View>
+              </View>
+
               {/* ── Détail par critère ────────────────────────────────── */}
               <View style={styles.block}>
                 <Text style={styles.blockTitle}>
@@ -736,18 +876,40 @@ export default function AuditScreen() {
 
                 {MOCK_CATEGORIES.map((cat, i) => {
                   const c = categoryColor(cat.score);
+                  const isExpanded = expandedCatIdx === i;
                   return (
-                    <View key={cat.key} style={styles.catRow}>
-                      <Ionicons name={cat.icon} size={14} color={c} style={{ width: 20 }} />
-                      <Text style={styles.catLabel}>{cat.label}</Text>
-                      <View style={styles.catTrack}>
-                        <Animated.View style={[styles.catFill, {
-                          width: catAnims[i].interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
-                          backgroundColor: c,
-                        }]} />
+                    <TouchableOpacity
+                      key={cat.key}
+                      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setExpandedCatIdx(prev => prev === i ? null : i); }}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.catRow}>
+                        <Ionicons name={cat.icon} size={14} color={c} style={{ width: 20 }} />
+                        <Text style={styles.catLabel}>{cat.label}</Text>
+                        <View style={styles.catTrack}>
+                          <Animated.View style={[styles.catFill, {
+                            width: catAnims[i].interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+                            backgroundColor: c,
+                          }]} />
+                        </View>
+                        <Text style={[styles.catScore, { color: c }]}>{cat.score}</Text>
+                        <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={12} color={COLORS.textMuted} />
                       </View>
-                      <Text style={[styles.catScore, { color: c }]}>{cat.score}</Text>
-                    </View>
+                      {isExpanded && (
+                        <View style={[styles.catDetail, { borderLeftColor: c }]}>
+                          {cat.problem && (
+                            <View style={styles.catDetailRow}>
+                              <Ionicons name="alert-circle-outline" size={12} color="#EF4444" />
+                              <Text style={styles.catDetailProblem}>{cat.problem}</Text>
+                            </View>
+                          )}
+                          <View style={styles.catDetailRow}>
+                            <Ionicons name="sparkles-outline" size={12} color={c} />
+                            <Text style={[styles.catDetailTip, { color: c }]}>{cat.tip}</Text>
+                          </View>
+                        </View>
+                      )}
+                    </TouchableOpacity>
                   );
                 })}
               </View>
@@ -792,10 +954,25 @@ export default function AuditScreen() {
 
                     {/* Fix — visible si expanded */}
                     {expanded && (
-                      <View style={[styles.issueFix, { borderColor: lv.border }]}>
-                        <Ionicons name="sparkles-outline" size={13} color={lv.color} />
-                        <Text style={[styles.issueFixText, { color: lv.color }]}>{issue.fix}</Text>
-                      </View>
+                      <>
+                        <View style={[styles.issueFix, { borderColor: lv.border }]}>
+                          <Ionicons name="sparkles-outline" size={13} color={lv.color} />
+                          <Text style={[styles.issueFixText, { color: lv.color }]}>{issue.fix}</Text>
+                        </View>
+                        {issue.freelanceType && (
+                          <TouchableOpacity
+                            style={[styles.issueFixBtn, { backgroundColor: lv.color + '15', borderColor: lv.border }]}
+                            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); goToExperts(); }}
+                            activeOpacity={0.8}
+                          >
+                            <Ionicons name="person-circle-outline" size={14} color={lv.color} />
+                            <Text style={[styles.issueFixBtnText, { color: lv.color }]}>
+                              {issue.freelanceLabel} · {issue.freelanceType}
+                            </Text>
+                            <Ionicons name="chevron-forward" size={12} color={lv.color} style={{ marginLeft: 'auto' }} />
+                          </TouchableOpacity>
+                        )}
+                      </>
                     )}
 
                     <View style={styles.issueExpandRow}>
@@ -806,6 +983,88 @@ export default function AuditScreen() {
                   </TouchableOpacity>
                 );
               })}
+
+              {/* ── À faire maintenant ────────────────────────────────── */}
+              <View style={styles.actionsCard}>
+                <View style={styles.actionsHeader}>
+                  <View style={styles.actionsBadge}>
+                    <Ionicons name="rocket-outline" size={11} color={COLORS.primary} />
+                    <Text style={styles.actionsBadgeText}>À FAIRE MAINTENANT</Text>
+                  </View>
+                  <Text style={styles.actionsSubtitle}>Actions classées par impact</Text>
+                </View>
+
+                {MOCK_ACTIONS.map((a, i) => (
+                  <View key={i} style={[styles.actionRow, { borderLeftColor: a.color }]}>
+                    <View style={[styles.actionNum, { backgroundColor: a.color + '18', borderColor: a.color + '30' }]}>
+                      <Text style={[styles.actionNumText, { color: a.color }]}>{a.priority}</Text>
+                    </View>
+                    <View style={{ flex: 1, gap: 4 }}>
+                      <Text style={styles.actionTitle}>{a.action}</Text>
+                      <View style={styles.actionCopyRow}>
+                        <Ionicons name="copy-outline" size={11} color={COLORS.textMuted} />
+                        <Text style={styles.actionCopy} numberOfLines={1}>{a.copy}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.actionMeta}>
+                      <View style={[styles.actionImpact, { backgroundColor: '#22C55E14' }]}>
+                        <Text style={styles.actionImpactText}>{a.impact}</Text>
+                      </View>
+                      <Text style={styles.actionTime}>{a.time}</Text>
+                    </View>
+                    {a.freelanceType && (
+                      <TouchableOpacity
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); goToExperts(); }}
+                        style={styles.actionFreelanceBtn}
+                        activeOpacity={0.8}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons name="person-outline" size={13} color={COLORS.primary} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))}
+
+                <View style={styles.actionsFooter}>
+                  <Ionicons name="time-outline" size={11} color={COLORS.textMuted} />
+                  <Text style={styles.actionsFooterText}>Temps total estimé : ~15 min pour +39 pts</Text>
+                </View>
+              </View>
+
+              {/* ── Hooks viraux templates ─────────────────────────────── */}
+              <View style={styles.hooksCard}>
+                <TouchableOpacity
+                  style={styles.hooksToggle}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowHooks(h => !h); }}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.hooksBadge}>
+                    <Ionicons name="flash" size={11} color="#F59E0B" />
+                    <Text style={styles.hooksBadgeText}>HOOKS VIRAUX</Text>
+                  </View>
+                  <Text style={styles.hooksTitle}>5 templates prêts à copier</Text>
+                  <Ionicons name={showHooks ? 'chevron-up' : 'chevron-down'} size={16} color={COLORS.textMuted} style={{ marginLeft: 'auto' }} />
+                </TouchableOpacity>
+
+                {showHooks && (
+                  <View style={styles.hooksList}>
+                    {MOCK_HOOKS.map((h, i) => (
+                      <View key={i} style={styles.hookRow}>
+                        <View style={styles.hookScoreBadge}>
+                          <Text style={styles.hookScoreText}>{h.score}</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.hookTemplate}>{h.template}</Text>
+                          <Text style={styles.hookType}>{h.type}</Text>
+                        </View>
+                      </View>
+                    ))}
+                    <Text style={styles.hooksNote}>
+                      Remplace les [crochets] par ton contenu. Score estimé basé sur 1M+ de vidéos.
+                    </Text>
+                  </View>
+                )}
+              </View>
 
               {/* ── Experts recommandés ──────────────────────────────── */}
               <View style={styles.matchSection}>
@@ -1270,6 +1529,146 @@ const styles = StyleSheet.create({
     paddingVertical: 6, alignItems: 'center',
   },
   matchBtnText: { fontSize: 11, fontWeight: '700' },
+
+  // ── Score insight ──────────────────────────────────────────────────────────
+  scoreInsightRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 6,
+    backgroundColor: COLORS.bg, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: COLORS.border,
+    paddingHorizontal: 10, paddingVertical: 8,
+    marginTop: 12, width: '100%',
+  },
+  scoreInsightText: { flex: 1, fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
+
+  // ── Diagnostic rapide ──────────────────────────────────────────────────────
+  diagCard: {
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: RADIUS.xl, padding: SPACING.lg, marginBottom: SPACING.md, gap: 8,
+  },
+  diagHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  diagHeaderText: { fontSize: 10, fontWeight: '800', color: COLORS.textMuted, letterSpacing: 0.8 },
+  diagRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderLeftWidth: 3, paddingLeft: 10,
+    paddingVertical: 5,
+  },
+  diagEmoji: { fontSize: 14 },
+  diagText:  { fontSize: 13, color: COLORS.text, flex: 1, fontWeight: '500', lineHeight: 18 },
+
+  // ── Rétention estimée ──────────────────────────────────────────────────────
+  retentionCard: {
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: RADIUS.xl, padding: SPACING.lg, marginBottom: SPACING.md, gap: 14,
+  },
+  retentionHeader: { gap: 4 },
+  retentionBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: '#EF444414', borderWidth: 1, borderColor: '#EF444430',
+    borderRadius: RADIUS.full, alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 4,
+  },
+  retentionBadgeText: { fontSize: 10, fontWeight: '700', color: '#EF4444', letterSpacing: 0.3 },
+  retentionSub: { fontSize: 12, color: COLORS.textMuted },
+  retentionBars: { flexDirection: 'row', alignItems: 'flex-end', gap: 4, height: 90 },
+  retentionBarCol: { flex: 1, alignItems: 'center', gap: 3 },
+  retentionBarTrack: { width: '100%', height: 70, justifyContent: 'flex-end', backgroundColor: COLORS.bg, borderRadius: 4, overflow: 'hidden' },
+  retentionBarFill: { width: '100%', borderRadius: 4 },
+  retentionPct: { fontSize: 9, fontWeight: '700', color: COLORS.text },
+  retentionSec: { fontSize: 8, color: COLORS.textMuted, fontWeight: '600' },
+  retentionAlert: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 7,
+    backgroundColor: '#EF444410', borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: '#EF444428', padding: 9,
+  },
+  retentionAlertText: { flex: 1, fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
+
+  // ── Critère expandable ─────────────────────────────────────────────────────
+  catDetail: {
+    borderLeftWidth: 3, paddingLeft: 10, marginTop: 4, marginBottom: 8, gap: 6,
+  },
+  catDetailRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  catDetailProblem: { flex: 1, fontSize: 12, color: '#EF4444', lineHeight: 16 },
+  catDetailTip:     { flex: 1, fontSize: 12, lineHeight: 16, fontWeight: '600' },
+
+  // ── Bouton "Corriger ce point" ─────────────────────────────────────────────
+  issueFixBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    borderWidth: 1, borderRadius: RADIUS.md,
+    paddingHorizontal: 10, paddingVertical: 9,
+    marginBottom: 4,
+  },
+  issueFixBtnText: { fontSize: 12, fontWeight: '700', flex: 1 },
+
+  // ── À faire maintenant ─────────────────────────────────────────────────────
+  actionsCard: {
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: RADIUS.xl, padding: SPACING.lg, marginBottom: SPACING.md, gap: 10,
+  },
+  actionsHeader: { gap: 5, marginBottom: 4 },
+  actionsBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: COLORS.primary + '15', borderColor: COLORS.primary + '30', borderWidth: 1,
+    borderRadius: RADIUS.full, alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 4,
+  },
+  actionsBadgeText: { fontSize: 10, fontWeight: '800', color: COLORS.primary, letterSpacing: 0.5 },
+  actionsSubtitle:  { fontSize: 12, color: COLORS.textMuted },
+  actionRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderLeftWidth: 3, paddingLeft: 10, paddingVertical: 4,
+  },
+  actionNum: {
+    width: 28, height: 28, borderRadius: 14,
+    borderWidth: 1, alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  actionNumText:   { fontSize: 12, fontWeight: '900' },
+  actionTitle:     { fontSize: 13, fontWeight: '700', color: COLORS.text },
+  actionCopyRow:   { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  actionCopy:      { fontSize: 11, color: COLORS.textMuted, flex: 1, fontStyle: 'italic' },
+  actionMeta:      { alignItems: 'flex-end', gap: 4, flexShrink: 0 },
+  actionImpact: {
+    borderRadius: RADIUS.full, paddingHorizontal: 7, paddingVertical: 2,
+  },
+  actionImpactText: { fontSize: 10, fontWeight: '800', color: '#22C55E' },
+  actionTime:       { fontSize: 10, color: COLORS.textMuted, fontWeight: '600' },
+  actionFreelanceBtn: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: COLORS.primary + '14', borderWidth: 1, borderColor: COLORS.primary + '30',
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  actionsFooter: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: COLORS.bg, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: COLORS.border,
+    paddingHorizontal: 10, paddingVertical: 8, marginTop: 4,
+  },
+  actionsFooterText: { fontSize: 11, color: COLORS.textMuted, fontWeight: '600' },
+
+  // ── Hooks viraux ───────────────────────────────────────────────────────────
+  hooksCard: {
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: RADIUS.xl, padding: SPACING.lg, marginBottom: SPACING.md,
+  },
+  hooksToggle: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  hooksBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: '#F59E0B15', borderColor: '#F59E0B30', borderWidth: 1,
+    borderRadius: RADIUS.full, alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 4,
+  },
+  hooksBadgeText: { fontSize: 10, fontWeight: '800', color: '#F59E0B', letterSpacing: 0.5 },
+  hooksTitle: { fontSize: 13, fontWeight: '700', color: COLORS.text },
+  hooksList:  { marginTop: 14, gap: 10 },
+  hookRow:    { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  hookScoreBadge: {
+    backgroundColor: COLORS.primary + '15', borderWidth: 1, borderColor: COLORS.primary + '30',
+    borderRadius: RADIUS.full, minWidth: 34, height: 34,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  hookScoreText:  { fontSize: 11, fontWeight: '900', color: COLORS.primary },
+  hookTemplate:   { fontSize: 13, fontWeight: '600', color: COLORS.text, lineHeight: 18, marginBottom: 2 },
+  hookType:       { fontSize: 10, color: COLORS.textMuted, fontWeight: '600' },
+  hooksNote: {
+    fontSize: 11, color: COLORS.textMuted, lineHeight: 16, fontStyle: 'italic',
+    borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 10, marginTop: 4,
+  },
 
   // Reset
   resetBtn: {
