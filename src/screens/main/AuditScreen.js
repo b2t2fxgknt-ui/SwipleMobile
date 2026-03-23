@@ -1168,308 +1168,77 @@ export default function AuditScreen() {
                 </View>
               </View>
 
-              {/* ── A. Experts recommandés (conversion) ───────────────── */}
-              <View style={styles.convHeader}>
-                <View style={styles.convBadge}>
-                  <Ionicons name="star" size={10} color="#F59E0B" />
-                  <Text style={styles.convBadgeText}>OPTION RECOMMANDÉE</Text>
+              {/* ── Offres ────────────────────────────────────────────── */}
+
+              {/* 1. Le faire moi-même — Gratuit (discret) */}
+              <TouchableOpacity
+                style={styles.offerFreeRow}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); navigation.goBack(); }}
+                activeOpacity={0.75}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.offerFreeTitle}>Le faire moi-même</Text>
+                  <Text style={styles.offerFreeSub}>Suis un plan guidé pour corriger ta vidéo étape par étape.</Text>
                 </View>
-                <Text style={styles.convTitle}>On s'en occupe pour toi</Text>
-                <Text style={styles.convSub}>Chaque expert résout un problème précis détecté dans ta vidéo</Text>
+                <View style={styles.offerFreeRight}>
+                  <Text style={styles.offerFreePrice}>Gratuit</Text>
+                  <Text style={styles.offerFreeCtaTxt}>Commencer →</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* 2. Corriger les 3 points clés — 29€ (secondaire) */}
+              <View style={styles.offerSecCard}>
+                <View style={styles.offerSecTop}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.offerSecTitle}>Corriger les 3 points clés</Text>
+                    <Text style={styles.offerSecSub}>On traite uniquement les 3 problèmes les plus bloquants.</Text>
+                  </View>
+                  <Text style={styles.offerSecPrice}>29€</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.offerSecBtn}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToOffer(); }}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.offerSecBtnText}>Corriger les points clés</Text>
+                  <Ionicons name="arrow-forward" size={14} color={COLORS.primary} />
+                </TouchableOpacity>
               </View>
 
-              {CONVERSION_EXPERTS.map((expert, i) => (
-                <View key={expert.id} style={[styles.convCard, i === 0 && styles.convCardTop]}>
-                  {i === 0 && (
-                    <LinearGradient
-                      colors={[expert.color + '14', 'transparent']}
-                      style={StyleSheet.absoluteFill}
-                      borderRadius={RADIUS.xl}
-                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 0.6 }}
-                    />
-                  )}
-
-                  {/* Badge */}
-                  {i === 0 && (
-                    <View style={[styles.convCardBadge, { backgroundColor: expert.color + '20', borderColor: expert.color + '40' }]}>
-                      <Ionicons name="flame" size={10} color={expert.color} />
-                      <Text style={[styles.convCardBadgeText, { color: expert.color }]}>Correction prioritaire</Text>
-                    </View>
-                  )}
-
-                  <View style={styles.convExpertRow}>
-                    {/* Avatar */}
-                    <View style={[styles.convAvatar, { backgroundColor: expert.color + '20', borderColor: expert.color + '50' }]}>
-                      <Text style={[styles.convAvatarText, { color: expert.color }]}>{expert.initials}</Text>
-                    </View>
-
-                    {/* Info */}
-                    <View style={{ flex: 1 }}>
-                      <View style={styles.convNameRow}>
-                        <Text style={styles.convName}>{expert.name}</Text>
-                        <View style={[styles.convExpertBadge, { backgroundColor: expert.color + '15', borderColor: expert.color + '30' }]}>
-                          <Text style={[styles.convExpertBadgeText, { color: expert.color }]}>{expert.badge}</Text>
-                        </View>
-                      </View>
-                      <Text style={styles.convSpecialty}>{expert.specialty}</Text>
-                      <View style={styles.convRatingRow}>
-                        <Ionicons name="star" size={11} color="#F59E0B" />
-                        <Text style={styles.convRating}>{expert.rating}</Text>
-                        <Text style={styles.convReviews}>({expert.reviews} avis)</Text>
-                        <View style={styles.convDot} />
-                        <Text style={styles.convProof}>{expert.proof}</Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Tagline */}
-                  <View style={[styles.convTaglineRow, { borderLeftColor: expert.color }]}>
-                    <Ionicons name={expert.icon} size={13} color={expert.color} />
-                    <Text style={styles.convTagline}>{expert.tagline}</Text>
-                  </View>
-
-                  {/* Résout / Prix / Délai */}
-                  <View style={styles.convMetaRow}>
-                    <View style={styles.convSolvesRow}>
-                      <Ionicons name="checkmark-circle" size={12} color="#22C55E" />
-                      <Text style={styles.convSolves}>Résout : {expert.solves}</Text>
-                    </View>
-                    <View style={styles.convPricePill}>
-                      <Text style={[styles.convPrice, { color: expert.color }]}>{expert.price}€</Text>
-                      <Text style={styles.convDelivery}> · {expert.deliveryTime}</Text>
-                    </View>
-                  </View>
-
-                  {/* CTA */}
-                  <TouchableOpacity
-                    style={styles.convCtaWrap}
-                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToOffer(); }}
-                    activeOpacity={0.85}
-                  >
-                    <LinearGradient
-                      colors={i === 0 ? ['#7C3AED', '#8B5CF6'] : [expert.color + 'CC', expert.color]}
-                      style={[styles.convCta, i === 0 && styles.convCtaPrimary]}
-                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                    />
-                    <View style={styles.convCtaInner}>
-                      <Text style={styles.convCtaText}>
-                        {i === 0 ? 'Corriger ma vidéo avec cet expert' : 'Choisir cet expert'}
-                      </Text>
-                      <Ionicons name="arrow-forward" size={14} color="#fff" />
-                    </View>
-                  </TouchableOpacity>
-                </View>
-              ))}
-
-              {/* Preuve sociale */}
-              <View style={styles.socialProofConv}>
-                <Ionicons name="people" size={13} color="#22C55E" />
-                <Text style={styles.socialProofConvText}>
-                  <Text style={{ fontWeight: '800', color: COLORS.text }}>+2 400 créateurs</Text> ont amélioré leurs vues grâce à ces experts ce mois-ci
-                </Text>
-              </View>
-
-              {/* ── Pack Optimisation Viralité ─────────────────────────── */}
-              <View style={styles.packCard}>
+              {/* 3. Optimisation complète — 60€ (dominant) */}
+              <View style={styles.offerPriCard}>
                 <LinearGradient
-                  colors={['#7C3AED22', '#7C3AED08']}
+                  colors={['#7C3AED18', '#7C3AED06']}
                   style={StyleSheet.absoluteFill}
                   borderRadius={RADIUS.xl}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 />
-
-                {/* Header */}
-                <View style={styles.packHeader}>
-                  <View style={styles.packBadge}>
-                    <Ionicons name="sparkles" size={10} color={COLORS.primary} />
-                    <Text style={styles.packBadgeText}>PACK COMPLET</Text>
+                <View style={styles.offerPriTop}>
+                  <View style={styles.offerPriBadge}>
+                    <Ionicons name="sparkles" size={10} color="#fff" />
+                    <Text style={styles.offerPriBadgeTxt}>Recommandé</Text>
                   </View>
-                  <View style={styles.packPriceRow}>
-                    <Text style={styles.packOriginal}>{PACK_ORIGINAL}€</Text>
-                    <Text style={styles.packPrice}>{PACK_PRICE}€</Text>
-                    <View style={styles.packDiscount}>
-                      <Text style={styles.packDiscountText}>-{Math.round((1 - PACK_PRICE/PACK_ORIGINAL)*100)}%</Text>
-                    </View>
-                  </View>
+                  <Text style={styles.offerPriPrice}>60€</Text>
                 </View>
-
-                <Text style={styles.packTitle}>Pack Optimisation Viralité</Text>
-                <Text style={styles.packSub}>Tout ce qu'il faut pour que ta vidéo performe · Livraison 24–48h</Text>
-
-                {/* Items */}
-                <View style={styles.packItems}>
-                  {PACK_ITEMS.map((item, i) => (
-                    <View key={i} style={styles.packItem}>
-                      <View style={styles.packItemCheck}>
-                        <Ionicons name="checkmark" size={11} color="#22C55E" />
-                      </View>
-                      <Ionicons name={item.icon} size={13} color={COLORS.primary} />
-                      <Text style={styles.packItemLabel}>{item.label}</Text>
-                    </View>
-                  ))}
-                </View>
-
-                {/* CTA pack */}
+                <Text style={styles.offerPriTitle}>Optimisation complète</Text>
+                <Text style={styles.offerPriSub}>On corrige tous les problèmes prioritaires de ta vidéo.</Text>
                 <TouchableOpacity
                   onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToOffer(); }}
                   activeOpacity={0.88}
+                  style={styles.offerPriCtaWrap}
                 >
                   <LinearGradient
                     colors={['#7C3AED', '#8B5CF6']}
-                    style={styles.packCta}
+                    style={[StyleSheet.absoluteFill, { borderRadius: RADIUS.lg }]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                  >
-                    <Ionicons name="rocket" size={16} color="#fff" />
-                    <Text style={styles.packCtaText}>Optimiser ma vidéo maintenant</Text>
-                  </LinearGradient>
+                  />
+                  <Ionicons name="rocket" size={16} color="#fff" />
+                  <Text style={styles.offerPriCtaTxt}>Corriger ma vidéo</Text>
+                  <Ionicons name="arrow-forward" size={14} color="#fff" />
                 </TouchableOpacity>
-
-                <Text style={styles.packNote}>Paiement sécurisé · Fonds libérés après validation · Satisfait ou révision gratuite</Text>
+                <Text style={styles.offerPriNote}>Paiement sécurisé · Révision gratuite · 24–48h</Text>
               </View>
 
-              {/* ── B. Je préfère avancer seul — GAMIFIÉ ─────────────── */}
-              {(() => {
-                const diyXp    = DIY_CHECKLIST.reduce((s, item, i) => s + (diyChecked[i] ? item.xp : 0), 0);
-                const diyLevel = diyGetLevel(diyXp);
-                const diyXpPct = Math.round((diyXp / DIY_TOTAL_XP) * 100);
-                const unlockedBadges = DIY_CHECKLIST.filter((_, i) => diyChecked[i]);
-                const isMaxLevel = diyXp >= DIY_TOTAL_XP;
-                return (
-                  <View style={styles.diyCard}>
-
-                    {/* ── Header gamifié ─── */}
-                    <View style={styles.diyGameHeader}>
-                      <LinearGradient
-                        colors={['#1A0A2E', '#1E1040']}
-                        style={StyleSheet.absoluteFill}
-                        borderRadius={RADIUS.lg}
-                      />
-                      {/* Niveau + XP */}
-                      <View style={styles.diyLevelRow}>
-                        <View style={styles.diyLevelBadge}>
-                          <Text style={styles.diyLevelN}>NV.{diyLevel.n}</Text>
-                        </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                          <Ionicons name={diyLevel.icon} size={13} color={diyLevel.iconColor} />
-                          <Text style={styles.diyLevelLabel}>{diyLevel.label}</Text>
-                        </View>
-                        <View style={styles.diyXpBadge}>
-                          <Ionicons name="star" size={10} color="#F59E0B" />
-                          <Text style={styles.diyXpBadgeTxt}>{diyXp} XP</Text>
-                        </View>
-                      </View>
-
-                      {/* Barre XP */}
-                      <View style={styles.diyXpTrack}>
-                        <View style={[styles.diyXpFill, { width: `${diyXpPct}%` }]}>
-                          <LinearGradient
-                            colors={['#F59E0B', '#EF4444']}
-                            style={StyleSheet.absoluteFill}
-                            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                          />
-                        </View>
-                      </View>
-                      <View style={styles.diyXpLegend}>
-                        <Text style={styles.diyXpLegendTxt}>{diyXp} / {DIY_TOTAL_XP} XP</Text>
-                        {!isMaxLevel && diyLevel.next !== null && (
-                          <Text style={styles.diyXpNextTxt}>Prochain niveau à {diyLevel.next} XP</Text>
-                        )}
-                        {isMaxLevel && (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                            <Ionicons name="trophy" size={12} color="#F59E0B" />
-                            <Text style={[styles.diyXpNextTxt, { color: '#F59E0B' }]}>Niveau MAX atteint !</Text>
-                          </View>
-                        )}
-                      </View>
-                    </View>
-
-                    {/* ── Missions ─── */}
-                    <View style={styles.diyMissionsHeader}>
-                      <Ionicons name="list-outline" size={12} color={COLORS.textMuted} />
-                      <Text style={styles.diyMissionsTitle}>MISSIONS DU JOUR</Text>
-                      <View style={styles.diyMissionsDoneBadge}>
-                        <Text style={styles.diyMissionsDoneTxt}>
-                          {diyChecked.filter(Boolean).length}/{DIY_CHECKLIST.length}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.diyList}>
-                      {DIY_CHECKLIST.map((item, i) => (
-                        <TouchableOpacity
-                          key={i}
-                          style={[styles.diyMissionRow, diyChecked[i] && { backgroundColor: item.color + '10', borderColor: item.color + '25' }]}
-                          onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                            setDiyChecked(prev => { const n = [...prev]; n[i] = !n[i]; return n; });
-                          }}
-                          activeOpacity={0.78}
-                        >
-                          <View style={[styles.diyMissionCheck, diyChecked[i] && { backgroundColor: item.color, borderColor: item.color }]}>
-                            {diyChecked[i] && <Ionicons name="checkmark" size={12} color="#fff" />}
-                          </View>
-                          <Ionicons name={item.icon} size={14} color={diyChecked[i] ? item.color : COLORS.textMuted} />
-                          <Text style={[styles.diyMissionText, diyChecked[i] && styles.diyMissionTextDone]}
-                            numberOfLines={2}>{item.text}</Text>
-                          <View style={styles.diyMissionRight}>
-                            <View style={[styles.diyXpPill, { backgroundColor: item.color + '18', borderColor: item.color + '35' }]}>
-                              <Text style={[styles.diyXpPillTxt, { color: item.color }]}>+{item.xp} XP</Text>
-                            </View>
-                            {diyChecked[i] && (
-                              <Ionicons name="ribbon" size={14} color={item.color} />
-                            )}
-                          </View>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-
-                    {/* ── Badges débloqués ─── */}
-                    {unlockedBadges.length > 0 && (
-                      <View style={styles.diyBadgesSection}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                          <Ionicons name="trophy" size={12} color="#F59E0B" />
-                          <Text style={styles.diyBadgesSectionTitle}>BADGES DÉBLOQUÉS</Text>
-                        </View>
-                        <View style={styles.diyBadgesList}>
-                          {unlockedBadges.map((item, i) => (
-                            <View key={i} style={[styles.diyBadgeChip, { backgroundColor: item.color + '18', borderColor: item.color + '35' }]}>
-                              <Ionicons name="ribbon" size={11} color={item.color} />
-                              <Text style={[styles.diyBadgeChipTxt, { color: item.color }]}>{item.badge}</Text>
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                    )}
-
-                    {/* ── Niveau max → célébration ─── */}
-                    {isMaxLevel && (
-                      <View style={styles.diyComplete}>
-                        <Ionicons name="trophy" size={28} color="#F59E0B" />
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.diyCompleteTitle}>Toutes les missions complétées !</Text>
-                          <Text style={styles.diyCompleteText}>Re-teste ta vidéo pour mesurer l'impact de tes corrections.</Text>
-                        </View>
-                      </View>
-                    )}
-
-                    {/* ── CTA re-tester ─── */}
-                    <TouchableOpacity
-                      style={styles.diyCtaBtn}
-                      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); reset(true); }}
-                      activeOpacity={0.82}
-                    >
-                      <Ionicons name="refresh-outline" size={15} color={COLORS.primary} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.diyCtaBtnText}>Re-tester ma vidéo</Text>
-                        <Text style={styles.diyCtaBtnSub}>
-                          {isMaxLevel ? 'Tu as tout optimisé — mesure l\'impact !' : 'Une fois tes corrections appliquées'}
-                        </Text>
-                      </View>
-                      <Ionicons name="arrow-forward" size={14} color={COLORS.primary} />
-                    </TouchableOpacity>
-                  </View>
-                );
-              })()}
 
               {/* ── Actions secondaires : Partager + Re-tester ── */}
               <View style={styles.secondaryActions}>
@@ -2302,4 +2071,55 @@ const styles = StyleSheet.create({
     gap: 6, marginTop: SPACING.md, paddingVertical: 10,
   },
   resetText: { fontSize: 13, color: COLORS.textMuted, fontWeight: '600' },
+
+  // ── Offer section ─────────────────────────────────────────────────────────
+  offerFreeRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: RADIUS.lg, padding: SPACING.md, marginBottom: SPACING.sm,
+  },
+  offerFreeTitle:  { fontSize: 13, fontWeight: '700', color: COLORS.textMuted, marginBottom: 2 },
+  offerFreeSub:    { fontSize: 11, color: COLORS.textMuted, lineHeight: 16 },
+  offerFreeRight:  { alignItems: 'flex-end', flexShrink: 0, gap: 2 },
+  offerFreePrice:  { fontSize: 12, fontWeight: '800', color: COLORS.textMuted },
+  offerFreeCtaTxt: { fontSize: 11, fontWeight: '700', color: COLORS.textMuted },
+
+  offerSecCard: {
+    backgroundColor: COLORS.card, borderWidth: 1.5, borderColor: COLORS.primary + '40',
+    borderRadius: RADIUS.xl, padding: SPACING.md, gap: 12, marginBottom: SPACING.sm,
+  },
+  offerSecTop:     { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  offerSecTitle:   { fontSize: 16, fontWeight: '800', color: COLORS.text, marginBottom: 4 },
+  offerSecSub:     { fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
+  offerSecPrice:   { fontSize: 24, fontWeight: '900', color: COLORS.primary, flexShrink: 0 },
+  offerSecBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: COLORS.primary + '12', borderWidth: 1.5, borderColor: COLORS.primary + '40',
+    borderRadius: RADIUS.lg, paddingVertical: 12,
+  },
+  offerSecBtnText: { fontSize: 14, fontWeight: '800', color: COLORS.primary },
+
+  offerPriCard: {
+    backgroundColor: COLORS.card, borderWidth: 2, borderColor: COLORS.primary + '60',
+    borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 10, overflow: 'hidden',
+    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22, shadowRadius: 18, elevation: 10,
+    marginBottom: SPACING.md,
+  },
+  offerPriTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  offerPriBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: COLORS.primary, borderRadius: RADIUS.full,
+    paddingHorizontal: 10, paddingVertical: 4,
+  },
+  offerPriBadgeTxt: { fontSize: 10, fontWeight: '900', color: '#fff', letterSpacing: 0.5 },
+  offerPriPrice:    { fontSize: 28, fontWeight: '900', color: COLORS.primary },
+  offerPriTitle:    { fontSize: 20, fontWeight: '900', color: COLORS.text },
+  offerPriSub:      { fontSize: 13, color: COLORS.textMuted, lineHeight: 18 },
+  offerPriCtaWrap: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, paddingVertical: 15, borderRadius: RADIUS.lg, overflow: 'hidden', marginTop: 4,
+  },
+  offerPriCtaTxt: { fontSize: 16, fontWeight: '900', color: '#fff' },
+  offerPriNote:   { fontSize: 10, color: COLORS.textMuted, textAlign: 'center' },
 });
