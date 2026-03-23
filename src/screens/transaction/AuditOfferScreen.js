@@ -149,8 +149,22 @@ export default function AuditOfferScreen() {
               </View>
             </View>
 
-            <Text style={styles.packTitle}>Pack Optimisation Viralité</Text>
-            <Text style={styles.packSub}>Tout ce qu'il faut pour que ta vidéo performe · Livraison 24–48h</Text>
+            {/* Expert Noah P. */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#8B5CF622', borderWidth: 1.5, borderColor: '#8B5CF6', alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: '#8B5CF6', fontWeight: '700', fontSize: 13 }}>NP</Text>
+              </View>
+              <View>
+                <Text style={{ color: COLORS.text, fontWeight: '700', fontSize: 14 }}>Noah P.</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="star" size={10} color="#F59E0B" />
+                  <Text style={{ color: COLORS.textMuted, fontSize: 12 }}>5.0 · Expert Swiple · 3.2M vues en moyenne</Text>
+                </View>
+              </View>
+            </View>
+
+            <Text style={styles.packTitle}>Optimisation complète par Noah P.</Text>
+            <Text style={styles.packSub}>Noah P. prend en charge l'intégralité de l'optimisation de ta vidéo · Livraison 48h</Text>
 
             {/* Items */}
             <View style={styles.packItems}>
@@ -186,7 +200,7 @@ export default function AuditOfferScreen() {
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
               />
               <Ionicons name="rocket" size={17} color="#fff" />
-              <Text style={styles.packCtaText}>Optimiser ma vidéo — {PACK_PRICE}€</Text>
+              <Text style={styles.packCtaText}>Confier ma vidéo à Noah P. — {PACK_PRICE}€</Text>
               <Ionicons name="arrow-forward" size={15} color="#fff" />
             </TouchableOpacity>
 

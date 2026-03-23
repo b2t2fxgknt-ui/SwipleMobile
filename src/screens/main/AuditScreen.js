@@ -1172,12 +1172,8 @@ export default function AuditScreen() {
 
               {/* ── Section header ── */}
               <View style={styles.ouvHeader}>
-                <View style={styles.ouvBadge}>
-                  <Ionicons name="people" size={10} color={COLORS.primary} />
-                  <Text style={styles.ouvBadgeText}>ON S'EN OCCUPE POUR VOUS</Text>
-                </View>
-                <Text style={styles.ouvTitle}>Choisis ton niveau de correction</Text>
-                <Text style={styles.ouvSub}>Des experts certifiés Swiple corrigent ta vidéo · Résultats en 24–48h</Text>
+                <Text style={styles.ouvTitle}>Comment corriger ta vidéo ?</Text>
+                <Text style={styles.ouvSub}>Fais-le toi-même gratuitement, ou délègue à un expert certifié Swiple.</Text>
               </View>
 
               {/* ── Option A : Le faire moi-même — Gratuit ── */}
@@ -1220,11 +1216,11 @@ export default function AuditScreen() {
                 <View style={styles.ouvDividerLine} />
               </View>
 
-              {/* ── Option B : Correction ciblée — 3 experts ── */}
+              {/* ── Option B : Déléguer à un expert ciblé ── */}
               <View style={styles.expertsBlock}>
                 <View style={styles.expertsBlockHead}>
-                  <Text style={styles.expertsBlockTitle}>Correction ciblée</Text>
-                  <Text style={styles.expertsBlockSub}>Un expert résout le problème qui te bloque le plus</Text>
+                  <Text style={styles.expertsBlockTitle}>Déléguer à un expert</Text>
+                  <Text style={styles.expertsBlockSub}>Un expert règle le problème qui te bloque le plus</Text>
                 </View>
                 {CONVERSION_EXPERTS.map((expert) => (
                   <TouchableOpacity
@@ -1275,21 +1271,23 @@ export default function AuditScreen() {
                   <Text style={styles.offerPriPrice}>60€</Text>
                 </View>
 
-                {/* 3 avatars experts */}
+                {/* Expert Noah P. */}
                 <View style={styles.packAvatarRow}>
-                  {CONVERSION_EXPERTS.map((e) => (
-                    <View key={e.id} style={[styles.packAvatar, { backgroundColor: e.color + '22', borderColor: e.color }]}>
-                      <Text style={[styles.packAvatarInitials, { color: e.color }]}>{e.initials}</Text>
+                  <View style={[styles.packAvatar, { backgroundColor: '#8B5CF622', borderColor: '#8B5CF6' }]}>
+                    <Text style={[styles.packAvatarInitials, { color: '#8B5CF6' }]}>NP</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.packAvatarLabel}>Noah P. · Expert Swiple</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                      <Ionicons name="star" size={10} color="#F59E0B" />
+                      <Text style={[styles.packAvatarLabel, { color: COLORS.textMuted, fontSize: 11 }]}>5.0 · 3.2M vues en moyenne</Text>
                     </View>
-                  ))}
-                  <Text style={styles.packAvatarLabel}>
-                    {CONVERSION_EXPERTS.map(e => e.name.split(' ')[0]).join(', ')} · ton équipe dédiée
-                  </Text>
+                  </View>
                 </View>
 
                 <Text style={styles.offerPriTitle}>Optimisation complète</Text>
                 <Text style={styles.offerPriSub}>
-                  3 experts corrigent tous les problèmes prioritaires de ta vidéo en une seule fois.
+                  Noah P. prend en charge l'intégralité de l'optimisation de ta vidéo en une seule fois.
                 </Text>
 
                 {/* Items */}
@@ -1310,8 +1308,8 @@ export default function AuditScreen() {
                   <Ionicons name="trending-down" size={12} color="#22C55E" />
                   <Text style={styles.packSavingText}>
                     Économise <Text style={{ fontWeight: '800', color: '#22C55E' }}>
-                      {CONVERSION_EXPERTS.reduce((s, e) => s + e.price, 0) - PACK_PRICE}€
-                    </Text> vs les corrections séparées ({CONVERSION_EXPERTS.reduce((s, e) => s + e.price, 0)}€)
+                      {PACK_ORIGINAL - PACK_PRICE}€
+                    </Text> vs le tarif normal ({PACK_ORIGINAL}€)
                   </Text>
                 </View>
 
@@ -1327,7 +1325,7 @@ export default function AuditScreen() {
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   />
                   <Ionicons name="rocket" size={16} color="#fff" />
-                  <Text style={styles.offerPriCtaTxt}>Lancer l'optimisation complète</Text>
+                  <Text style={styles.offerPriCtaTxt}>Confier ma vidéo à Noah P.</Text>
                   <Ionicons name="arrow-forward" size={14} color="#fff" />
                 </TouchableOpacity>
                 <Text style={styles.offerPriNote}>Paiement sécurisé · Révision gratuite · 24–48h</Text>
