@@ -320,7 +320,7 @@ export default function AuditDIYScreen() {
               Noah P. prend en charge l'intégralité des corrections en 48h — hook, montage, sous-titres et son.
             </Text>
             <TouchableOpacity style={styles.nudgeBtn} onPress={goToOffer} activeOpacity={0.85}>
-              <Text style={styles.nudgeBtnTxt}>Déléguer à Noah P. — 60€</Text>
+              <Text style={styles.nudgeBtnTxt}>Déléguer</Text>
               <Ionicons name="arrow-forward" size={14} color={COLORS.primary} />
             </TouchableOpacity>
           </View>

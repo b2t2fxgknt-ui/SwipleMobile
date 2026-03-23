@@ -1075,16 +1075,6 @@ export default function AuditScreen() {
                       </View>
                       <Text style={styles.actionTime}>{a.time}</Text>
                     </View>
-                    {a.freelanceType && (
-                      <TouchableOpacity
-                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); goToExperts(); }}
-                        style={styles.actionFreelanceBtn}
-                        activeOpacity={0.8}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <Ionicons name="person-outline" size={13} color={COLORS.primary} />
-                      </TouchableOpacity>
-                    )}
                   </View>
                 ))}
 
