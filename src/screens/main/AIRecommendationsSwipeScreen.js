@@ -126,6 +126,71 @@ const AI_RECS = [
   },
 ];
 
+// ── Experts issus des audits ──────────────────────────────────────────────────
+
+const AUDIT_EXPERT_RECS = [
+  {
+    id: 'ae1', type: 'expert',
+    category: 'Hook', icon: 'flash-outline', color: '#EF4444',
+    solution: 'Thomas G. réécrit tes premières secondes pour maximiser la rétention.',
+    expertName: 'Thomas G.', expertInitials: 'TG',
+    expertSpecialty: 'Hook & Script viral',
+    expertBadge: 'Top Copywriter',
+    expertRating: 4.9, expertReviews: 127,
+    expertPrice: 29,
+    expertColor: '#EF4444', expertIcon: 'flash-outline',
+    expertProof: '2.1M vues en moyenne',
+    problem: 'Hook trop lent — 78 % de tes viewers quittent avant la 3ᵉ seconde.',
+    videoRef: 'Vidéo auditée · audit d\'aujourd\'hui',
+    impact: '+28%', impactLabel: 'de rétention',
+  },
+  {
+    id: 'ae2', type: 'expert',
+    category: 'Sous-titres', icon: 'text-outline', color: '#F59E0B',
+    solution: 'Léa M. ajoute des sous-titres pro et optimise le rythme de montage.',
+    expertName: 'Léa M.', expertInitials: 'LM',
+    expertSpecialty: 'Montage & Sous-titres TikTok',
+    expertBadge: 'Livraison 24h',
+    expertRating: 4.8, expertReviews: 89,
+    expertPrice: 49,
+    expertColor: '#F59E0B', expertIcon: 'text-outline',
+    expertProof: '1.4M vues en moyenne',
+    problem: 'Pas de sous-titres — 80 % de ton audience regarde sans le son.',
+    videoRef: 'Vidéo auditée · audit d\'aujourd\'hui',
+    impact: '+40%', impactLabel: 'de rétention',
+  },
+  {
+    id: 'ae3', type: 'expert',
+    category: 'Optimisation', icon: 'sparkles-outline', color: '#8B5CF6',
+    solution: 'Noah P. prend en charge l\'intégralité de l\'optimisation de ta vidéo.',
+    expertName: 'Noah P.', expertInitials: 'NP',
+    expertSpecialty: 'Optimisation TikTok complète',
+    expertBadge: 'Expert Swiple',
+    expertRating: 5.0, expertReviews: 56,
+    expertPrice: 89,
+    expertColor: '#8B5CF6', expertIcon: 'sparkles-outline',
+    expertProof: '3.2M vues en moyenne',
+    problem: 'Hook, sous-titres, son, cadrage — tous les points critiques détectés.',
+    videoRef: 'Vidéo auditée · audit d\'aujourd\'hui',
+    impact: '+65%', impactLabel: 'de performance globale',
+  },
+];
+
+// Deck final : recommandations IA intercalées avec les experts de l'audit
+const FULL_DECK = [
+  AI_RECS[0],              // Hook
+  AI_RECS[1],              // Sous-titres
+  AUDIT_EXPERT_RECS[0],    // Thomas G. — Hook expert
+  AI_RECS[2],              // Son
+  AI_RECS[3],              // Cadrage
+  AUDIT_EXPERT_RECS[1],    // Léa M. — Sous-titres & montage
+  AI_RECS[4],              // Hashtags
+  AI_RECS[5],              // Format
+  AI_RECS[6],              // CTA
+  AUDIT_EXPERT_RECS[2],    // Noah P. — Optimisation complète
+  AI_RECS[7],              // Lumière
+];
+
 // ── Composant carte IA ────────────────────────────────────────────────────────
 
 function AICard({ rec, impactAnim }) {
@@ -216,11 +281,87 @@ function AICard({ rec, impactAnim }) {
   );
 }
 
+// ── Composant carte Expert (depuis audit) ─────────────────────────────────────
+
+function ExpertCard({ rec }) {
+  const c = rec.expertColor;
+  return (
+    <View style={styles.card}>
+      {/* Header — identité de l'expert */}
+      <LinearGradient colors={[c + '22', c + '06']} style={styles.cardHeader}>
+        <View style={styles.headerLeft}>
+          <View style={[styles.expertAvatarLg, { backgroundColor: c + '20', borderColor: c + '55' }]}>
+            <Text style={[styles.expertInitialsLg, { color: c }]}>{rec.expertInitials}</Text>
+          </View>
+          <View>
+            <Text style={styles.categoryLabel}>EXPERT RECOMMANDÉ</Text>
+            <Text style={[styles.categoryName, { color: c }]}>{rec.expertName}</Text>
+            <Text style={styles.expertSpecialtyTxt}>{rec.expertSpecialty}</Text>
+          </View>
+        </View>
+        <View style={styles.headerRight}>
+          <View style={[styles.diffBadge, { backgroundColor: c + '15', borderColor: c + '35' }]}>
+            <Text style={[styles.diffText, { color: c }]}>{rec.expertBadge}</Text>
+          </View>
+          <View style={styles.timeBadge}>
+            <Ionicons name="star" size={10} color="#F59E0B" />
+            <Text style={styles.timeText}>{rec.expertRating} · {rec.expertReviews} avis</Text>
+          </View>
+        </View>
+      </LinearGradient>
+
+      {/* Corps */}
+      <View style={styles.cardBody}>
+
+        {/* Badge vidéo auditée */}
+        <View style={styles.videoRefRow}>
+          <Ionicons name="videocam-outline" size={12} color={COLORS.primary} />
+          <Text style={styles.videoRefTxt}>{rec.videoRef}</Text>
+        </View>
+
+        {/* Problème issu de l'audit */}
+        <View style={[styles.problemBox, { borderLeftColor: '#EF4444' }]}>
+          <View style={styles.boxHeader}>
+            <Ionicons name="alert-circle-outline" size={14} color="#EF4444" />
+            <Text style={[styles.boxTitle, { color: '#EF4444' }]}>Problème détecté dans ta vidéo</Text>
+          </View>
+          <Text style={styles.boxText}>{rec.problem}</Text>
+        </View>
+
+        {/* Ce que fait l'expert */}
+        <View style={[styles.solutionBox, { borderLeftColor: c }]}>
+          <View style={styles.boxHeader}>
+            <Ionicons name={rec.expertIcon} size={14} color={c} />
+            <Text style={[styles.boxTitle, { color: c }]}>Ce que fait {rec.expertName.split(' ')[0]}</Text>
+          </View>
+          <Text style={styles.boxText}>{rec.expertSpecialty} · livraison 24–48h</Text>
+        </View>
+
+        {/* Impact + Tarif côte à côte */}
+        <View style={[styles.expertStatsRow, { borderColor: c + '28', backgroundColor: c + '08' }]}>
+          <View style={styles.expertStat}>
+            <Text style={styles.impactLabel}>IMPACT</Text>
+            <Text style={[styles.expertStatNum, { color: c }]}>{rec.impact}</Text>
+            <Text style={styles.impactMetric}>{rec.impactLabel}</Text>
+          </View>
+          <View style={[styles.expertStatDivider, { backgroundColor: c + '30' }]} />
+          <View style={styles.expertStat}>
+            <Text style={styles.impactLabel}>TARIF</Text>
+            <Text style={[styles.expertStatNum, { color: c }]}>{rec.expertPrice}€</Text>
+            <Text style={styles.impactMetric}>{rec.expertProof}</Text>
+          </View>
+        </View>
+
+      </View>
+    </View>
+  );
+}
+
 // ── Écran principal ───────────────────────────────────────────────────────────
 
 export default function AIRecommendationsSwipeScreen() {
   const navigation = useNavigation();
-  const [deck,     setDeck]     = useState(AI_RECS);
+  const [deck,     setDeck]     = useState(FULL_DECK);
   const [accepted, setAccepted] = useState([]);
   const [history,  setHistory]  = useState([]);        // pour le undo
   const [phase,    setPhase]    = useState('swiping'); // 'swiping' | 'done'
@@ -324,7 +465,7 @@ export default function AIRecommendationsSwipeScreen() {
   }, [history, position, phase]);
 
   // ── Progress ───────────────────────────────────────────────────────────
-  const total    = AI_RECS.length;
+  const total    = FULL_DECK.length;
   const done     = total - deck.length;
   const progress = done / total;
 
@@ -466,7 +607,7 @@ export default function AIRecommendationsSwipeScreen() {
               style={styles.restartBtn}
               onPress={() => {
                 position.setValue({ x: 0, y: 0 });
-                setDeck(AI_RECS);
+                setDeck(FULL_DECK);
                 setAccepted([]);
                 setHistory([]);
                 setPhase('swiping');
@@ -572,7 +713,9 @@ export default function AIRecommendationsSwipeScreen() {
                   <Text style={styles.ignoreStampText}>IGNORÉ</Text>
                 </Animated.View>
 
-                <AICard rec={rec} impactAnim={impactAnim} />
+                {rec.type === 'expert'
+                  ? <ExpertCard rec={rec} />
+                  : <AICard rec={rec} impactAnim={impactAnim} />}
               </Animated.View>
             );
           }
@@ -583,14 +726,18 @@ export default function AIRecommendationsSwipeScreen() {
                 key={rec.id}
                 style={[styles.cardWrapper, { zIndex: 20, transform: [{ scale: nextCardScale }] }]}
               >
-                <AICard rec={rec} impactAnim={new Animated.Value(0)} />
+                {rec.type === 'expert'
+                  ? <ExpertCard rec={rec} />
+                  : <AICard rec={rec} impactAnim={new Animated.Value(0)} />}
               </Animated.View>
             );
           }
 
           return (
             <View key={rec.id} style={[styles.cardWrapper, { zIndex: 10, transform: [{ scale: 0.88 }] }]}>
-              <AICard rec={rec} impactAnim={new Animated.Value(0)} />
+              {rec.type === 'expert'
+                ? <ExpertCard rec={rec} />
+                : <AICard rec={rec} impactAnim={new Animated.Value(0)} />}
             </View>
           );
         })}
@@ -669,7 +816,7 @@ const styles = StyleSheet.create({
   progressFill: { height: '100%', borderRadius: 2, overflow: 'hidden' },
 
   // Deck
-  deck: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  deck: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: SPACING.xl },
   cardWrapper: { position: 'absolute', width: CARD_W },
 
   // Card
@@ -767,7 +914,8 @@ const styles = StyleSheet.create({
   // Actions
   actions: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: SPACING.md, paddingVertical: SPACING.sm, paddingHorizontal: SPACING.xl,
+    gap: SPACING.md, paddingVertical: SPACING.xs, paddingHorizontal: SPACING.lg,
+    marginBottom: 6,
   },
   actionBtnOutline: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
@@ -875,4 +1023,26 @@ const styles = StyleSheet.create({
     paddingVertical: 6, alignItems: 'center',
   },
   matchBtnText: { fontSize: 11, ...FONT.bold },
+
+  // Expert card styles
+  expertAvatarLg: {
+    width: 48, height: 48, borderRadius: 24,
+    borderWidth: 2, alignItems: 'center', justifyContent: 'center',
+  },
+  expertInitialsLg: { fontSize: 17, ...FONT.extrabold },
+  expertSpecialtyTxt: { fontSize: 10, color: COLORS.textMuted, marginTop: 1 },
+  videoRefRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: COLORS.primary + '12', borderWidth: 1, borderColor: COLORS.primary + '28',
+    borderRadius: RADIUS.sm, paddingHorizontal: 8, paddingVertical: 4,
+    alignSelf: 'flex-start',
+  },
+  videoRefTxt: { fontSize: 11, color: COLORS.primary, ...FONT.medium },
+  expertStatsRow: {
+    flexDirection: 'row', borderWidth: 1, borderRadius: RADIUS.lg,
+    padding: SPACING.md, alignItems: 'center',
+  },
+  expertStat: { flex: 1, alignItems: 'center' },
+  expertStatDivider: { width: 1, height: 40, marginHorizontal: 4 },
+  expertStatNum: { fontSize: 28, ...FONT.extrabold, lineHeight: 34 },
 });
