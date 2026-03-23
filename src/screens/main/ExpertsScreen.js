@@ -15,12 +15,10 @@ import * as Haptics from 'expo-haptics';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
-import { FREELANCERS, CATEGORY_ACCENT, CATEGORY_ICON, matchFreelancers } from '../../data/freelancers';
+import { FREELANCERS, CATEGORY_ACCENT, CATEGORY_ICON } from '../../data/freelancers';
 import FreelancerProfileSheet from '../../components/ui/FreelancerProfileSheet';
 import { useFavorites } from '../../lib/FavoritesContext';
-
-// ── Données ───────────────────────────────────────────────────────────────────
-const RECOMMENDED = matchFreelancers(['hook', 'subtitle', 'sound', 'framing'], 3);
+import { useExpertSelection } from '../../lib/ExpertSelectionContext';
 
 const CAT_FILTERS = [
   { key: 'all',               label: 'Tous',    icon: 'apps-outline'      },
@@ -31,7 +29,121 @@ const CAT_FILTERS = [
   { key: 'ia_automatisation', label: 'IA',      icon: 'sparkles-outline'  },
 ];
 
-// ── Carte Expert recommandée ──────────────────────────────────────────────────
+// ── Carte Expert sélectionné (depuis optimisation ou audit) ───────────────────
+function SelectedExpertCard({ expert, navigation }) {
+  const c = expert.expertColor;
+  const sourceBadge = expert.source === 'audit' ? 'Commandé · Audit' : 'Accepté · Optimisation';
+  const sourceIcon  = expert.source === 'audit' ? 'analytics-outline' : 'checkmark-circle-outline';
+
+  function handleOrder() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    navigation.navigate('MissionConfirmation', {
+      mission: {
+        type:      expert.category,
+        icon:      expert.expertIcon || 'sparkles-outline',
+        color:     c,
+        title:     `Mission ${expert.expertSpecialty}`,
+        problem:   expert.problem,
+        duration:  '15–60s',
+        budget:    expert.expertPrice,
+        revisions: 2,
+        deadline:  expert.expertDelivery,
+      },
+      freelancer: {
+        name:      expert.expertName,
+        initials:  expert.expertInitials,
+        specialty: expert.expertSpecialty,
+        rating:    expert.expertRating,
+        level:     expert.expertBadge,
+        color:     c,
+      },
+    });
+  }
+
+  return (
+    <View style={styles.selCard}>
+      <LinearGradient
+        colors={[c + '15', c + '04']}
+        style={StyleSheet.absoluteFill}
+        borderRadius={RADIUS.xl}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+      />
+
+      {/* ── Source badge (audit ou optimisation) ── */}
+      <View style={[styles.selSourceBadge, { backgroundColor: c + '15', borderColor: c + '35' }]}>
+        <Ionicons name={sourceIcon} size={10} color={c} />
+        <Text style={[styles.selSourceTxt, { color: c }]}>{sourceBadge}</Text>
+      </View>
+
+      {/* ── Identité expert ── */}
+      <View style={styles.selIdentity}>
+        <View style={[styles.selAvatar, { backgroundColor: c + '22', borderColor: c }]}>
+          <Text style={[styles.selInitials, { color: c }]}>{expert.expertInitials}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <View style={styles.selNameRow}>
+            <Text style={styles.selName}>{expert.expertName}</Text>
+            <View style={[styles.selBadgePill, { backgroundColor: c + '15', borderColor: c + '35' }]}>
+              <Text style={[styles.selBadgeTxt, { color: c }]}>{expert.expertBadge}</Text>
+            </View>
+          </View>
+          <Text style={[styles.selSpecialty, { color: c }]}>{expert.expertSpecialty}</Text>
+          <View style={styles.selRatingRow}>
+            <Ionicons name="star" size={11} color="#F59E0B" />
+            <Text style={styles.selRating}>{expert.expertRating}</Text>
+            {expert.expertReviews && (
+              <>
+                <Text style={styles.selDot}>·</Text>
+                <Text style={styles.selReviews}>{expert.expertReviews} avis</Text>
+              </>
+            )}
+            <Text style={styles.selDot}>·</Text>
+            <Ionicons name="time-outline" size={10} color={COLORS.textMuted} />
+            <Text style={styles.selReviews}>{expert.expertDelivery}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* ── Vidéo concernée ── */}
+      <View style={[styles.selVideoRow, { borderColor: COLORS.border, backgroundColor: COLORS.bg }]}>
+        <Ionicons name="videocam-outline" size={12} color={COLORS.primary} />
+        <Text style={styles.selVideoTitle}>{expert.videoTitle}</Text>
+        <Text style={styles.selVideoDot}>·</Text>
+        <Text style={styles.selVideoDate}>{expert.auditDate}</Text>
+      </View>
+
+      {/* ── Problème détecté ── */}
+      <View style={[styles.selProblem, { borderLeftColor: '#EF4444' }]}>
+        <Ionicons name="alert-circle-outline" size={12} color="#EF4444" />
+        <Text style={styles.selProblemTxt}>{expert.problem}</Text>
+      </View>
+
+      {/* ── Footer prix + commande ── */}
+      <View style={styles.selFooter}>
+        <View>
+          <Text style={styles.selPriceLabel}>Tarif fixe</Text>
+          <Text style={[styles.selPrice, { color: c }]}>{expert.expertPrice}€</Text>
+        </View>
+        {expert.impact && (
+          <View style={[styles.selImpactPill, { backgroundColor: c + '12', borderColor: c + '30' }]}>
+            <Ionicons name="trending-up" size={11} color={c} />
+            <Text style={[styles.selImpactTxt, { color: c }]}>{expert.impact} {expert.impactLabel}</Text>
+          </View>
+        )}
+        <TouchableOpacity
+          style={[styles.selOrderBtn, { backgroundColor: c }]}
+          onPress={handleOrder}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.selOrderTxt}>Commander</Text>
+          <Ionicons name="arrow-forward" size={13} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+// ── Carte Expert recommandée (exploration) ────────────────────────────────────
 function ExpertCard({ f, navigation, onViewProfile, onToggleFav, isFav }) {
   const accent   = CATEGORY_ACCENT[f.category] ?? COLORS.primary;
   const iconName = CATEGORY_ICON[f.category]   ?? 'briefcase';
@@ -242,6 +354,7 @@ function CompactCard({ f, navigation, onViewProfile, onToggleFav, isFav }) {
 export default function ExpertsScreen() {
   const navigation        = useNavigation();
   const { toggleFavorite, isFavorite, favorites } = useFavorites();
+  const { selectedExperts } = useExpertSelection();
   const [explore,         setExplore]        = useState(false);
   const [query,           setQuery]          = useState('');
   const [catFilter,       setCatFilter]      = useState('all');
@@ -323,14 +436,16 @@ export default function ExpertsScreen() {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.aiBadge}>
-              <Ionicons name="sparkles" size={11} color={COLORS.primary} />
-              <Text style={styles.aiBadgeText}>SÉLECTION IA</Text>
+              <Ionicons name="people" size={11} color={COLORS.primary} />
+              <Text style={styles.aiBadgeText}>
+                {selectedExperts.length > 0 ? `${selectedExperts.length} EXPERT${selectedExperts.length > 1 ? 'S' : ''}` : 'MES EXPERTS'}
+              </Text>
             </View>
             <Text style={styles.headerTitle}>
-              Experts{'\n'}<Text style={{ color: COLORS.primary }}>recommandés</Text>
+              Déléguer à{'\n'}<Text style={{ color: COLORS.primary }}>un expert</Text>
             </Text>
             <Text style={styles.headerSub}>
-              Optimise ta vidéo avec les meilleurs créateurs
+              Experts acceptés depuis tes audits et l'optimisation
             </Text>
           </View>
           {/* Bouton Favoris */}
@@ -364,17 +479,36 @@ export default function ExpertsScreen() {
 
         {/* ── SECTION LABEL ── */}
         <View style={styles.sectionLabel}>
-          <Text style={styles.sectionLabelText}>MATCHÉS AVEC TON AUDIT</Text>
+          <Text style={styles.sectionLabelText}>TES EXPERTS SÉLECTIONNÉS</Text>
           <View style={styles.sectionLabelLine} />
         </View>
 
-        {/* ── CARTES RECOMMANDÉES ── */}
-        <View style={styles.cardsStack}>
-          {RECOMMENDED.map(f => (
-            <ExpertCard key={f.id} f={f} navigation={navigation} onViewProfile={setSheetFreelancer}
-              isFav={isFavorite(f.id)} onToggleFav={toggleFavorite} />
-          ))}
-        </View>
+        {/* ── EXPERTS DEPUIS AUDIT / OPTIMISATION ── */}
+        {selectedExperts.length === 0 ? (
+          <View style={styles.emptyExperts}>
+            <View style={styles.emptyExpertsIcon}>
+              <Ionicons name="people-outline" size={32} color={COLORS.textMuted} />
+            </View>
+            <Text style={styles.emptyExpertsTitle}>Aucun expert sélectionné</Text>
+            <Text style={styles.emptyExpertsSub}>
+              Lance un audit ou parcours la page Optimisation pour accepter des experts.
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyExpertsCta}
+              onPress={() => navigation.navigate('Audit')}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="analytics-outline" size={14} color={COLORS.primary} />
+              <Text style={styles.emptyExpertsCtaTxt}>Lancer un audit</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.cardsStack}>
+            {selectedExperts.map(e => (
+              <SelectedExpertCard key={e.id} expert={e} navigation={navigation} />
+            ))}
+          </View>
+        )}
 
         {/* ── EXPLORER ── */}
         {!explore ? (
@@ -700,4 +834,86 @@ const styles = StyleSheet.create({
     gap: 5, paddingVertical: 10,
   },
   collapseBtnText: { fontSize: 12, color: COLORS.textMuted, fontWeight: '600' },
+
+  // ── SelectedExpertCard ─────────────────────────────────────────────────────
+  selCard: {
+    borderRadius: RADIUS.xl, overflow: 'hidden',
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
+    padding: SPACING.md, gap: 10, marginBottom: SPACING.sm,
+  },
+  selSourceBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    alignSelf: 'flex-start', borderWidth: 1, borderRadius: RADIUS.full,
+    paddingHorizontal: 9, paddingVertical: 3,
+  },
+  selSourceTxt: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
+  selIdentity: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  selAvatar: {
+    width: 54, height: 54, borderRadius: 27,
+    borderWidth: 2, alignItems: 'center', justifyContent: 'center',
+  },
+  selInitials: { fontSize: 19, fontWeight: '900' },
+  selNameRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 2 },
+  selName: { fontSize: 16, fontWeight: '800', color: COLORS.text },
+  selBadgePill: {
+    borderWidth: 1, borderRadius: RADIUS.full,
+    paddingHorizontal: 7, paddingVertical: 2,
+  },
+  selBadgeTxt: { fontSize: 9, fontWeight: '800' },
+  selSpecialty: { fontSize: 12, fontWeight: '600', marginBottom: 3 },
+  selRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  selRating: { fontSize: 11, fontWeight: '700', color: '#F59E0B' },
+  selReviews: { fontSize: 11, color: COLORS.textMuted },
+  selDot: { fontSize: 11, color: COLORS.textMuted },
+  selVideoRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    borderWidth: 1, borderRadius: RADIUS.md,
+    paddingHorizontal: 10, paddingVertical: 6,
+  },
+  selVideoTitle: { fontSize: 12, fontWeight: '700', color: COLORS.text },
+  selVideoDot:  { fontSize: 11, color: COLORS.textMuted },
+  selVideoDate: { fontSize: 11, color: COLORS.textMuted },
+  selProblem: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 7,
+    borderLeftWidth: 3, paddingLeft: 9,
+  },
+  selProblemTxt: { flex: 1, fontSize: 12, color: COLORS.text, lineHeight: 17 },
+  selFooter: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+    paddingTop: 4,
+  },
+  selPriceLabel: { fontSize: 9, color: COLORS.textMuted, fontWeight: '600' },
+  selPrice: { fontSize: 20, fontWeight: '900' },
+  selImpactPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    borderWidth: 1, borderRadius: RADIUS.full,
+    paddingHorizontal: 8, paddingVertical: 4, flex: 1,
+  },
+  selImpactTxt: { fontSize: 10, fontWeight: '700' },
+  selOrderBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 10,
+  },
+  selOrderTxt: { fontSize: 13, fontWeight: '800', color: '#fff' },
+
+  // Empty experts state
+  emptyExperts: {
+    alignItems: 'center', paddingVertical: SPACING.xl,
+    gap: 10, paddingHorizontal: SPACING.lg,
+  },
+  emptyExpertsIcon: {
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 4,
+  },
+  emptyExpertsTitle: { fontSize: 16, fontWeight: '800', color: COLORS.text },
+  emptyExpertsSub: { fontSize: 13, color: COLORS.textMuted, textAlign: 'center', lineHeight: 19 },
+  emptyExpertsCta: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    borderWidth: 1, borderColor: COLORS.primary + '40',
+    backgroundColor: COLORS.primary + '12',
+    borderRadius: RADIUS.full, paddingHorizontal: 16, paddingVertical: 9,
+    marginTop: 4,
+  },
+  emptyExpertsCtaTxt: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
 });

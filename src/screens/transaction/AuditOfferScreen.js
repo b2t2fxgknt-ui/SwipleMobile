@@ -19,6 +19,7 @@ import * as Haptics from 'expo-haptics';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
+import { useExpertSelection } from '../../lib/ExpertSelectionContext';
 
 // ── Données ───────────────────────────────────────────────────────────────────
 
@@ -81,6 +82,7 @@ const TARGETED_FIXES = [
 export default function AuditOfferScreen() {
   const navigation = useNavigation();
   const route      = useRoute();
+  const { addExpert } = useExpertSelection();
 
   const score        = route.params?.score        ?? 56;
   const criticalCount = route.params?.criticalCount ?? 2;
@@ -88,13 +90,47 @@ export default function AuditOfferScreen() {
   const targetedTotal = TARGETED_FIXES.reduce((s, f) => s + f.price, 0);
   const packSaving    = targetedTotal - PACK_PRICE;
 
+  const today = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
   function handlePack() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    addExpert({
+      id: 'audit-pack-noah',
+      source: 'audit',
+      expertName: 'Noah P.', expertInitials: 'NP',
+      expertColor: '#8B5CF6', expertSpecialty: 'Optimisation TikTok complète',
+      expertRating: 5.0, expertReviews: 56,
+      expertPrice: PACK_PRICE, expertDelivery: '48h',
+      expertBadge: 'Expert Swiple',
+      expertDesc: 'Prend en charge l\'intégralité : hook, montage, sous-titres, son trending.',
+      expertIcon: 'sparkles-outline',
+      problem: 'Tous les points critiques détectés dans ta vidéo.',
+      videoTitle: 'Vidéo auditée',
+      auditDate: today,
+      category: 'Optimisation', icon: 'sparkles-outline', color: '#8B5CF6',
+      impact: '+65%', impactLabel: 'de performance globale',
+    });
     navigation.navigate('Experts');
   }
 
   function handleTargeted(fix) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    addExpert({
+      id: `audit-fix-${fix.id}`,
+      source: 'audit',
+      expertName: fix.expertName, expertInitials: fix.expertInitials,
+      expertColor: fix.color, expertSpecialty: fix.expertBadge,
+      expertRating: fix.rating, expertReviews: null,
+      expertPrice: fix.price, expertDelivery: fix.deliveryTime,
+      expertBadge: fix.expertBadge,
+      expertDesc: fix.solution,
+      expertIcon: fix.icon,
+      problem: fix.problem,
+      videoTitle: 'Vidéo auditée',
+      auditDate: today,
+      category: fix.expertBadge, icon: fix.icon, color: fix.color,
+      impact: null, impactLabel: null,
+    });
     navigation.navigate('Experts');
   }
 

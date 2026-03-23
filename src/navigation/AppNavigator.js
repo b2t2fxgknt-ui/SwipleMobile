@@ -5,9 +5,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { COLORS } from '../lib/theme';
-import { MissionsProvider }       from '../lib/MissionsContext';
-import { ConversationsProvider }  from '../lib/ConversationsContext';
-import { FavoritesProvider }      from '../lib/FavoritesContext';
+import { MissionsProvider }          from '../lib/MissionsContext';
+import { ConversationsProvider }     from '../lib/ConversationsContext';
+import { FavoritesProvider }         from '../lib/FavoritesContext';
+import { ExpertSelectionProvider }   from '../lib/ExpertSelectionContext';
 
 import WelcomeScreen       from '../screens/auth/WelcomeScreen';
 import LoginScreen         from '../screens/auth/LoginScreen';
@@ -70,6 +71,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       {/* MissionsProvider ici = accessible par TOUS les écrans (tabs + transaction stack) */}
+      <ExpertSelectionProvider>
       <FavoritesProvider>
       <ConversationsProvider>
       <MissionsProvider>
@@ -227,6 +229,7 @@ export default function AppNavigator() {
       </MissionsProvider>
       </ConversationsProvider>
       </FavoritesProvider>
+      </ExpertSelectionProvider>
     </NavigationContainer>
   );
 }

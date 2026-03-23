@@ -10,6 +10,7 @@ import * as Haptics from 'expo-haptics';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS, SPACING, FONT, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
+import { useExpertSelection } from '../../lib/ExpertSelectionContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -415,6 +416,7 @@ function ExpertCard({ rec }) {
 
 export default function AIRecommendationsSwipeScreen() {
   const navigation = useNavigation();
+  const { addExpert } = useExpertSelection();
   const [deck,     setDeck]     = useState(FULL_DECK);
   const [accepted, setAccepted] = useState([]);
   const [history,  setHistory]  = useState([]);        // pour le undo
@@ -465,6 +467,7 @@ export default function AIRecommendationsSwipeScreen() {
     if (direction === 'right' && topRec) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setAccepted(prev => [...prev, topRec]);
+      addExpert({ ...topRec, source: 'optimisation' });
     } else {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
