@@ -28,6 +28,7 @@ import RevisionRequestScreen     from '../screens/transaction/RevisionRequestScr
 import DisputeScreen                from '../screens/transaction/DisputeScreen';
 import PendingValidationsScreen     from '../screens/transaction/PendingValidationsScreen';
 import AuditOfferScreen            from '../screens/transaction/AuditOfferScreen';
+import AuditDIYScreen             from '../screens/transaction/AuditDIYScreen';
 import ReviewScreen              from '../screens/transaction/ReviewScreen';
 import MessagerieScreen          from '../screens/main/MessagerieScreen';
 import NotificationsScreen       from '../screens/main/NotificationsScreen';
@@ -170,6 +171,12 @@ export default function AppNavigator() {
               name="AuditOffer"
               component={AuditOfferScreen}
               options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
+            />
+            {/* 8d. Plan d'action DIY post-audit */}
+            <Stack.Screen
+              name="AuditDIY"
+              component={AuditDIYScreen}
+              options={{ animation: 'slide_from_right' }}
             />
             {/* 9. Messagerie */}
             <Stack.Screen

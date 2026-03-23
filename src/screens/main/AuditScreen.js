@@ -1201,7 +1201,7 @@ export default function AuditScreen() {
                 </View>
                 <TouchableOpacity
                   style={styles.diyOfferBtn}
-                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); navigation.goBack(); }}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); navigation.navigate('AuditDIY', { score: GLOBAL_SCORE, criticalCount: MOCK_ISSUES.filter(x => x.level === 'critical').length }); }}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.diyOfferBtnTxt}>Commencer seul</Text>
