@@ -57,9 +57,10 @@ function getScreenOptions(accentColor) {
     tabBarActiveTintColor:   accentColor,
     tabBarInactiveTintColor: COLORS.textMuted,
     tabBarStyle: {
-      backgroundColor: COLORS.card,
-      borderTopColor:  COLORS.border,
-      borderTopWidth:  0.5,
+      backgroundColor: COLORS.bg,
+      borderTopColor:  'transparent',
+      borderTopWidth:  0,
+      elevation:       0,
       height:          Platform.OS === 'ios' ? 84 : 62,
       paddingBottom:   Platform.OS === 'ios' ? 26 : 8,
       paddingTop:      8,
@@ -105,7 +106,7 @@ export default function MainTabs({ session }) {
 
   return (
     <SessionContext.Provider value={session}>
-      <Tab.Navigator screenOptions={screenOptions}>
+      <Tab.Navigator screenOptions={screenOptions} sceneContainerStyle={{ backgroundColor: COLORS.bg }}>
 
         {isFreelancer ? (
           /* ── FREELANCE : Missions · Projets · Revenus · Profil ── */

@@ -76,14 +76,6 @@ const TARGETED_FIXES = [
   },
 ];
 
-const DIY_ACTIONS = [
-  'Réécrire les 2 premières secondes avec un hook choc',
-  'Activer les sous-titres auto dans CapCut (5 min)',
-  'Remplacer la musique par un son trending',
-  'Recadrer le sujet dans la zone dorée (15%–55%)',
-  'Ajouter 5–8 hashtags ciblés',
-];
-
 // ── Écran ─────────────────────────────────────────────────────────────────────
 
 export default function AuditOfferScreen() {
@@ -104,11 +96,6 @@ export default function AuditOfferScreen() {
   function handleTargeted(fix) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate('Experts');
-  }
-
-  function handleDiy() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.goBack();
   }
 
   return (
@@ -296,44 +283,6 @@ export default function AuditOfferScreen() {
             </View>
           </View>
 
-          {/* ══ DIVIDER ══════════════════════════════════════════════════ */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerTxt}>ou</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* ══ C. DIY ═══════════════════════════════════════════════════ */}
-          <View style={styles.diyCard}>
-            <View style={styles.diyHeader}>
-              <View style={styles.diyIconBox}>
-                <Ionicons name="person-outline" size={18} color={COLORS.textMuted} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.diyTitle}>Je me débrouille seul</Text>
-                <Text style={styles.diySub}>Plan d'action complet basé sur ton audit · ~20 min</Text>
-              </View>
-            </View>
-
-            {/* Preview checklist (3 items) */}
-            <View style={styles.diyPreview}>
-              {DIY_ACTIONS.slice(0, 3).map((action, i) => (
-                <View key={i} style={styles.diyPreviewRow}>
-                  <View style={styles.diyPreviewDot} />
-                  <Text style={styles.diyPreviewText} numberOfLines={1}>{action}</Text>
-                </View>
-              ))}
-              <Text style={styles.diyPreviewMore}>+{DIY_ACTIONS.length - 3} autres actions…</Text>
-            </View>
-
-            {/* CTA DIY */}
-            <TouchableOpacity style={styles.diyCta} onPress={handleDiy} activeOpacity={0.82}>
-              <Ionicons name="list-outline" size={15} color={COLORS.primary} />
-              <Text style={styles.diyCtaText}>Voir le plan d'action complet</Text>
-              <Ionicons name="arrow-forward" size={14} color={COLORS.primary} />
-            </TouchableOpacity>
-          </View>
-
           <View style={{ height: 30 }} />
         </ScrollView>
       </SafeAreaView>
@@ -483,33 +432,4 @@ const styles = StyleSheet.create({
   packNudgeText: { fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
   packNudgeCta:  { fontSize: 12, fontWeight: '800', color: COLORS.primary },
 
-  // ── DIY ───────────────────────────────────────────────────────────────────
-  diyCard: {
-    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
-    borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 12,
-  },
-  diyHeader:  { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  diyIconBox: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: COLORS.bg, borderWidth: 1, borderColor: COLORS.border,
-    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-  },
-  diyTitle: { fontSize: 15, fontWeight: '800', color: COLORS.text, marginTop: 2 },
-  diySub:   { fontSize: 12, color: COLORS.textMuted, marginTop: 3, lineHeight: 16 },
-
-  diyPreview: { gap: 7, backgroundColor: COLORS.bg, borderRadius: RADIUS.md, padding: 10, borderWidth: 1, borderColor: COLORS.border },
-  diyPreviewRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  diyPreviewDot: {
-    width: 5, height: 5, borderRadius: 2.5,
-    backgroundColor: COLORS.textMuted, marginTop: 6, flexShrink: 0,
-  },
-  diyPreviewText: { flex: 1, fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
-  diyPreviewMore: { fontSize: 11, color: COLORS.primary, fontWeight: '700', marginTop: 2 },
-
-  diyCta: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: COLORS.primary + '10', borderWidth: 1.5, borderColor: COLORS.primary + '35',
-    borderRadius: RADIUS.lg, paddingVertical: 12, paddingHorizontal: SPACING.md,
-  },
-  diyCtaText: { flex: 1, fontSize: 13, fontWeight: '700', color: COLORS.primary },
 });

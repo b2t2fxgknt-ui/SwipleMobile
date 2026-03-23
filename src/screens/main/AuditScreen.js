@@ -88,11 +88,11 @@ const MOCK_ISSUES = [
 
 // ── Diagnostic rapide ──────────────────────────────────────────────────────────
 const MOCK_QUICK_DIAG = [
-  { emoji: '❌', type: 'critical', text: 'Hook trop lent — 78% quittent avant 3s'             },
-  { emoji: '❌', type: 'critical', text: 'Aucun sous-titre — 80% regardent sans son'           },
-  { emoji: '⚠️', type: 'warning',  text: 'Audio non-trending — portée organique limitée'      },
-  { emoji: '⚠️', type: 'warning',  text: 'Sujet masqué par les boutons TikTok'                },
-  { emoji: '✅', type: 'ok',       text: 'Qualité visuelle excellente · Format 9:16 respecté' },
+  { icon: 'close-circle',     type: 'critical', text: 'Hook trop lent — 78% quittent avant 3s'             },
+  { icon: 'close-circle',     type: 'critical', text: 'Aucun sous-titre — 80% regardent sans son'           },
+  { icon: 'alert-circle',     type: 'warning',  text: 'Audio non-trending — portée organique limitée'      },
+  { icon: 'alert-circle',     type: 'warning',  text: 'Sujet masqué par les boutons TikTok'                },
+  { icon: 'checkmark-circle', type: 'ok',       text: 'Qualité visuelle excellente · Format 9:16 respecté' },
 ];
 
 // ── Actions concrètes numérotées ──────────────────────────────────────────────
@@ -185,10 +185,10 @@ const DIY_CHECKLIST = [
 const DIY_TOTAL_XP = DIY_CHECKLIST.reduce((s, i) => s + i.xp, 0); // 60
 
 function diyGetLevel(xp) {
-  if (xp >= 60) return { n: 4, label: 'Créateur Optimisé',   emoji: '🏆', next: null };
-  if (xp >= 35) return { n: 3, label: 'Créateur Confirmé',   emoji: '⭐', next: 60  };
-  if (xp >= 20) return { n: 2, label: 'Créateur Progressif', emoji: '🔥', next: 35  };
-  return               { n: 1, label: 'Créateur Débutant',   emoji: '🎮', next: 20  };
+  if (xp >= 60) return { n: 4, label: 'Créateur Optimisé',   icon: 'trophy',          iconColor: '#F59E0B', next: null };
+  if (xp >= 35) return { n: 3, label: 'Créateur Confirmé',   icon: 'star',            iconColor: '#8B5CF6', next: 60  };
+  if (xp >= 20) return { n: 2, label: 'Créateur Progressif', icon: 'flame',           iconColor: '#EF4444', next: 35  };
+  return               { n: 1, label: 'Créateur Débutant',   icon: 'game-controller',  iconColor: '#3B82F6', next: 20  };
 }
 
 // ── Templates de hooks viraux ─────────────────────────────────────────────────
@@ -803,7 +803,7 @@ export default function AuditScreen() {
                   const color = d.type === 'critical' ? '#EF4444' : d.type === 'warning' ? '#F59E0B' : '#22C55E';
                   return (
                     <View key={i} style={[styles.diagRow, { borderLeftColor: color }]}>
-                      <Text style={styles.diagEmoji}>{d.emoji}</Text>
+                      <Ionicons name={d.icon} size={14} color={color} />
                       <Text style={styles.diagText}>{d.text}</Text>
                     </View>
                   );
@@ -1349,7 +1349,10 @@ export default function AuditScreen() {
                         <View style={styles.diyLevelBadge}>
                           <Text style={styles.diyLevelN}>NV.{diyLevel.n}</Text>
                         </View>
-                        <Text style={styles.diyLevelLabel}>{diyLevel.emoji} {diyLevel.label}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                          <Ionicons name={diyLevel.icon} size={13} color={diyLevel.iconColor} />
+                          <Text style={styles.diyLevelLabel}>{diyLevel.label}</Text>
+                        </View>
                         <View style={styles.diyXpBadge}>
                           <Ionicons name="star" size={10} color="#F59E0B" />
                           <Text style={styles.diyXpBadgeTxt}>{diyXp} XP</Text>
@@ -1372,7 +1375,10 @@ export default function AuditScreen() {
                           <Text style={styles.diyXpNextTxt}>Prochain niveau à {diyLevel.next} XP</Text>
                         )}
                         {isMaxLevel && (
-                          <Text style={[styles.diyXpNextTxt, { color: '#F59E0B' }]}>🏆 Niveau MAX atteint !</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                            <Ionicons name="trophy" size={12} color="#F59E0B" />
+                            <Text style={[styles.diyXpNextTxt, { color: '#F59E0B' }]}>Niveau MAX atteint !</Text>
+                          </View>
                         )}
                       </View>
                     </View>
@@ -1410,7 +1416,7 @@ export default function AuditScreen() {
                               <Text style={[styles.diyXpPillTxt, { color: item.color }]}>+{item.xp} XP</Text>
                             </View>
                             {diyChecked[i] && (
-                              <Text style={[styles.diyBadgeUnlocked, { color: item.color }]}>🏅</Text>
+                              <Ionicons name="ribbon" size={14} color={item.color} />
                             )}
                           </View>
                         </TouchableOpacity>
@@ -1420,11 +1426,15 @@ export default function AuditScreen() {
                     {/* ── Badges débloqués ─── */}
                     {unlockedBadges.length > 0 && (
                       <View style={styles.diyBadgesSection}>
-                        <Text style={styles.diyBadgesSectionTitle}>🏆 BADGES DÉBLOQUÉS</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                          <Ionicons name="trophy" size={12} color="#F59E0B" />
+                          <Text style={styles.diyBadgesSectionTitle}>BADGES DÉBLOQUÉS</Text>
+                        </View>
                         <View style={styles.diyBadgesList}>
                           {unlockedBadges.map((item, i) => (
                             <View key={i} style={[styles.diyBadgeChip, { backgroundColor: item.color + '18', borderColor: item.color + '35' }]}>
-                              <Text style={[styles.diyBadgeChipTxt, { color: item.color }]}>🏅 {item.badge}</Text>
+                              <Ionicons name="ribbon" size={11} color={item.color} />
+                              <Text style={[styles.diyBadgeChipTxt, { color: item.color }]}>{item.badge}</Text>
                             </View>
                           ))}
                         </View>
@@ -1434,7 +1444,7 @@ export default function AuditScreen() {
                     {/* ── Niveau max → célébration ─── */}
                     {isMaxLevel && (
                       <View style={styles.diyComplete}>
-                        <Text style={{ fontSize: 28 }}>🏆</Text>
+                        <Ionicons name="trophy" size={28} color="#F59E0B" />
                         <View style={{ flex: 1 }}>
                           <Text style={styles.diyCompleteTitle}>Toutes les missions complétées !</Text>
                           <Text style={styles.diyCompleteText}>Re-teste ta vidéo pour mesurer l'impact de tes corrections.</Text>
@@ -2277,7 +2287,7 @@ const styles = StyleSheet.create({
   },
   stickyCta: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, paddingVertical: 9, paddingHorizontal: SPACING.lg,
+    gap: 7, paddingVertical: 7, paddingHorizontal: SPACING.lg,
   },
   stickyCtaText: { fontSize: 13, fontWeight: '800', color: '#fff', flex: 1 },
   stickyCtaArrow: {
