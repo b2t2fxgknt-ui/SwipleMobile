@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Platform, TouchableOpacity } from 'react-native';
+import { Platform, TouchableOpacity, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { SessionContext } from '../lib/SessionContext';
@@ -58,12 +58,12 @@ function getScreenOptions(accentColor) {
     tabBarInactiveTintColor: COLORS.textMuted,
     tabBarStyle: {
       backgroundColor: COLORS.bg,
-      borderTopColor:  'transparent',
-      borderTopWidth:  0,
+      borderTopColor:  COLORS.border,
+      borderTopWidth:  StyleSheet.hairlineWidth,
       elevation:       0,
-      height:          Platform.OS === 'ios' ? 84 : 62,
+      height:          Platform.OS === 'ios' ? 80 : 58,
       paddingBottom:   Platform.OS === 'ios' ? 26 : 8,
-      paddingTop:      8,
+      paddingTop:      4,
     },
     tabBarLabelStyle: {
       fontSize:   10,

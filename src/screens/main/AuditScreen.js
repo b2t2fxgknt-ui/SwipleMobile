@@ -2150,7 +2150,7 @@ const styles = StyleSheet.create({
   },
   stickyCta: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 7, paddingVertical: 7, paddingHorizontal: SPACING.lg,
+    gap: 7, paddingVertical: 11, paddingHorizontal: SPACING.lg,
   },
   stickyCtaText: { fontSize: 13, fontWeight: '800', color: '#fff', flex: 1 },
   stickyCtaArrow: {
