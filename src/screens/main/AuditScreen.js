@@ -1168,60 +1168,154 @@ export default function AuditScreen() {
                 </View>
               </View>
 
-              {/* ── Offres ────────────────────────────────────────────── */}
+              {/* ════ ON S'EN OCCUPE POUR VOUS ══════════════════════════ */}
 
-              {/* 1. Le faire moi-même — Gratuit (discret) */}
-              <TouchableOpacity
-                style={styles.offerFreeRow}
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); navigation.goBack(); }}
-                activeOpacity={0.75}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.offerFreeTitle}>Le faire moi-même</Text>
-                  <Text style={styles.offerFreeSub}>Suis un plan guidé pour corriger ta vidéo étape par étape.</Text>
+              {/* ── Section header ── */}
+              <View style={styles.ouvHeader}>
+                <View style={styles.ouvBadge}>
+                  <Ionicons name="people" size={10} color={COLORS.primary} />
+                  <Text style={styles.ouvBadgeText}>ON S'EN OCCUPE POUR VOUS</Text>
                 </View>
-                <View style={styles.offerFreeRight}>
-                  <Text style={styles.offerFreePrice}>Gratuit</Text>
-                  <Text style={styles.offerFreeCtaTxt}>Commencer →</Text>
-                </View>
-              </TouchableOpacity>
+                <Text style={styles.ouvTitle}>Choisis ton niveau de correction</Text>
+                <Text style={styles.ouvSub}>Des experts certifiés Swiple corrigent ta vidéo · Résultats en 24–48h</Text>
+              </View>
 
-              {/* 2. Corriger les 3 points clés — 29€ (secondaire) */}
-              <View style={styles.offerSecCard}>
-                <View style={styles.offerSecTop}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.offerSecTitle}>Corriger les 3 points clés</Text>
-                    <Text style={styles.offerSecSub}>On traite uniquement les 3 problèmes les plus bloquants.</Text>
+              {/* ── Option A : Le faire moi-même — Gratuit ── */}
+              <View style={styles.diyOfferCard}>
+                <View style={styles.diyOfferHead}>
+                  <View style={styles.diyOfferIconBox}>
+                    <Ionicons name="person-outline" size={16} color={COLORS.textMuted} />
                   </View>
-                  <Text style={styles.offerSecPrice}>29€</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.diyOfferTitle}>Le faire moi-même</Text>
+                    <Text style={styles.diyOfferSub}>Plan d'action guidé basé sur ton audit · ~20 min</Text>
+                  </View>
+                  <View style={styles.diyOfferPricePill}>
+                    <Text style={styles.diyOfferPriceTxt}>Gratuit</Text>
+                  </View>
+                </View>
+                <View style={styles.diyOfferList}>
+                  {DIY_CHECKLIST.slice(0, 3).map((item, i) => (
+                    <View key={i} style={styles.diyOfferRow}>
+                      <Ionicons name={item.icon} size={11} color={COLORS.textMuted} />
+                      <Text style={styles.diyOfferRowTxt} numberOfLines={1}>{item.text}</Text>
+                    </View>
+                  ))}
+                  <Text style={styles.diyOfferMore}>+{DIY_CHECKLIST.length - 3} autres étapes…</Text>
                 </View>
                 <TouchableOpacity
-                  style={styles.offerSecBtn}
-                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToOffer(); }}
-                  activeOpacity={0.85}
+                  style={styles.diyOfferBtn}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); navigation.goBack(); }}
+                  activeOpacity={0.8}
                 >
-                  <Text style={styles.offerSecBtnText}>Corriger les points clés</Text>
-                  <Ionicons name="arrow-forward" size={14} color={COLORS.primary} />
+                  <Text style={styles.diyOfferBtnTxt}>Commencer seul</Text>
+                  <Ionicons name="arrow-forward" size={13} color={COLORS.textMuted} />
                 </TouchableOpacity>
               </View>
 
-              {/* 3. Optimisation complète — 60€ (dominant) */}
+              {/* ── Divider ── */}
+              <View style={styles.ouvDivider}>
+                <View style={styles.ouvDividerLine} />
+                <Text style={styles.ouvDividerTxt}>ou déléguer à un expert</Text>
+                <View style={styles.ouvDividerLine} />
+              </View>
+
+              {/* ── Option B : Correction ciblée — 3 experts ── */}
+              <View style={styles.expertsBlock}>
+                <View style={styles.expertsBlockHead}>
+                  <Text style={styles.expertsBlockTitle}>Correction ciblée</Text>
+                  <Text style={styles.expertsBlockSub}>Un expert résout le problème qui te bloque le plus</Text>
+                </View>
+                {CONVERSION_EXPERTS.map((expert) => (
+                  <TouchableOpacity
+                    key={expert.id}
+                    style={styles.expertRow}
+                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToOffer(); }}
+                    activeOpacity={0.85}
+                  >
+                    <View style={[styles.expertRowAvatar, { backgroundColor: expert.color + '22', borderColor: expert.color + '50' }]}>
+                      <Text style={[styles.expertRowInitials, { color: expert.color }]}>{expert.initials}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.expertRowName}>{expert.name}</Text>
+                      <Text style={styles.expertRowSpecialty} numberOfLines={1}>{expert.specialty}</Text>
+                      <View style={styles.expertRowMeta}>
+                        <Ionicons name="star" size={9} color="#F59E0B" />
+                        <Text style={styles.expertRowRating}>{expert.rating}</Text>
+                        <View style={styles.expertRowDot} />
+                        <Text style={[styles.expertRowSolves, { color: expert.color }]} numberOfLines={1}>
+                          {expert.solves}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.expertRowRight}>
+                      <Text style={[styles.expertRowPrice, { color: expert.color }]}>{expert.price}€</Text>
+                      <View style={[styles.expertRowCtaBtn, { backgroundColor: expert.color + '15', borderColor: expert.color + '35' }]}>
+                        <Text style={[styles.expertRowCtaTxt, { color: expert.color }]}>Choisir</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* ── Option C : Pack complet 60€ — dominant ── */}
               <View style={styles.offerPriCard}>
                 <LinearGradient
-                  colors={['#7C3AED18', '#7C3AED06']}
+                  colors={['#7C3AED1A', '#7C3AED06']}
                   style={StyleSheet.absoluteFill}
                   borderRadius={RADIUS.xl}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 />
+                {/* Badge + prix */}
                 <View style={styles.offerPriTop}>
                   <View style={styles.offerPriBadge}>
                     <Ionicons name="sparkles" size={10} color="#fff" />
-                    <Text style={styles.offerPriBadgeTxt}>Recommandé</Text>
+                    <Text style={styles.offerPriBadgeTxt}>Recommandé · le plus populaire</Text>
                   </View>
                   <Text style={styles.offerPriPrice}>60€</Text>
                 </View>
+
+                {/* 3 avatars experts */}
+                <View style={styles.packAvatarRow}>
+                  {CONVERSION_EXPERTS.map((e) => (
+                    <View key={e.id} style={[styles.packAvatar, { backgroundColor: e.color + '22', borderColor: e.color }]}>
+                      <Text style={[styles.packAvatarInitials, { color: e.color }]}>{e.initials}</Text>
+                    </View>
+                  ))}
+                  <Text style={styles.packAvatarLabel}>
+                    {CONVERSION_EXPERTS.map(e => e.name.split(' ')[0]).join(', ')} · ton équipe dédiée
+                  </Text>
+                </View>
+
                 <Text style={styles.offerPriTitle}>Optimisation complète</Text>
-                <Text style={styles.offerPriSub}>On corrige tous les problèmes prioritaires de ta vidéo.</Text>
+                <Text style={styles.offerPriSub}>
+                  3 experts corrigent tous les problèmes prioritaires de ta vidéo en une seule fois.
+                </Text>
+
+                {/* Items */}
+                <View style={styles.packItems}>
+                  {PACK_ITEMS.map((item, i) => (
+                    <View key={i} style={styles.packItem}>
+                      <View style={styles.packItemCheck}>
+                        <Ionicons name="checkmark" size={11} color="#22C55E" />
+                      </View>
+                      <Ionicons name={item.icon} size={13} color={COLORS.primary} />
+                      <Text style={styles.packItemLabel}>{item.label}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Économie */}
+                <View style={styles.packSavingRow}>
+                  <Ionicons name="trending-down" size={12} color="#22C55E" />
+                  <Text style={styles.packSavingText}>
+                    Économise <Text style={{ fontWeight: '800', color: '#22C55E' }}>
+                      {CONVERSION_EXPERTS.reduce((s, e) => s + e.price, 0) - PACK_PRICE}€
+                    </Text> vs les corrections séparées ({CONVERSION_EXPERTS.reduce((s, e) => s + e.price, 0)}€)
+                  </Text>
+                </View>
+
+                {/* CTA */}
                 <TouchableOpacity
                   onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToOffer(); }}
                   activeOpacity={0.88}
@@ -1233,7 +1327,7 @@ export default function AuditScreen() {
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   />
                   <Ionicons name="rocket" size={16} color="#fff" />
-                  <Text style={styles.offerPriCtaTxt}>Corriger ma vidéo</Text>
+                  <Text style={styles.offerPriCtaTxt}>Lancer l'optimisation complète</Text>
                   <Ionicons name="arrow-forward" size={14} color="#fff" />
                 </TouchableOpacity>
                 <Text style={styles.offerPriNote}>Paiement sécurisé · Révision gratuite · 24–48h</Text>
@@ -1279,7 +1373,7 @@ export default function AuditScreen() {
 
       {/* ── Sticky CTA ── */}
       {phase === 'results' && (
-        <View style={[styles.stickyCtaWrap, { paddingBottom: insets.bottom || 0 }]}>
+        <View style={styles.stickyCtaWrap}>
           <LinearGradient
             colors={['#7C3AED', '#8B5CF6']}
             style={StyleSheet.absoluteFill}
@@ -2072,33 +2166,93 @@ const styles = StyleSheet.create({
   },
   resetText: { fontSize: 13, color: COLORS.textMuted, fontWeight: '600' },
 
-  // ── Offer section ─────────────────────────────────────────────────────────
-  offerFreeRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
+  // ── "ON S'EN OCCUPE POUR VOUS" section ────────────────────────────────────
+  ouvHeader: { marginBottom: SPACING.md, gap: 5 },
+  ouvBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: COLORS.primary + '15', borderWidth: 1, borderColor: COLORS.primary + '30',
+    borderRadius: RADIUS.full, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4,
+  },
+  ouvBadgeText: { fontSize: 10, fontWeight: '900', color: COLORS.primary, letterSpacing: 0.7 },
+  ouvTitle:     { fontSize: 22, fontWeight: '900', color: COLORS.text },
+  ouvSub:       { fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
+
+  ouvDivider: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    marginVertical: SPACING.md,
+  },
+  ouvDividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: COLORS.border },
+  ouvDividerTxt:  { fontSize: 11, color: COLORS.textMuted, fontWeight: '600' },
+
+  // DIY offer card
+  diyOfferCard: {
     backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
-    borderRadius: RADIUS.lg, padding: SPACING.md, marginBottom: SPACING.sm,
+    borderRadius: RADIUS.xl, padding: SPACING.md, gap: 10, marginBottom: SPACING.sm,
   },
-  offerFreeTitle:  { fontSize: 13, fontWeight: '700', color: COLORS.textMuted, marginBottom: 2 },
-  offerFreeSub:    { fontSize: 11, color: COLORS.textMuted, lineHeight: 16 },
-  offerFreeRight:  { alignItems: 'flex-end', flexShrink: 0, gap: 2 },
-  offerFreePrice:  { fontSize: 12, fontWeight: '800', color: COLORS.textMuted },
-  offerFreeCtaTxt: { fontSize: 11, fontWeight: '700', color: COLORS.textMuted },
+  diyOfferHead:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  diyOfferIconBox: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: COLORS.bg, borderWidth: 1, borderColor: COLORS.border,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  diyOfferTitle:    { fontSize: 14, fontWeight: '800', color: COLORS.text },
+  diyOfferSub:      { fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
+  diyOfferPricePill: {
+    backgroundColor: COLORS.bg, borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: RADIUS.full, paddingHorizontal: 9, paddingVertical: 3, flexShrink: 0,
+  },
+  diyOfferPriceTxt: { fontSize: 11, fontWeight: '800', color: COLORS.textMuted },
+  diyOfferList: {
+    backgroundColor: COLORS.bg, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: COLORS.border,
+    paddingHorizontal: 10, paddingVertical: 8, gap: 5,
+  },
+  diyOfferRow:    { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  diyOfferRowTxt: { flex: 1, fontSize: 11, color: COLORS.textMuted, lineHeight: 16 },
+  diyOfferMore:   { fontSize: 10, color: COLORS.primary, fontWeight: '700', marginTop: 2 },
+  diyOfferBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7,
+    backgroundColor: COLORS.bg, borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: RADIUS.lg, paddingVertical: 10,
+  },
+  diyOfferBtnTxt: { fontSize: 13, fontWeight: '700', color: COLORS.textMuted },
 
-  offerSecCard: {
-    backgroundColor: COLORS.card, borderWidth: 1.5, borderColor: COLORS.primary + '40',
-    borderRadius: RADIUS.xl, padding: SPACING.md, gap: 12, marginBottom: SPACING.sm,
+  // Experts block (3 rows)
+  expertsBlock: {
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: RADIUS.xl, padding: SPACING.md, gap: 0, marginBottom: SPACING.sm, overflow: 'hidden',
   },
-  offerSecTop:     { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  offerSecTitle:   { fontSize: 16, fontWeight: '800', color: COLORS.text, marginBottom: 4 },
-  offerSecSub:     { fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
-  offerSecPrice:   { fontSize: 24, fontWeight: '900', color: COLORS.primary, flexShrink: 0 },
-  offerSecBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: COLORS.primary + '12', borderWidth: 1.5, borderColor: COLORS.primary + '40',
-    borderRadius: RADIUS.lg, paddingVertical: 12,
+  expertsBlockHead: { marginBottom: SPACING.sm },
+  expertsBlockTitle: { fontSize: 16, fontWeight: '800', color: COLORS.text, marginBottom: 2 },
+  expertsBlockSub:   { fontSize: 12, color: COLORS.textMuted },
+  expertRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: COLORS.border,
   },
-  offerSecBtnText: { fontSize: 14, fontWeight: '800', color: COLORS.primary },
+  expertRowAvatar: {
+    width: 40, height: 40, borderRadius: 20,
+    borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  expertRowInitials:  { fontSize: 14, fontWeight: '800' },
+  expertRowName:      { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 1 },
+  expertRowSpecialty: { fontSize: 11, color: COLORS.textMuted, marginBottom: 3 },
+  expertRowMeta:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  expertRowRating:    { fontSize: 10, fontWeight: '700', color: '#F59E0B' },
+  expertRowDot: {
+    width: 3, height: 3, borderRadius: 1.5,
+    backgroundColor: COLORS.border,
+  },
+  expertRowSolves:  { fontSize: 10, fontWeight: '600', flex: 1 },
+  expertRowRight:   { alignItems: 'flex-end', gap: 4, flexShrink: 0 },
+  expertRowPrice:   { fontSize: 16, fontWeight: '900' },
+  expertRowCtaBtn: {
+    borderWidth: 1, borderRadius: RADIUS.md,
+    paddingHorizontal: 10, paddingVertical: 4,
+  },
+  expertRowCtaTxt: { fontSize: 11, fontWeight: '800' },
 
+  // Pack dominant card
   offerPriCard: {
     backgroundColor: COLORS.card, borderWidth: 2, borderColor: COLORS.primary + '60',
     borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 10, overflow: 'hidden',
@@ -2110,16 +2264,33 @@ const styles = StyleSheet.create({
   offerPriBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: COLORS.primary, borderRadius: RADIUS.full,
-    paddingHorizontal: 10, paddingVertical: 4,
+    paddingHorizontal: 10, paddingVertical: 4, flexShrink: 1,
   },
-  offerPriBadgeTxt: { fontSize: 10, fontWeight: '900', color: '#fff', letterSpacing: 0.5 },
-  offerPriPrice:    { fontSize: 28, fontWeight: '900', color: COLORS.primary },
+  offerPriBadgeTxt: { fontSize: 9, fontWeight: '900', color: '#fff', letterSpacing: 0.4 },
+  offerPriPrice:    { fontSize: 28, fontWeight: '900', color: COLORS.primary, flexShrink: 0 },
   offerPriTitle:    { fontSize: 20, fontWeight: '900', color: COLORS.text },
-  offerPriSub:      { fontSize: 13, color: COLORS.textMuted, lineHeight: 18 },
+  offerPriSub:      { fontSize: 12, color: COLORS.textMuted, lineHeight: 17 },
   offerPriCtaWrap: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, paddingVertical: 15, borderRadius: RADIUS.lg, overflow: 'hidden', marginTop: 4,
   },
-  offerPriCtaTxt: { fontSize: 16, fontWeight: '900', color: '#fff' },
+  offerPriCtaTxt: { fontSize: 15, fontWeight: '900', color: '#fff' },
   offerPriNote:   { fontSize: 10, color: COLORS.textMuted, textAlign: 'center' },
+
+  // Pack avatar group
+  packAvatarRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  packAvatar: {
+    width: 32, height: 32, borderRadius: 16,
+    borderWidth: 1.5, alignItems: 'center', justifyContent: 'center',
+  },
+  packAvatarInitials: { fontSize: 11, fontWeight: '800' },
+  packAvatarLabel:    { flex: 1, fontSize: 11, color: COLORS.textMuted, fontWeight: '600', lineHeight: 15 },
+
+  // Pack saving row
+  packSavingRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    backgroundColor: '#22C55E0C', borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: '#22C55E25', padding: 8,
+  },
+  packSavingText: { flex: 1, fontSize: 12, color: COLORS.textMuted, lineHeight: 16 },
 });
