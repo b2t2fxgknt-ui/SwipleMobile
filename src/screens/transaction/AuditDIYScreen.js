@@ -142,7 +142,18 @@ export default function AuditDIYScreen() {
 
   function goToOffer() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    navigation.navigate('AuditOffer', { score, criticalCount });
+    navigation.navigate('MissionConfirmation', {
+      mission: {
+        type: 'Optimisation', icon: 'sparkles-outline', color: '#8B5CF6',
+        title: 'Optimisation complète par Noah P.',
+        problem: 'Tu bloques sur un point — Noah P. prend tout en charge',
+        duration: '15–60s', budget: 60, revisions: 2, deadline: '48h',
+      },
+      freelancer: {
+        name: 'Noah P.', initials: 'NP', specialty: 'Optimisation TikTok complète',
+        rating: 5.0, level: 'Expert Swiple', color: '#8B5CF6',
+      },
+    });
   }
 
   return (

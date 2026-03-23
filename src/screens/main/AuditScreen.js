@@ -18,6 +18,7 @@ import * as Haptics from 'expo-haptics';
 import { COLORS, SPACING, FONT, RADIUS, SHADOW } from '../../lib/theme';
 import { useNavigation } from '@react-navigation/native';
 import BubbleBackground from '../../components/ui/BubbleBackground';
+import { useExpertSelection } from '../../lib/ExpertSelectionContext';
 import { matchFreelancers, CATEGORY_ACCENT } from '../../data/freelancers';
 import ShareScoreModal from '../../components/ui/ShareScoreModal';
 
@@ -423,11 +424,59 @@ export default function AuditScreen() {
     setExpandedIdx(prev => (prev === i ? null : i));
   }, []);
 
+  const { addExpert } = useExpertSelection();
   const goToExperts = useCallback(() => navigation.navigate('Experts'), [navigation]);
   const goToOffer   = useCallback(() => navigation.navigate('AuditOffer', {
     score: GLOBAL_SCORE,
     criticalCount: MOCK_ISSUES.filter(x => x.level === 'critical').length,
   }), [navigation]);
+
+  // ── Navigation directe vers MissionConfirmation avec le bon expert ──────────
+  const today = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  const goToMission = useCallback((expert, problem, priceOverride) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    addExpert({
+      id: `audit-direct-${expert.id}`,
+      source: 'audit',
+      expertName: expert.name, expertInitials: expert.initials,
+      expertColor: expert.color, expertSpecialty: expert.specialty,
+      expertRating: expert.rating, expertReviews: expert.reviews,
+      expertPrice: priceOverride ?? expert.price, expertDelivery: expert.deliveryTime,
+      expertBadge: expert.badge, expertDesc: expert.tagline,
+      expertIcon: expert.icon, problem,
+      videoTitle: 'Vidéo auditée', auditDate: today,
+      category: expert.specialty, icon: expert.icon, color: expert.color,
+      impact: null, impactLabel: null,
+    });
+    navigation.navigate('MissionConfirmation', {
+      mission: {
+        type:      expert.specialty.split(' ')[0],
+        icon:      expert.icon,
+        color:     expert.color,
+        title:     `Mission ${expert.specialty}`,
+        problem,
+        duration:  '15–60s',
+        budget:    priceOverride ?? expert.price,
+        revisions: 2,
+        deadline:  expert.deliveryTime,
+      },
+      freelancer: {
+        name:      expert.name,
+        initials:  expert.initials,
+        specialty: expert.specialty,
+        rating:    expert.rating,
+        level:     expert.badge,
+        color:     expert.color,
+      },
+    });
+  }, [navigation, addExpert, today]);
+
+  // Mapping freelanceType → expert pour les boutons des issues
+  const EXPERT_BY_TYPE = {
+    'Copywriter': CONVERSION_EXPERTS[0], // Thomas G.
+    'Monteur':    CONVERSION_EXPERTS[1], // Léa M.
+  };
 
   const accentColor = globalColor(GLOBAL_SCORE);
 
@@ -1022,17 +1071,22 @@ export default function AuditScreen() {
                           <Ionicons name="sparkles-outline" size={13} color={lv.color} />
                           <Text style={[styles.issueFixText, { color: lv.color }]}>{issue.fix}</Text>
                         </View>
-                        {issue.freelanceType && (
+                        {issue.freelanceType && EXPERT_BY_TYPE[issue.freelanceType] && (
                           <TouchableOpacity
                             style={[styles.issueFixBtn, { backgroundColor: lv.color + '15', borderColor: lv.border }]}
-                            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); goToExperts(); }}
+                            onPress={() => goToMission(EXPERT_BY_TYPE[issue.freelanceType], issue.title)}
                             activeOpacity={0.8}
                           >
-                            <Ionicons name="person-circle-outline" size={14} color={lv.color} />
+                            <View style={[styles.issueExpertAvatar, { backgroundColor: EXPERT_BY_TYPE[issue.freelanceType].color + '20', borderColor: EXPERT_BY_TYPE[issue.freelanceType].color + '60' }]}>
+                              <Text style={[styles.issueExpertInitials, { color: EXPERT_BY_TYPE[issue.freelanceType].color }]}>{EXPERT_BY_TYPE[issue.freelanceType].initials}</Text>
+                            </View>
                             <Text style={[styles.issueFixBtnText, { color: lv.color }]}>
-                              {issue.freelanceLabel} · {issue.freelanceType}
+                              {EXPERT_BY_TYPE[issue.freelanceType].name} · {issue.freelanceLabel}
                             </Text>
-                            <Ionicons name="chevron-forward" size={12} color={lv.color} style={{ marginLeft: 'auto' }} />
+                            <Text style={[styles.issueFixBtnPrice, { color: EXPERT_BY_TYPE[issue.freelanceType].color }]}>
+                              {EXPERT_BY_TYPE[issue.freelanceType].price}€
+                            </Text>
+                            <Ionicons name="chevron-forward" size={12} color={lv.color} style={{ marginLeft: 2 }} />
                           </TouchableOpacity>
                         )}
                       </>
@@ -1216,7 +1270,7 @@ export default function AuditScreen() {
                   <TouchableOpacity
                     key={expert.id}
                     style={styles.expertRow}
-                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToOffer(); }}
+                    onPress={() => goToMission(expert, expert.solves)}
                     activeOpacity={0.85}
                   >
                     <View style={[styles.expertRowAvatar, { backgroundColor: expert.color + '22', borderColor: expert.color + '50' }]}>
@@ -1305,7 +1359,7 @@ export default function AuditScreen() {
 
                 {/* CTA */}
                 <TouchableOpacity
-                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); goToOffer(); }}
+                  onPress={() => goToMission(CONVERSION_EXPERTS[2], 'Tous les points critiques de ta vidéo', PACK_PRICE)}
                   activeOpacity={0.88}
                   style={styles.offerPriCtaWrap}
                 >
@@ -1819,6 +1873,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   issueFixBtnText: { fontSize: 12, fontWeight: '700', flex: 1 },
+  issueFixBtnPrice: { fontSize: 12, fontWeight: '800' },
+  issueExpertAvatar: {
+    width: 22, height: 22, borderRadius: 11, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  issueExpertInitials: { fontSize: 8, fontWeight: '900' },
 
   // ── À faire maintenant ─────────────────────────────────────────────────────
   actionsCard: {

@@ -105,12 +105,22 @@ export default function AuditOfferScreen() {
       expertDesc: 'Prend en charge l\'intégralité : hook, montage, sous-titres, son trending.',
       expertIcon: 'sparkles-outline',
       problem: 'Tous les points critiques détectés dans ta vidéo.',
-      videoTitle: 'Vidéo auditée',
-      auditDate: today,
+      videoTitle: 'Vidéo auditée', auditDate: today,
       category: 'Optimisation', icon: 'sparkles-outline', color: '#8B5CF6',
       impact: '+65%', impactLabel: 'de performance globale',
     });
-    navigation.navigate('Experts');
+    navigation.navigate('MissionConfirmation', {
+      mission: {
+        type: 'Optimisation', icon: 'sparkles-outline', color: '#8B5CF6',
+        title: 'Optimisation complète par Noah P.',
+        problem: 'Tous les points critiques de ta vidéo (hook, sous-titres, son, cadrage)',
+        duration: '15–60s', budget: PACK_PRICE, revisions: 2, deadline: '48h',
+      },
+      freelancer: {
+        name: 'Noah P.', initials: 'NP', specialty: 'Optimisation TikTok complète',
+        rating: 5.0, level: 'Expert Swiple', color: '#8B5CF6',
+      },
+    });
   }
 
   function handleTargeted(fix) {
@@ -122,16 +132,25 @@ export default function AuditOfferScreen() {
       expertColor: fix.color, expertSpecialty: fix.expertBadge,
       expertRating: fix.rating, expertReviews: null,
       expertPrice: fix.price, expertDelivery: fix.deliveryTime,
-      expertBadge: fix.expertBadge,
-      expertDesc: fix.solution,
-      expertIcon: fix.icon,
-      problem: fix.problem,
-      videoTitle: 'Vidéo auditée',
-      auditDate: today,
+      expertBadge: fix.expertBadge, expertDesc: fix.solution,
+      expertIcon: fix.icon, problem: fix.problem,
+      videoTitle: 'Vidéo auditée', auditDate: today,
       category: fix.expertBadge, icon: fix.icon, color: fix.color,
       impact: null, impactLabel: null,
     });
-    navigation.navigate('Experts');
+    navigation.navigate('MissionConfirmation', {
+      mission: {
+        type: fix.expertBadge, icon: fix.icon, color: fix.color,
+        title: `Mission ${fix.expertBadge} — ${fix.problem}`,
+        problem: fix.problem,
+        duration: '15–60s', budget: fix.price, revisions: 2, deadline: fix.deliveryTime,
+      },
+      freelancer: {
+        name: fix.expertName, initials: fix.expertInitials,
+        specialty: fix.expertBadge, rating: fix.rating,
+        level: fix.expertBadge, color: fix.color,
+      },
+    });
   }
 
   return (
