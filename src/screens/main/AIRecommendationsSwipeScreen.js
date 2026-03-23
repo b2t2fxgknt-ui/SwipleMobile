@@ -338,7 +338,7 @@ export default function AIRecommendationsSwipeScreen() {
           <BubbleBackground variant="acheteur" />
         </View>
         <StatusBar barStyle="light-content" />
-        <SafeAreaView style={{ flex: 1 }}>
+        <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
           <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.doneWrap}>
 
@@ -597,7 +597,7 @@ export default function AIRecommendationsSwipeScreen() {
       </View>
 
       {/* Boutons d'action */}
-      <SafeAreaView>
+      <SafeAreaView edges={['left', 'right']}>
         <View style={styles.actions}>
           <TouchableOpacity
             style={[styles.actionBtnOutline, { borderColor: '#EF444440' }]}

@@ -289,7 +289,7 @@ export default function ExpertsScreen() {
   }, [query, catFilter]);
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="light-content" />
       {/* Fond "marketplace" distinct — gradient chaud + bulle prestataire */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">

@@ -434,7 +434,7 @@ export default function OrdersScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <FreelancerProfileSheet
         visible={!!profileFreelancer}
         freelancer={profileFreelancer}
