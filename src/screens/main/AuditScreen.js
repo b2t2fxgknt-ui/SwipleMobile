@@ -22,6 +22,7 @@ import { useExpertSelection } from '../../lib/ExpertSelectionContext';
 import { matchFreelancers, CATEGORY_ACCENT } from '../../data/freelancers';
 import ShareScoreModal from '../../components/ui/ShareScoreModal';
 import FreelancerProfileSheet from '../../components/ui/FreelancerProfileSheet';
+import ScrollProgressIndicator from '../../components/ui/ScrollProgressIndicator';
 import { CONVERSION_EXPERTS, PACK_PRICE, PACK_ORIGINAL, PACK_ITEMS, toSheetExpert } from '../../data/auditExperts';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -259,6 +260,9 @@ export default function AuditScreen() {
   const glowAnim       = useRef(new Animated.Value(0)).current;  // glow on high score
   const deltaAnim      = useRef(new Animated.Value(0)).current;  // banner delta re-test
   const retentionAnim  = useRef(new Animated.Value(0)).current;  // drop-off curve
+  const scrollIndicatorY = useRef(new Animated.Value(0)).current;
+  const [scrollContentH,   setScrollContentH]   = useState(0);
+  const [scrollContainerH, setScrollContainerH] = useState(0);
 
   // ── Simulated file pick ───────────────────────────────────────────────────
   const handlePickFile = useCallback(() => {
@@ -464,6 +468,13 @@ export default function AuditScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={16}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollIndicatorY } } }],
+            { useNativeDriver: false }
+          )}
+          onContentSizeChange={(_, h) => setScrollContentH(h)}
+          onLayout={(e) => setScrollContainerH(e.nativeEvent.layout.height)}
         >
 
           {/* ── HEADER ──────────────────────────────────────────────────── */}
@@ -1453,6 +1464,13 @@ export default function AuditScreen() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* ── Indicateur de scroll ── */}
+      <ScrollProgressIndicator
+        scrollY={scrollIndicatorY}
+        contentHeight={scrollContentH}
+        containerHeight={scrollContainerH}
+      />
 
       {/* ── Fiche profil expert ── */}
       <FreelancerProfileSheet

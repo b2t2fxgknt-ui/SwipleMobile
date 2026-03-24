@@ -11,6 +11,7 @@ import {
   TouchableOpacity, StatusBar, Animated, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ScrollProgressIndicator from '../../components/ui/ScrollProgressIndicator';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -350,6 +351,9 @@ export default function OrdersScreen() {
   const [supabaseOrders, setSupabaseOrders] = useState([]);
   const [refreshing,     setRefreshing]     = useState(false);
   const [activeTab,      setActiveTab]      = useState('all');
+  const scrollIndicatorY = useRef(new Animated.Value(0)).current;
+  const [scrollContentH,   setScrollContentH]   = useState(0);
+  const [scrollContainerH, setScrollContainerH] = useState(0);
 
   // ── Fetch Supabase orders (silencieux si table vide) ─────────────────────
   const fetchSupabase = useCallback(async (isRefresh = false) => {
@@ -517,6 +521,13 @@ export default function OrdersScreen() {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollIndicatorY } } }],
+          { useNativeDriver: false }
+        )}
+        onContentSizeChange={(_, h) => setScrollContentH(h)}
+        onLayout={(e) => setScrollContainerH(e.nativeEvent.layout.height)}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -555,6 +566,13 @@ export default function OrdersScreen() {
         )}
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* ── Indicateur de scroll ── */}
+      <ScrollProgressIndicator
+        scrollY={scrollIndicatorY}
+        contentHeight={scrollContentH}
+        containerHeight={scrollContainerH}
+      />
     </SafeAreaView>
   );
 }

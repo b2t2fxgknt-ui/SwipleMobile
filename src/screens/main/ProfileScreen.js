@@ -19,6 +19,7 @@ import { supabase } from '../../lib/supabase';
 import { useSession } from '../../lib/SessionContext';
 import { COLORS, SPACING, FONT, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
+import ScrollProgressIndicator from '../../components/ui/ScrollProgressIndicator';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -392,6 +393,9 @@ export default function ProfileScreen() {
 
   // Completion bar animation
   const completionAnim = useRef(new Animated.Value(0)).current;
+  const scrollIndicatorY = useRef(new Animated.Value(0)).current;
+  const [scrollContentH,   setScrollContentH]   = useState(0);
+  const [scrollContainerH, setScrollContainerH] = useState(0);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -515,6 +519,13 @@ export default function ProfileScreen() {
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollIndicatorY } } }],
+            { useNativeDriver: false }
+          )}
+          onContentSizeChange={(_, h) => setScrollContentH(h)}
+          onLayout={(e) => setScrollContainerH(e.nativeEvent.layout.height)}
         >
 
           {/* ── Barre supérieure avec cloche + gear ── */}
@@ -812,6 +823,13 @@ export default function ProfileScreen() {
           <Text style={styles.version}>Swiple · v2.0</Text>
           <View style={{ height: 40 }} />
         </ScrollView>
+
+        {/* ── Indicateur de scroll ── */}
+        <ScrollProgressIndicator
+          scrollY={scrollIndicatorY}
+          contentHeight={scrollContentH}
+          containerHeight={scrollContainerH}
+        />
       </SafeAreaView>
     </View>
   );

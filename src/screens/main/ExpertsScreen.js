@@ -9,6 +9,7 @@ import {
  TextInput, StatusBar, Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ScrollProgressIndicator from '../../components/ui/ScrollProgressIndicator';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -370,6 +371,9 @@ export default function ExpertsScreen() {
   const [catFilter,       setCatFilter]      = useState('all');
   const [sheetFreelancer, setSheetFreelancer]= useState(null);
   const exploreAnim = useRef(new Animated.Value(0)).current;
+  const scrollIndicatorY = useRef(new Animated.Value(0)).current;
+  const [scrollContentH,   setScrollContentH]   = useState(0);
+  const [scrollContainerH, setScrollContainerH] = useState(0);
 
   function buildOrder(f) {
     const accent = CATEGORY_ACCENT[f.category] ?? COLORS.primary;
@@ -447,6 +451,13 @@ export default function ExpertsScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollIndicatorY } } }],
+          { useNativeDriver: false }
+        )}
+        onContentSizeChange={(_, h) => setScrollContentH(h)}
+        onLayout={(e) => setScrollContainerH(e.nativeEvent.layout.height)}
       >
         {/* ── HEADER ── */}
         <View style={styles.header}>
@@ -622,6 +633,13 @@ export default function ExpertsScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* ── Indicateur de scroll ── */}
+      <ScrollProgressIndicator
+        scrollY={scrollIndicatorY}
+        contentHeight={scrollContentH}
+        containerHeight={scrollContainerH}
+      />
     </SafeAreaView>
   );
 }
