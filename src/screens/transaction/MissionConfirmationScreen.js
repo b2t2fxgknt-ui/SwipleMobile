@@ -16,6 +16,8 @@ import * as Haptics from 'expo-haptics';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { COLORS, SPACING, FONT, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
+import FreelancerProfileSheet from '../../components/ui/FreelancerProfileSheet';
+import { toSheetFromMissionFreelancer } from '../../data/auditExperts';
 
 // ── Mock fallback (si pas de params navigation) ───────────────────────────────
 const DEFAULT_MISSION = {
@@ -82,6 +84,7 @@ export default function MissionConfirmationScreen() {
   const freelancer = route.params?.freelancer ?? DEFAULT_FREELANCER;
 
   const [agreed, setAgreed] = useState(false);
+  const [profileVisible, setProfileVisible] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(24)).current;
 
@@ -179,7 +182,16 @@ export default function MissionConfirmationScreen() {
 
             {/* ── Freelance sélectionné ── */}
             <View style={styles.sectionLabel}><Text style={styles.sectionLabelText}>FREELANCE SÉLECTIONNÉ</Text></View>
-            <View style={styles.card}>
+            <TouchableOpacity
+              style={[styles.card, styles.freelanceCard]}
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setProfileVisible(true); }}
+              activeOpacity={0.88}
+            >
+              <View style={styles.freelanceTapHint}>
+                <Ionicons name="person-circle-outline" size={11} color={COLORS.textLight} />
+                <Text style={styles.freelanceTapHintText}>Appuie pour voir le profil complet</Text>
+                <Ionicons name="chevron-forward" size={11} color={COLORS.textLight} />
+              </View>
               <View style={styles.freelanceRow}>
                 <View style={[styles.freelanceAvatar, { backgroundColor: freelancer.color + '20', borderColor: freelancer.color + '40' }]}>
                   <Text style={[styles.freelanceInitials, { color: freelancer.color }]}>{freelancer.initials}</Text>
@@ -202,7 +214,7 @@ export default function MissionConfirmationScreen() {
                   </View>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
 
             {/* ── Récapitulatif prix ── */}
             <View style={styles.sectionLabel}><Text style={styles.sectionLabelText}>RÉCAPITULATIF</Text></View>
@@ -261,6 +273,14 @@ export default function MissionConfirmationScreen() {
 
           </Animated.View>
         </ScrollView>
+
+        {/* ── Fiche expert ── */}
+        <FreelancerProfileSheet
+          visible={profileVisible}
+          freelancer={toSheetFromMissionFreelancer(freelancer)}
+          onClose={() => setProfileVisible(false)}
+          onOrder={null}
+        />
 
         {/* ── CTA sticky ── */}
         <View style={styles.ctaWrapper}>
@@ -327,6 +347,9 @@ const styles = StyleSheet.create({
   metaChipText:   { fontSize: 11, color: COLORS.textMuted, fontWeight: '600' },
 
   // Freelance
+  freelanceCard:       { borderColor: COLORS.border },
+  freelanceTapHint:    { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 10 },
+  freelanceTapHintText:{ fontSize: 10, color: COLORS.textLight, fontWeight: '600', flex: 1 },
   freelanceRow:      { flexDirection: 'row', alignItems: 'center', gap: 12 },
   freelanceAvatar:   { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   freelanceInitials: { fontSize: 17, fontWeight: '800' },

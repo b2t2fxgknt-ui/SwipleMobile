@@ -21,6 +21,8 @@ import BubbleBackground from '../../components/ui/BubbleBackground';
 import { useExpertSelection } from '../../lib/ExpertSelectionContext';
 import { matchFreelancers, CATEGORY_ACCENT } from '../../data/freelancers';
 import ShareScoreModal from '../../components/ui/ShareScoreModal';
+import FreelancerProfileSheet from '../../components/ui/FreelancerProfileSheet';
+import { CONVERSION_EXPERTS, PACK_PRICE, PACK_ORIGINAL, PACK_ITEMS, toSheetExpert } from '../../data/auditExperts';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
@@ -139,42 +141,7 @@ const RETENTION_CURVE = [
   { sec: 'Fin',  pct: 7,   label: ''                  },
 ];
 
-// ── Experts conversion (cartes dédiées) ──────────────────────────────────────
-const CONVERSION_EXPERTS = [
-  {
-    id: 'cx1', name: 'Thomas G.', initials: 'TG',
-    specialty: 'Hook & Script viral',
-    tagline: 'Réécrit tes 3 premières secondes pour x3 la rétention',
-    solves: 'Hook trop lent',
-    rating: 4.9, reviews: 127, price: 29, deliveryTime: '24h',
-    proof: '2.1M vues en moyenne', color: '#EF4444', icon: 'flash-outline', badge: 'Top Copywriter',
-  },
-  {
-    id: 'cx2', name: 'Léa M.', initials: 'LM',
-    specialty: 'Montage & Sous-titres TikTok',
-    tagline: 'Sous-titres pro + rythme de coupe optimisé',
-    solves: 'Sous-titres manquants',
-    rating: 4.8, reviews: 89, price: 49, deliveryTime: '24h',
-    proof: '1.4M vues en moyenne', color: '#F59E0B', icon: 'text-outline', badge: 'Livraison 24h',
-  },
-  {
-    id: 'cx3', name: 'Noah P.', initials: 'NP',
-    specialty: 'Optimisation TikTok complète',
-    tagline: 'Prend en charge l\'intégralité de l\'optimisation',
-    solves: 'Tous les points critiques',
-    rating: 5.0, reviews: 56, price: 89, deliveryTime: '48h',
-    proof: '3.2M vues en moyenne', color: '#8B5CF6', icon: 'sparkles-outline', badge: 'Expert Swiple',
-  },
-];
-
-const PACK_ITEMS = [
-  { icon: 'flash-outline',        label: 'Hook réécrit (0–3s)' },
-  { icon: 'cut-outline',          label: 'Montage + rythme optimisé' },
-  { icon: 'text-outline',         label: 'Sous-titres animés' },
-  { icon: 'musical-note-outline', label: 'Son trending ajouté' },
-];
-const PACK_PRICE    = 60;
-const PACK_ORIGINAL = 127;
+// CONVERSION_EXPERTS, PACK_PRICE, PACK_ORIGINAL, PACK_ITEMS → importés depuis data/auditExperts.js
 
 const DIY_CHECKLIST = [
   { text: 'Réécrire les 2 premières secondes avec un hook choc', xp: 20, badge: 'Hook Master',     icon: 'flash-outline',        color: '#EF4444' },
@@ -276,6 +243,7 @@ export default function AuditScreen() {
   const [showHooks,      setShowHooks]      = useState(false);
   const [showDiy,        setShowDiy]        = useState(false);
   const [diyChecked,     setDiyChecked]     = useState(DIY_CHECKLIST.map(() => false));
+  const [sheetExpert,    setSheetExpert]    = useState(null);
 
   // ── Rétention & viralité ─────────────────────────────────────────────────
   const [previousScore,  setPreviousScore]  = useState(null); // score avant re-test
@@ -1264,37 +1232,88 @@ export default function AuditScreen() {
               <View style={styles.expertsBlock}>
                 <View style={styles.expertsBlockHead}>
                   <Text style={styles.expertsBlockTitle}>Déléguer à un expert</Text>
-                  <Text style={styles.expertsBlockSub}>Un expert règle le problème qui te bloque le plus</Text>
+                  <Text style={styles.expertsBlockSub}>Chaque expert règle un problème précis · tu choisis ce qui te bloque</Text>
                 </View>
+
                 {CONVERSION_EXPERTS.map((expert) => (
-                  <TouchableOpacity
-                    key={expert.id}
-                    style={styles.expertRow}
-                    onPress={() => goToMission(expert, expert.solves)}
-                    activeOpacity={0.85}
-                  >
-                    <View style={[styles.expertRowAvatar, { backgroundColor: expert.color + '22', borderColor: expert.color + '50' }]}>
-                      <Text style={[styles.expertRowInitials, { color: expert.color }]}>{expert.initials}</Text>
+                  <View key={expert.id} style={[styles.microCard, { borderColor: expert.color + '35' }]}>
+                    <LinearGradient
+                      colors={[expert.color + '12', expert.color + '04']}
+                      style={StyleSheet.absoluteFill}
+                      borderRadius={RADIUS.xl}
+                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                    />
+
+                    {/* Problème badge */}
+                    <View style={[styles.microProblemBadge, { backgroundColor: expert.color + '15', borderColor: expert.color + '35' }]}>
+                      <Ionicons name="alert-circle-outline" size={11} color={expert.color} />
+                      <Text style={[styles.microProblemTxt, { color: expert.color }]}>{expert.solves}</Text>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.expertRowName}>{expert.name}</Text>
-                      <Text style={styles.expertRowSpecialty} numberOfLines={1}>{expert.specialty}</Text>
-                      <View style={styles.expertRowMeta}>
-                        <Ionicons name="star" size={9} color="#F59E0B" />
-                        <Text style={styles.expertRowRating}>{expert.rating}</Text>
-                        <View style={styles.expertRowDot} />
-                        <Text style={[styles.expertRowSolves, { color: expert.color }]} numberOfLines={1}>
-                          {expert.solves}
-                        </Text>
+
+                    {/* Identité */}
+                    <View style={styles.microIdentity}>
+                      <TouchableOpacity
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSheetExpert(toSheetExpert(expert)); }}
+                        activeOpacity={0.8}
+                        style={[styles.microAvatar, { backgroundColor: expert.color + '22', borderColor: expert.color }]}
+                      >
+                        <Text style={[styles.microInitials, { color: expert.color }]}>{expert.initials}</Text>
+                      </TouchableOpacity>
+                      <View style={{ flex: 1 }}>
+                        <TouchableOpacity
+                          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSheetExpert(toSheetExpert(expert)); }}
+                          activeOpacity={0.8}
+                        >
+                          <View style={styles.microNameRow}>
+                            <Text style={styles.microName}>{expert.name}</Text>
+                            <View style={[styles.microBadge, { backgroundColor: expert.color + '15', borderColor: expert.color + '30' }]}>
+                              <Text style={[styles.microBadgeTxt, { color: expert.color }]}>{expert.badge}</Text>
+                            </View>
+                          </View>
+                        </TouchableOpacity>
+                        <Text style={[styles.microSpecialty, { color: expert.color }]}>{expert.specialty}</Text>
+                        <View style={styles.microMeta}>
+                          <Ionicons name="star" size={10} color="#F59E0B" />
+                          <Text style={styles.microRating}>{expert.rating}</Text>
+                          <Text style={styles.microDot}>·</Text>
+                          <Text style={styles.microReviews}>{expert.reviews} avis</Text>
+                          <Text style={styles.microDot}>·</Text>
+                          <Ionicons name="time-outline" size={10} color={COLORS.textMuted} />
+                          <Text style={styles.microDelivery}>{expert.deliveryTime}</Text>
+                        </View>
                       </View>
                     </View>
-                    <View style={styles.expertRowRight}>
-                      <Text style={[styles.expertRowPrice, { color: expert.color }]}>{expert.price}€</Text>
-                      <View style={[styles.expertRowCtaBtn, { backgroundColor: expert.color + '15', borderColor: expert.color + '35' }]}>
-                        <Text style={[styles.expertRowCtaTxt, { color: expert.color }]}>Choisir</Text>
-                      </View>
+
+                    {/* Tagline */}
+                    <Text style={styles.microTagline}>{expert.tagline}</Text>
+
+                    {/* Preuve sociale */}
+                    <View style={styles.microProof}>
+                      <Ionicons name="trending-up" size={11} color="#22C55E" />
+                      <Text style={styles.microProofTxt}>{expert.proof}</Text>
                     </View>
-                  </TouchableOpacity>
+
+                    {/* Boutons */}
+                    <View style={styles.microFooter}>
+                      <TouchableOpacity
+                        style={[styles.microProfileBtn, { borderColor: expert.color + '40' }]}
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSheetExpert(toSheetExpert(expert)); }}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="person-circle-outline" size={13} color={expert.color} />
+                        <Text style={[styles.microProfileTxt, { color: expert.color }]}>Voir le profil</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.microOrderBtn, { backgroundColor: expert.color }]}
+                        onPress={() => goToMission(expert, expert.solves)}
+                        activeOpacity={0.85}
+                      >
+                        <Text style={styles.microOrderTxt}>Déléguer · {expert.price}€</Text>
+                        <Ionicons name="arrow-forward" size={13} color="#fff" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 ))}
               </View>
 
@@ -1434,6 +1453,17 @@ export default function AuditScreen() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* ── Fiche profil expert ── */}
+      <FreelancerProfileSheet
+        visible={!!sheetExpert}
+        freelancer={sheetExpert}
+        onClose={() => setSheetExpert(null)}
+        onOrder={sheetExpert ? () => {
+          const e = CONVERSION_EXPERTS.find(x => x.initials === sheetExpert.initials);
+          if (e) goToMission(e, e.solves);
+        } : null}
+      />
 
     </SafeAreaView>
   );
@@ -2299,6 +2329,57 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 4,
   },
   expertRowCtaTxt: { fontSize: 11, fontWeight: '800' },
+
+  // ── Micro-mission expert cards ────────────────────────────────────────────
+  microCard: {
+    borderRadius: RADIUS.xl, borderWidth: 1, overflow: 'hidden',
+    padding: SPACING.md, gap: 10, marginBottom: SPACING.sm,
+  },
+  microProblemBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    alignSelf: 'flex-start', borderWidth: 1, borderRadius: RADIUS.full,
+    paddingHorizontal: 9, paddingVertical: 3,
+  },
+  microProblemTxt: { fontSize: 10, fontWeight: '800', letterSpacing: 0.3 },
+  microIdentity: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  microAvatar: {
+    width: 52, height: 52, borderRadius: 26, borderWidth: 2,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  microInitials: { fontSize: 18, fontWeight: '900' },
+  microNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 1 },
+  microName: { fontSize: 15, fontWeight: '800', color: COLORS.text },
+  microBadge: {
+    borderWidth: 1, borderRadius: RADIUS.full,
+    paddingHorizontal: 6, paddingVertical: 2,
+  },
+  microBadgeTxt: { fontSize: 9, fontWeight: '800' },
+  microSpecialty: { fontSize: 11, fontWeight: '600', marginBottom: 2 },
+  microMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  microRating: { fontSize: 11, fontWeight: '700', color: '#F59E0B' },
+  microDot: { fontSize: 10, color: COLORS.textMuted },
+  microReviews: { fontSize: 11, color: COLORS.textMuted },
+  microDelivery: { fontSize: 11, color: COLORS.textMuted },
+  microTagline: { fontSize: 13, color: COLORS.text, lineHeight: 18, fontStyle: 'italic' },
+  microProof: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: '#22C55E0C', borderRadius: RADIUS.sm,
+    paddingHorizontal: 8, paddingVertical: 4,
+    alignSelf: 'flex-start',
+  },
+  microProofTxt: { fontSize: 11, color: '#22C55E', fontWeight: '600' },
+  microFooter: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
+  microProfileBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    borderWidth: 1, borderRadius: RADIUS.md,
+    paddingHorizontal: 11, paddingVertical: 9,
+  },
+  microProfileTxt: { fontSize: 12, fontWeight: '700' },
+  microOrderBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, borderRadius: RADIUS.md, paddingVertical: 10,
+  },
+  microOrderTxt: { fontSize: 13, fontWeight: '800', color: '#fff' },
 
   // Pack dominant card
   offerPriCard: {

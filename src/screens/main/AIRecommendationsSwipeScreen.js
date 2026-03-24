@@ -11,6 +11,8 @@ import { useNavigation } from '@react-navigation/native';
 import { COLORS, SPACING, FONT, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
 import { useExpertSelection } from '../../lib/ExpertSelectionContext';
+import FreelancerProfileSheet from '../../components/ui/FreelancerProfileSheet';
+import { toSheetFromContextExpert } from '../../data/auditExperts';
 
 const { width, height } = Dimensions.get('window');
 
@@ -314,7 +316,7 @@ function AICard({ rec, impactAnim }) {
 
 // ── Composant carte Expert (depuis audit) ─────────────────────────────────────
 
-function ExpertCard({ rec }) {
+function ExpertCard({ rec, onViewProfile }) {
   const c = rec.expertColor;
   return (
     <View style={styles.card}>
@@ -330,13 +332,19 @@ function ExpertCard({ rec }) {
           <Text style={[styles.expertCertTxt, { color: c }]}>Expert Swiple certifié</Text>
         </View>
 
-        {/* Avatar centré grand */}
-        <View style={[styles.expertAvatarXl, { backgroundColor: c + '25', borderColor: c }]}>
+        {/* Avatar centré grand — tappable */}
+        <TouchableOpacity
+          onPress={() => onViewProfile?.(rec)}
+          activeOpacity={0.85}
+          style={[styles.expertAvatarXl, { backgroundColor: c + '25', borderColor: c }]}
+        >
           <Text style={[styles.expertInitialsXl, { color: c }]}>{rec.expertInitials}</Text>
-        </View>
+        </TouchableOpacity>
 
-        {/* Nom + spécialité */}
-        <Text style={styles.expertHeroName}>{rec.expertName}</Text>
+        {/* Nom + spécialité — tappable */}
+        <TouchableOpacity onPress={() => onViewProfile?.(rec)} activeOpacity={0.85}>
+          <Text style={styles.expertHeroName}>{rec.expertName}</Text>
+        </TouchableOpacity>
         <Text style={[styles.expertHeroSpecialty, { color: c }]}>{rec.expertSpecialty}</Text>
 
         {/* Note + avis + badge inline */}
@@ -417,7 +425,8 @@ function ExpertCard({ rec }) {
 export default function AIRecommendationsSwipeScreen() {
   const navigation = useNavigation();
   const { addExpert } = useExpertSelection();
-  const [deck,     setDeck]     = useState(FULL_DECK);
+  const [deck,       setDeck]       = useState(FULL_DECK);
+  const [sheetExpert, setSheetExpert] = useState(null);
   const [accepted, setAccepted] = useState([]);
   const [history,  setHistory]  = useState([]);        // pour le undo
   const [phase,    setPhase]    = useState('swiping'); // 'swiping' | 'done'
@@ -723,7 +732,7 @@ export default function AIRecommendationsSwipeScreen() {
                   <Text style={styles.ignoreStampText}>IGNORÉ</Text>
                 </Animated.View>
 
-                <ExpertCard rec={rec} />
+                <ExpertCard rec={rec} onViewProfile={e => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSheetExpert(toSheetFromContextExpert(e)); }} />
               </Animated.View>
             );
           }
@@ -734,7 +743,7 @@ export default function AIRecommendationsSwipeScreen() {
                 key={rec.id}
                 style={[styles.cardWrapper, { zIndex: 20, transform: [{ scale: nextCardScale }] }]}
               >
-                <ExpertCard rec={rec} />
+                <ExpertCard rec={rec} onViewProfile={e => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSheetExpert(toSheetFromContextExpert(e)); }} />
               </Animated.View>
             );
           }
@@ -746,6 +755,14 @@ export default function AIRecommendationsSwipeScreen() {
           );
         })}
       </View>
+
+      {/* Fiche profil expert */}
+      <FreelancerProfileSheet
+        visible={!!sheetExpert}
+        freelancer={sheetExpert}
+        onClose={() => setSheetExpert(null)}
+        onOrder={null}
+      />
 
       {/* Boutons d'action */}
       <SafeAreaView edges={['left', 'right']}>

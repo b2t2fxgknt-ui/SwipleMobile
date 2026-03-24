@@ -19,6 +19,7 @@ import { FREELANCERS, CATEGORY_ACCENT, CATEGORY_ICON } from '../../data/freelanc
 import FreelancerProfileSheet from '../../components/ui/FreelancerProfileSheet';
 import { useFavorites } from '../../lib/FavoritesContext';
 import { useExpertSelection } from '../../lib/ExpertSelectionContext';
+import { toSheetFromContextExpert } from '../../data/auditExperts';
 
 const CAT_FILTERS = [
   { key: 'all',               label: 'Tous',    icon: 'apps-outline'      },
@@ -30,7 +31,7 @@ const CAT_FILTERS = [
 ];
 
 // ── Carte Expert sélectionné (depuis optimisation ou audit) ───────────────────
-function SelectedExpertCard({ expert, navigation }) {
+function SelectedExpertCard({ expert, navigation, onViewProfile }) {
   const c = expert.expertColor;
   const sourceBadge = expert.source === 'audit' ? 'Commandé · Audit' : 'Accepté · Optimisation';
   const sourceIcon  = expert.source === 'audit' ? 'analytics-outline' : 'checkmark-circle-outline';
@@ -77,12 +78,18 @@ function SelectedExpertCard({ expert, navigation }) {
 
       {/* ── Identité expert ── */}
       <View style={styles.selIdentity}>
-        <View style={[styles.selAvatar, { backgroundColor: c + '22', borderColor: c }]}>
+        <TouchableOpacity
+          onPress={() => onViewProfile?.(expert)}
+          activeOpacity={0.8}
+          style={[styles.selAvatar, { backgroundColor: c + '22', borderColor: c }]}
+        >
           <Text style={[styles.selInitials, { color: c }]}>{expert.expertInitials}</Text>
-        </View>
+        </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <View style={styles.selNameRow}>
-            <Text style={styles.selName}>{expert.expertName}</Text>
+            <TouchableOpacity onPress={() => onViewProfile?.(expert)} activeOpacity={0.8}>
+              <Text style={styles.selName}>{expert.expertName}</Text>
+            </TouchableOpacity>
             <View style={[styles.selBadgePill, { backgroundColor: c + '15', borderColor: c + '35' }]}>
               <Text style={[styles.selBadgeTxt, { color: c }]}>{expert.expertBadge}</Text>
             </View>
@@ -124,12 +131,14 @@ function SelectedExpertCard({ expert, navigation }) {
           <Text style={styles.selPriceLabel}>Tarif fixe</Text>
           <Text style={[styles.selPrice, { color: c }]}>{expert.expertPrice}€</Text>
         </View>
-        {expert.impact && (
-          <View style={[styles.selImpactPill, { backgroundColor: c + '12', borderColor: c + '30' }]}>
-            <Ionicons name="trending-up" size={11} color={c} />
-            <Text style={[styles.selImpactTxt, { color: c }]}>{expert.impact} {expert.impactLabel}</Text>
-          </View>
-        )}
+        <TouchableOpacity
+          style={[styles.selProfileBtn, { borderColor: c + '40' }]}
+          onPress={() => onViewProfile?.(expert)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="person-circle-outline" size={13} color={c} />
+          <Text style={[styles.selProfileTxt, { color: c }]}>Profil</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.selOrderBtn, { backgroundColor: c }]}
           onPress={handleOrder}
@@ -355,6 +364,7 @@ export default function ExpertsScreen() {
   const navigation        = useNavigation();
   const { toggleFavorite, isFavorite, favorites } = useFavorites();
   const { selectedExperts } = useExpertSelection();
+  const [sheetContextExpert, setSheetContextExpert] = useState(null);
   const [explore,         setExplore]        = useState(false);
   const [query,           setQuery]          = useState('');
   const [catFilter,       setCatFilter]      = useState('all');
@@ -424,6 +434,12 @@ export default function ExpertsScreen() {
           const { mission, freelancer } = buildOrder(sheetFreelancer);
           navigation.navigate('MissionConfirmation', { mission, freelancer });
         }}
+      />
+      <FreelancerProfileSheet
+        visible={!!sheetContextExpert}
+        freelancer={sheetContextExpert}
+        onClose={() => setSheetContextExpert(null)}
+        onOrder={null}
       />
 
       <ScrollView
@@ -505,7 +521,10 @@ export default function ExpertsScreen() {
         ) : (
           <View style={styles.cardsStack}>
             {selectedExperts.map(e => (
-              <SelectedExpertCard key={e.id} expert={e} navigation={navigation} />
+              <SelectedExpertCard
+                key={e.id} expert={e} navigation={navigation}
+                onViewProfile={ex => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSheetContextExpert(toSheetFromContextExpert(ex)); }}
+              />
             ))}
           </View>
         )}
@@ -890,9 +909,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 4, flex: 1,
   },
   selImpactTxt: { fontSize: 10, fontWeight: '700' },
+  selProfileBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    borderWidth: 1, borderRadius: RADIUS.md,
+    paddingHorizontal: 10, paddingVertical: 9,
+  },
+  selProfileTxt: { fontSize: 12, fontWeight: '700' },
   selOrderBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 10,
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 5, borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 10,
   },
   selOrderTxt: { fontSize: 13, fontWeight: '800', color: '#fff' },
 
