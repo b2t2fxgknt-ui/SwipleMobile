@@ -13,6 +13,7 @@ import { ExpertSelectionProvider }   from '../lib/ExpertSelectionContext';
 import WelcomeScreen       from '../screens/auth/WelcomeScreen';
 import LoginScreen         from '../screens/auth/LoginScreen';
 import RegisterScreen      from '../screens/auth/RegisterScreen';
+import FreelanceOnboardingScreen from '../screens/auth/FreelanceOnboardingScreen';
 import OnboardingScreen    from '../screens/auth/OnboardingScreen';
 import MainTabs            from './MainTabs';
 import ServiceDetailScreen from '../screens/main/ServiceDetailScreen';
@@ -81,6 +82,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Welcome"  component={WelcomeScreen}  />
             <Stack.Screen name="Login"    component={LoginScreen}    />
             <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="FreelanceOnboarding" component={FreelanceOnboardingScreen} />
           </>
         ) : (
           <>
