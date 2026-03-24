@@ -45,7 +45,7 @@ export default function WelcomeScreen({ navigation }) {
           <View style={styles.cards}>
             <TouchableOpacity
               style={styles.card}
-              onPress={() => navigation.navigate('Register', { role: 'acheteur' })}
+              onPress={() => navigation.navigate('InfluencerOnboarding')}
               activeOpacity={0.72}
             >
               <View style={styles.cardLeft}>
