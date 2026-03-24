@@ -19,58 +19,6 @@ import BubbleBackground from '../../components/ui/BubbleBackground';
 import { useMissions }      from '../../lib/MissionsContext';
 import { useConversations } from '../../lib/ConversationsContext';
 
-// ─── Mock conversations (démonstration) ────────────────────────────────────────
-
-const MOCK_ATTENTE = [
-  {
-    id: 'mock_a1',
-    meta: { name: 'Théo Blanchet', initials: 'TB', color: '#F59E0B', type: 'Design', title: 'Logo identité' },
-    lastMsg: { from: 'me', text: 'J\'ai envoyé les fichiers sources, dites-moi si ça vous convient !', ts: 'Il y a 1h' },
-    unread: 0,
-  },
-  {
-    id: 'mock_a2',
-    meta: { name: 'Camille Roux', initials: 'CR', color: '#3B82F6', type: 'Dev', title: 'API REST' },
-    lastMsg: { from: 'me', text: 'Voici la première version, j\'attends votre retour.', ts: 'Hier' },
-    unread: 0,
-  },
-];
-
-const MOCK_ENCOURS = [
-  {
-    id: 'mock_e1',
-    meta: { name: 'Julien Moreau', initials: 'JM', color: COLORS.primary, type: 'Marketing', title: 'Campagne Google Ads' },
-    lastMsg: { from: 'client', text: 'Super travail ! Pouvez-vous ajuster le ciblage pour le 25–35 ans ?', ts: 'Il y a 5 min' },
-    unread: 2,
-  },
-  {
-    id: 'mock_e2',
-    meta: { name: 'Sarah Dumont', initials: 'SD', color: COLORS.prestataire, type: 'Vidéo', title: 'Teaser produit 30s' },
-    lastMsg: { from: 'client', text: 'Le montage est excellent, on continue !', ts: 'Il y a 23 min' },
-    unread: 1,
-  },
-  {
-    id: 'mock_e3',
-    meta: { name: 'Marc Lefebvre', initials: 'ML', color: '#EC4899', type: 'Contenu', title: 'Articles SEO ×5' },
-    lastMsg: { from: 'me', text: 'Article 3 envoyé, les 2 derniers seront prêts vendredi.', ts: '14:32' },
-    unread: 0,
-  },
-];
-
-const MOCK_TERMINEES = [
-  {
-    id: 'mock_t1',
-    meta: { name: 'Alice Chen', initials: 'AC', color: COLORS.textMuted, type: 'Design', title: 'UI Kit mobile' },
-    lastMsg: { from: 'client', text: '⭐⭐⭐⭐⭐ Excellent travail, mission validée !', ts: 'Lun' },
-    unread: 0,
-  },
-  {
-    id: 'mock_t2',
-    meta: { name: 'Pierre Dubois', initials: 'PD', color: COLORS.textLight, type: 'Dev', title: 'Extension Chrome' },
-    lastMsg: { from: 'me', text: 'Merci pour votre confiance, à bientôt !', ts: '12 mars' },
-    unread: 0,
-  },
-];
 
 // ─── buildInitialMessages ───────────────────────────────────────────────────────
 
@@ -293,9 +241,16 @@ export default function MessagerieScreen() {
       };
     });
 
-  const enCoursAll  = [...ctxConvs, ...MOCK_ENCOURS];
-  const enAttenteAll = MOCK_ATTENTE;
-  const termineesAll = MOCK_TERMINEES;
+  // Conversations réelles uniquement — alimentées par MissionsContext + ConversationsContext
+  const enCoursAll  = ctxConvs.filter(c => {
+    const missionStatus = c.meta?.raw?.status;
+    return !missionStatus || (missionStatus !== 'valide' && missionStatus !== 'completed');
+  });
+  const enAttenteAll = [];  // Sera peuplé lorsque les missions "en attente d'acceptation" seront gérées
+  const termineesAll = ctxConvs.filter(c => {
+    const missionStatus = c.meta?.raw?.status;
+    return missionStatus === 'valide' || missionStatus === 'completed';
+  });
 
   // ── Ouvrir une conversation ───────────────────────────────────────────────
   function openConversation(conv) {
@@ -414,7 +369,7 @@ export default function MessagerieScreen() {
   // ═══════════════════════════════════════════════════════════════════════════
   //  VUE LISTE AVEC SECTIONS DÉROULANTES
   // ═══════════════════════════════════════════════════════════════════════════
-  const totalUnread = MOCK_ENCOURS.reduce((s, c) => s + (c.unread ?? 0), 0);
+  const totalUnread = enCoursAll.reduce((s, c) => s + (c.unread ?? 0), 0);
 
   return (
     <SafeAreaView style={styles.safe}>

@@ -342,26 +342,31 @@ export default function MissionTrackingScreen() {
                   {!isValidated && (
                     <View style={styles.validationActions}>
 
-                      {/* Retouche gratuite */}
+                      {/* Retouche gratuite — ou litige si épuisée */}
                       <TouchableOpacity
-                        style={[styles.validationActionBtn, styles.revisionActionBtn, !canRevise && { opacity: 0.38 }]}
+                        style={[styles.validationActionBtn, styles.revisionActionBtn, !canRevise && { borderColor: '#EF444430', backgroundColor: '#EF44440A' }]}
                         onPress={() => {
-                          if (!canRevise) return;
                           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          navigation.navigate('RevisionRequest', { mission: liveMission, freelancer });
+                          if (!canRevise) {
+                            navigation.navigate('Dispute', { mission: liveMission, freelancer });
+                          } else {
+                            navigation.navigate('RevisionRequest', { mission: liveMission, freelancer });
+                          }
                         }}
-                        activeOpacity={canRevise ? 0.78 : 1}
+                        activeOpacity={0.78}
                       >
-                        <View style={styles.revisionActionIcon}>
-                          <Ionicons name="refresh-outline" size={18} color="#F59E0B" />
+                        <View style={[styles.revisionActionIcon, !canRevise && { backgroundColor: '#EF444415' }]}>
+                          <Ionicons name={canRevise ? 'refresh-outline' : 'warning-outline'} size={18} color={canRevise ? '#F59E0B' : '#EF4444'} />
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.revisionActionTitle}>Demander une retouche</Text>
+                          <Text style={[styles.revisionActionTitle, !canRevise && { color: '#EF4444' }]}>
+                            {canRevise ? 'Demander une retouche' : 'Ouvrir un litige'}
+                          </Text>
                           <Text style={styles.revisionActionSub}>
-                            {canRevise ? `Gratuit · ${revCount}/1 utilisée` : '1/1 retouche utilisée'}
+                            {canRevise ? `Gratuit · ${revCount}/1 utilisée` : 'Toutes les révisions utilisées'}
                           </Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={14} color="#F59E0B60" />
+                        <Ionicons name="chevron-forward" size={14} color={canRevise ? '#F59E0B60' : '#EF444460'} />
                       </TouchableOpacity>
 
                       {/* Divider */}

@@ -18,6 +18,7 @@ const CARD_W          = width - SPACING.lg * 2;
 const CARD_H          = height * 0.56;
 
 import { FREELANCERS, CATEGORY_ACCENT, CATEGORY_ICON } from '../../data/freelancers';
+import FreelancerProfileSheet from '../../components/ui/FreelancerProfileSheet';
 
 // ── Composant carte ───────────────────────────────────────────────────────────
 
@@ -119,9 +120,10 @@ function FreelancerCard({ freelancer }) {
 
 export default function FreelanceSwipeScreen() {
   const navigation = useNavigation();
-  const [deck,     setDeck]     = useState(FREELANCERS);
-  const [likedIds, setLikedIds] = useState([]);
-  const [phase,    setPhase]    = useState('swiping'); // 'swiping' | 'done'
+  const [deck,              setDeck]             = useState(FREELANCERS);
+  const [likedIds,          setLikedIds]         = useState([]);
+  const [phase,             setPhase]            = useState('swiping'); // 'swiping' | 'done'
+  const [profileFreelancer, setProfileFreelancer] = useState(null);
 
   const position = useRef(new Animated.ValueXY()).current;
 
@@ -266,6 +268,12 @@ export default function FreelanceSwipeScreen() {
 
   return (
     <View style={styles.container}>
+      <FreelancerProfileSheet
+        visible={!!profileFreelancer}
+        freelancer={profileFreelancer}
+        onClose={() => setProfileFreelancer(null)}
+        onOrder={null}
+      />
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <BubbleBackground variant="acheteur" />
       </View>
@@ -365,7 +373,7 @@ export default function FreelanceSwipeScreen() {
             onPress={() => {
               if (deck[0]) {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                navigation.navigate('Explorer');
+                setProfileFreelancer(deck[0]);
               }
             }}
             activeOpacity={0.75}

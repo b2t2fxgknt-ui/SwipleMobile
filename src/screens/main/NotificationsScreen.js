@@ -213,6 +213,46 @@ function NotifItem({ notif, onRead, onAction }) {
   );
 }
 
+// ─── Nav target builder ───────────────────────────────────────────────────────
+
+function buildNavTarget(notif, isFreelancer) {
+  const mockMission = {
+    id: `notif_${notif.id}`,
+    title: notif.title,
+    type: 'Mission',
+    status: 'livre',
+    budget: 89,
+    color: notif.color,
+    icon: notif.icon,
+    deadline: '48',
+    revisions: 1,
+    clientName: 'Client',
+    clientInitials: 'CL',
+  };
+  const mockFreelancer = { name: 'Freelance', initials: 'FL' };
+
+  switch (notif.action) {
+    case 'Voir la livraison':
+      if (isFreelancer) return { screen: 'MissionBrief', params: { mission: { ...mockMission, status: 'revision' } } };
+      return { screen: 'MissionTracking', params: { mission: mockMission, freelancer: mockFreelancer } };
+    case 'Voir':
+      if (isFreelancer) return { screen: 'MissionBrief', params: { mission: { ...mockMission, status: 'revision', type: 'Vidéo' } } };
+      return { screen: 'MissionTracking', params: { mission: { ...mockMission, status: 'livre' }, freelancer: mockFreelancer } };
+    case 'Répondre':
+      return { screen: 'Messagerie', params: {} };
+    case 'Voir la mission':
+      return { screen: 'Main', params: {} };
+    case 'Voir la demande':
+      return { screen: 'MissionBrief', params: { mission: { ...mockMission, status: 'revision', type: 'Vidéo', color: '#3B82F6', icon: 'refresh-circle-outline' } } };
+    case 'Voir le profil':
+      return { screen: 'Main', params: { screen: 'Experts' } };
+    case 'Retirer':
+      return { screen: 'Main', params: { screen: 'Revenus' } };
+    default:
+      return null;
+  }
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function NotificationsScreen({ navigation, route }) {
@@ -237,6 +277,14 @@ export default function NotificationsScreen({ navigation, route }) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setNotifs(prev => prev.map(n => ({ ...n, read: true })));
   }, []);
+
+  const handleAction = useCallback((notif) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    markRead(notif.id);
+    const target = buildNavTarget(notif, isFreelancer);
+    if (!target) return;
+    navigation.navigate(target.screen, target.params);
+  }, [isFreelancer, markRead, navigation]);
 
   const handleScroll = useCallback(({ nativeEvent }) => {
     const y = nativeEvent.contentOffset.y;
@@ -337,7 +385,7 @@ export default function NotificationsScreen({ navigation, route }) {
                     key={notif.id}
                     notif={notif}
                     onRead={markRead}
-                    onAction={() => {}}
+                    onAction={handleAction}
                   />
                 ))}
               </View>

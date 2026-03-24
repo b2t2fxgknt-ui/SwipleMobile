@@ -19,8 +19,7 @@ import BubbleBackground from '../../components/ui/BubbleBackground';
 import { useMissions } from '../../lib/MissionsContext';
 
 const { width: SW } = Dimensions.get('window');
-const MAX_REVISIONS = 1;
-const REVISIONS_USED = 0;
+const DEFAULT_MAX_REVISIONS = 1;
 
 // ── Comparaison avant/après ────────────────────────────────────────────────────
 function BeforeAfterSlider({ color }) {
@@ -100,7 +99,10 @@ export default function DeliveryScreen() {
   const { mission, freelancer } = route.params ?? {};
 
   const mColor = mission?.color ?? COLORS.primary;
-  const revisionsLeft = MAX_REVISIONS - REVISIONS_USED;
+  // Révisions restantes dynamiques — lues depuis la mission (revisions = nombre accordé, revisionsUsed = nombre utilisé)
+  const maxRevisions  = mission?.revisions   ?? DEFAULT_MAX_REVISIONS;
+  const revisionsUsed = mission?.revisionsUsed ?? 0;
+  const revisionsLeft = Math.max(0, maxRevisions - revisionsUsed);
 
   function handleValidate() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -110,11 +112,12 @@ export default function DeliveryScreen() {
   }
 
   function handleRevision() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (revisionsLeft === 0) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      // Plus de révisions gratuites → ouvrir le litige
+      navigation.navigate('Dispute', { mission, freelancer });
       return;
     }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     navigation.navigate('RevisionRequest', { mission, freelancer, revisionsLeft });
   }
 
@@ -214,6 +217,20 @@ export default function DeliveryScreen() {
               <Text style={styles.validateText}>Valider et payer</Text>
             </LinearGradient>
           </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleRevision} activeOpacity={0.8} style={styles.revisionBtn}>
+            <Ionicons
+              name={revisionsLeft > 0 ? 'refresh-circle-outline' : 'warning-outline'}
+              size={15}
+              color={revisionsLeft > 0 ? COLORS.primary : '#EF4444'}
+            />
+            <Text style={[styles.revisionBtnText, { color: revisionsLeft > 0 ? COLORS.primary : '#EF4444' }]}>
+              {revisionsLeft > 0
+                ? `Demander une révision (${revisionsLeft} restante${revisionsLeft > 1 ? 's' : ''})`
+                : 'Ouvrir un litige'}
+            </Text>
+          </TouchableOpacity>
+
           <Text style={styles.ctaSub}>Paiement libéré uniquement après votre validation</Text>
         </View>
       </SafeAreaView>

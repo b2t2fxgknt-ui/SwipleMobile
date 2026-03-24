@@ -49,8 +49,10 @@ export default function RevisionRequestScreen() {
       return;
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // ── Met à jour le statut dans ProjetsScreen → onglet "Révision" ──
-    if (mission?.id) updateStatus(mission.id, 'revision');
+    // ── Met à jour le statut + compteur de révisions utilisées ──
+    if (mission?.id) updateStatus(mission.id, 'revision', {
+      revisionsUsed: (mission?.revisionsUsed ?? 0) + 1,
+    });
     setSent(true);
     setTimeout(() => navigation.goBack(), 2000);
   }
