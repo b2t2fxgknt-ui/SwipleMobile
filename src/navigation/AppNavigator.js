@@ -9,6 +9,7 @@ import { MissionsProvider }          from '../lib/MissionsContext';
 import { ConversationsProvider }     from '../lib/ConversationsContext';
 import { FavoritesProvider }         from '../lib/FavoritesContext';
 import { ExpertSelectionProvider }   from '../lib/ExpertSelectionContext';
+import { BriefsProvider }            from '../lib/BriefsContext';
 
 import WelcomeScreen       from '../screens/auth/WelcomeScreen';
 import LoginScreen         from '../screens/auth/LoginScreen';
@@ -40,6 +41,8 @@ import ServiceCreationScreen     from '../screens/main/ServiceCreationScreen';
 import BriefDetailScreen         from '../screens/main/BriefDetailScreen';
 import FavoritesScreen           from '../screens/main/FavoritesScreen';
 import EditProfileScreen         from '../screens/main/EditProfileScreen';
+import BriefCreationScreen       from '../screens/main/BriefCreationScreen';
+import ApplicantsScreen          from '../screens/main/ApplicantsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -74,6 +77,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       {/* MissionsProvider ici = accessible par TOUS les écrans (tabs + transaction stack) */}
+      <BriefsProvider>
       <ExpertSelectionProvider>
       <FavoritesProvider>
       <ConversationsProvider>
@@ -233,6 +237,18 @@ export default function AppNavigator() {
               component={EditProfileScreen}
               options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
             />
+            {/* 16. Création de brief (client) */}
+            <Stack.Screen
+              name="BriefCreation"
+              component={BriefCreationScreen}
+              options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
+            />
+            {/* 17. Candidatures reçues sur un brief */}
+            <Stack.Screen
+              name="Applicants"
+              component={ApplicantsScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
 
           </>
         )}
@@ -241,6 +257,7 @@ export default function AppNavigator() {
       </ConversationsProvider>
       </FavoritesProvider>
       </ExpertSelectionProvider>
+      </BriefsProvider>
     </NavigationContainer>
   );
 }

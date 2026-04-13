@@ -16,6 +16,9 @@ import * as Haptics from 'expo-haptics';
 import { COLORS, SPACING, FONT, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
 import { useMissions } from '../../lib/MissionsContext';
+import { useBriefs } from '../../lib/BriefsContext';
+import { useContext } from 'react';
+import { SessionContext } from '../../lib/SessionContext';
 
 const { width, height } = Dimensions.get('window');
 const SWIPE_THRESHOLD   = width * 0.30;
@@ -195,6 +198,8 @@ function BriefCard({ brief }) {
 
 export default function MissionsScreen() {
   const { acceptMission } = useMissions();
+  const { addApplicant }  = useBriefs();
+  const session           = useContext(SessionContext);
   const [deck,    setDeck]    = useState(MOCK_BRIEFS);
   const [passed,  setPassed]  = useState([]);
   const [phase,   setPhase]   = useState('swiping'); // 'swiping' | 'done'
@@ -232,6 +237,20 @@ export default function MissionsScreen() {
     if (direction === 'right' && top) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       acceptMission(top); // → ProjetsScreen instantanément
+
+      // Enregistrer la candidature côté client
+      const meta = session?.user?.user_metadata ?? {};
+      const fullName = meta.full_name ?? meta.name ?? 'Ghostwriter';
+      const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'GW';
+      addApplicant(top.id, {
+        id:        session?.user?.id ?? `local_${Date.now()}`,
+        initials,
+        name:      fullName,
+        specialty: top.type ?? 'Ghostwriting TikTok',
+        rating:    5.0,
+        missions:  0,
+        bio:       '',
+      });
     } else {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       if (top) setPassed(prev => [...prev, top]);
