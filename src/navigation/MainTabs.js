@@ -12,12 +12,14 @@ import MissionsScreen               from '../screens/main/MissionsScreen';
 import ProjetsScreenComponent       from '../screens/main/ProjetsScreen';
 import RevenuesScreen               from '../screens/main/RevenuesScreen';
 import ClientBriefsScreen           from '../screens/main/ClientBriefsScreen';
+import GhostwritersScreen           from '../screens/main/GhostwritersScreen';
 
 const Tab = createBottomTabNavigator();
 
 // ── Screen wrappers (module-scope = stable refs, no remount on re-render) ─────
 
-const ClientBriefsTabScreen = () => <ClientBriefsScreen />;
+const ClientBriefsTabScreen     = () => <ClientBriefsScreen />;
+const GhostwritersTabScreen     = () => <GhostwritersScreen />;
 const MissionsTabScreen     = () => <MissionsScreen />;
 const ProjetsTabScreen      = () => <ProjetsScreenComponent />;
 const RevenuesTabScreen     = () => <RevenuesScreen />;
@@ -127,12 +129,17 @@ export default function MainTabs({ session }) {
             />
           </>
         ) : (
-          /* ── CLIENT : Briefs · Commandes · Profil ── */
+          /* ── CLIENT : Briefs · Ghostwriters · Commandes · Profil ── */
           <>
             <Tab.Screen
               name="Briefs"
               component={ClientBriefsTabScreen}
               options={{ tabBarIcon: icon('document-text', 'document-text-outline') }}
+            />
+            <Tab.Screen
+              name="Ghostwriters"
+              component={GhostwritersTabScreen}
+              options={{ tabBarIcon: icon('people', 'people-outline') }}
             />
             <Tab.Screen
               name="Commandes"

@@ -4,10 +4,10 @@
  * Swipe gauche = passer
  */
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, Dimensions, PanResponder,
-  Animated, TouchableOpacity, StatusBar,
+  Animated, TouchableOpacity, StatusBar, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,6 +19,7 @@ import { useMissions } from '../../lib/MissionsContext';
 import { useBriefs } from '../../lib/BriefsContext';
 import { useContext } from 'react';
 import { SessionContext } from '../../lib/SessionContext';
+import { supabase } from '../../lib/supabase';
 
 const { width, height } = Dimensions.get('window');
 const SWIPE_THRESHOLD   = width * 0.30;
@@ -201,8 +202,71 @@ export default function MissionsScreen() {
   const { addApplicant }  = useBriefs();
   const session           = useContext(SessionContext);
   const [deck,    setDeck]    = useState(MOCK_BRIEFS);
+  const [loading, setLoading] = useState(false);
   const [passed,  setPassed]  = useState([]);
   const [phase,   setPhase]   = useState('swiping'); // 'swiping' | 'done'
+
+  // ── Fetch briefs depuis Supabase au montage ───────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchBriefs() {
+      try {
+        setLoading(true);
+        const userId = session?.user?.id;
+
+        // 1. Briefs ouverts
+        const { data: rows, error } = await supabase
+          .from('briefs')
+          .select('*')
+          .eq('status', 'open')
+          .order('created_at', { ascending: false });
+
+        if (error || !rows?.length) return; // garde les MOCK_BRIEFS
+
+        // 2. Candidatures déjà soumises par ce freelance
+        let appliedIds = new Set();
+        if (userId) {
+          const { data: myApps } = await supabase
+            .from('applications')
+            .select('brief_id')
+            .eq('freelancer_id', userId);
+          appliedIds = new Set((myApps ?? []).map(a => a.brief_id));
+        }
+
+        // 3. Convertir en format local
+        const briefs = rows
+          .filter(r => !appliedIds.has(r.id))
+          .map(r => ({
+            id:            r.id,
+            type:          r.type,
+            color:         r.color ?? '#8B5CF6',
+            icon:          r.icon  ?? 'document-text-outline',
+            title:         r.title,
+            activity:      r.activity  ?? '',
+            audience:      r.audience  ?? '',
+            subject:       r.subject   ?? '',
+            tone:          r.tone      ?? '',
+            platform:      r.platform  ?? 'TikTok',
+            postsPerMonth: r.posts_per_month ?? 4,
+            budget:        r.budget    ?? 0,
+            deadline:      r.deadline  ?? '',
+            clientInitials: 'CL',
+            clientName:     'Client',
+          }));
+
+        if (!cancelled && briefs.length > 0) {
+          setDeck(briefs);
+          setPhase('swiping');
+        }
+      } catch (_) {
+        // pas de Supabase → reste sur MOCK_BRIEFS
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchBriefs();
+    return () => { cancelled = true; };
+  }, [session?.user?.id]);
 
   const position = useRef(new Animated.ValueXY()).current;
 
@@ -337,6 +401,16 @@ export default function MissionsScreen() {
             </TouchableOpacity>
           </View>
         </SafeAreaView>
+      </View>
+    );
+  }
+
+  // ── Chargement ───────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', gap: 14 }]}>
+        <ActivityIndicator color={COLORS.prestataire} size="large" />
+        <Text style={{ color: COLORS.textMuted, fontSize: 14, fontWeight: '600' }}>Chargement des briefs…</Text>
       </View>
     );
   }
