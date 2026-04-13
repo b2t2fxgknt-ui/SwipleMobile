@@ -6,28 +6,22 @@ import { SessionContext } from '../lib/SessionContext';
 import { supabase } from '../lib/supabase';
 import { COLORS, FONT } from '../lib/theme';
 
-import MatchesScreen                from '../screens/main/MatchesScreen';
 import ProfileScreen                from '../screens/main/ProfileScreen';
 import OrdersScreen                 from '../screens/main/OrdersScreen';
-import AIRecommendationsSwipeScreen from '../screens/main/AIRecommendationsSwipeScreen';
-import AuditScreen                  from '../screens/main/AuditScreen';
 import ExpertsScreen                from '../screens/main/ExpertsScreen';
 import MissionsScreen               from '../screens/main/MissionsScreen';
 import ProjetsScreenComponent       from '../screens/main/ProjetsScreen';
 import RevenuesScreen               from '../screens/main/RevenuesScreen';
-// MissionsProvider est maintenant dans AppNavigator (niveau supérieur)
 
 const Tab = createBottomTabNavigator();
 
 // ── Screen wrappers (module-scope = stable refs, no remount on re-render) ─────
 
-const OptimisationScreen  = () => <AIRecommendationsSwipeScreen />;
-const AuditTabScreen      = () => <AuditScreen />;
-const ExpertsTabScreen    = () => <ExpertsScreen />;
-const MissionsTabScreen   = () => <MissionsScreen />;
-const ProjetsTabScreen    = () => <ProjetsScreenComponent />;
-const RevenuesTabScreen   = () => <RevenuesScreen />;
-const OrdersWrapper       = () => <OrdersScreen />;
+const GhostwritersTabScreen = () => <ExpertsScreen />;
+const MissionsTabScreen     = () => <MissionsScreen />;
+const ProjetsTabScreen      = () => <ProjetsScreenComponent />;
+const RevenuesTabScreen     = () => <RevenuesScreen />;
+const OrdersWrapper         = () => <OrdersScreen />;
 
 // ── Tab icon helper ───────────────────────────────────────────────────────────
 
@@ -133,21 +127,11 @@ export default function MainTabs({ session }) {
             />
           </>
         ) : (
-          /* ── CLIENT : Audit · Optimisation · Experts · Commandes · Profil ── */
+          /* ── CLIENT : Ghostwriters · Commandes · Profil ── */
           <>
             <Tab.Screen
-              name="Audit"
-              component={AuditTabScreen}
-              options={{ tabBarIcon: icon('analytics', 'analytics-outline') }}
-            />
-            <Tab.Screen
-              name="Optimisation"
-              component={OptimisationScreen}
-              options={{ tabBarIcon: icon('sparkles', 'sparkles-outline') }}
-            />
-            <Tab.Screen
-              name="Experts"
-              component={ExpertsTabScreen}
+              name="Ghostwriters"
+              component={GhostwritersTabScreen}
               options={{ tabBarIcon: icon('people', 'people-outline') }}
             />
             <Tab.Screen

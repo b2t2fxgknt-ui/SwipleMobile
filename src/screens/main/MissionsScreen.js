@@ -1,6 +1,6 @@
 /**
- * MissionsScreen.js — Swipe de missions IA (style Tinder) pour freelances.
- * Swipe droite = accepter → va instantanément dans Projets
+ * MissionsScreen.js — Swipe de briefs ghostwriting TikTok (style Tinder) pour freelances.
+ * Swipe droite = candidater → va instantanément dans Projets
  * Swipe gauche = passer
  */
 
@@ -22,215 +22,120 @@ const SWIPE_THRESHOLD   = width * 0.30;
 const CARD_W            = width - SPACING.lg * 2;
 const CARD_H            = height * 0.66;
 
-// ── Données mock ──────────────────────────────────────────────────────────────
+// ── Briefs ghostwriting TikTok ────────────────────────────────────────────────
 
-const MOCK_MISSIONS = [
+const MOCK_BRIEFS = [
   {
-    id: 'm1', type: 'Hook', icon: 'timer-outline', color: '#EF4444',
-    title: 'Refaire le hook d\'une vidéo TikTok lifestyle',
-    problem: 'L\'attention est perdue dès la 2ᵉ seconde',
-    description: 'Vidéo lifestyle 45s sur la routine matinale. Hook trop classique, besoin d\'un démarrage percutant qui retient dès la première image.',
-    tags: ['Hook', 'TikTok', 'Lifestyle'],
-    duration: '45 sec', budget: 45, difficulty: 'Facile', deadline: '48h',
-    compatibility: 94, isRecommended: true,
-    clientInitials: 'LM', clientName: 'Léa M.', viralScore: 42,
-    dos: ['Commencer par une question provocante', 'Montrer le résultat avant le process', 'Transitions rapides'],
-    donts: ['Intro musicale longue', 'Texte statique sans mouvement', 'Commencer par "Bonjour"'],
-    objective: 'Hook de 2–3 secondes qui génère de la curiosité immédiate et incite à regarder la suite.',
-    creator: {
-      name: 'Léa Marchand', username: '@leamarchand', initials: 'LM',
-      platform: 'TikTok',
-      followers: '48K', avgViews: '12K', engagement: '6.2%', postFreq: '5/sem',
-      niche: 'Lifestyle & Routine', style: 'Authentique, lumineux, chill',
-      tags: ['Lifestyle', 'Routine', 'Bien-être'],
-      objective: 'Atteindre 100K abonnés en 3 mois via du contenu quotidien engageant sur sa routine morning.',
-      dos: ['Tonalité bienveillante', 'Plans rapprochés naturels', 'Musique chill ou trending'],
-      donts: ['Trop de texte à l\'écran', 'Intro longue', 'Voix off'],
-      collab: 0,
-    },
+    id: 'b1', type: 'Script + Montage', icon: 'videocam-outline', color: '#EF4444',
+    title: 'Ghostwriter pour coach business féminin',
+    activity: 'Coach business pour femmes entrepreneures',
+    audience: 'Femmes 30-45 ans qui veulent quitter leur CDI',
+    subject: 'Comment se lancer sans quitter son job',
+    tone: 'Cash et bienveillant',
+    platform: 'TikTok', postsPerMonth: 4,
+    budget: 150, deadline: '48h',
+    clientInitials: 'SC', clientName: 'Sophie C.',
   },
   {
-    id: 'm2', type: 'Montage', icon: 'cut-outline', color: '#8B5CF6',
-    title: 'Montage complet YouTube Shorts fitness',
-    problem: 'Durée 78s — trop longue, rythme plat',
-    description: 'Vidéo fitness à recouper à 55s. Transitions à dynamiser, rythme à fluidifier, accroches visuelles à ajouter.',
-    tags: ['Montage', 'YouTube', 'Fitness'],
-    duration: '78 sec', budget: 120, difficulty: 'Moyen', deadline: '72h',
-    compatibility: 88, isRecommended: true,
-    clientInitials: 'TR', clientName: 'Tom R.', viralScore: 58,
-    dos: ['Rythme rapide et dynamique', 'Plans d\'ensemble + zoom effort', 'Chiffres/résultats visuels'],
-    donts: ['Trop de parole', 'Intro musicale longue', 'Montage mou'],
-    objective: 'Recouper à 55s max, dynamiser les transitions et ajouter des accroches visuelles fortes.',
-    creator: {
-      name: 'Tom Rousseau', username: '@tomrfit', initials: 'TR',
-      platform: 'YouTube',
-      followers: '92K', avgViews: '28K', engagement: '4.8%', postFreq: '3/sem',
-      niche: 'Fitness & Performance', style: 'Motivant, énergique, pédago',
-      tags: ['Fitness', 'Musculation', 'Nutrition'],
-      objective: 'Booster l\'engagement sur les Shorts pour amener du trafic vers les longues vidéos.',
-      dos: ['Rythme rapide', 'Plans d\'ensemble + zoom effort', 'Chiffres/résultats visuels'],
-      donts: ['Trop de parole', 'Intro musicale longue', 'Montage mou'],
-      collab: 1,
-    },
+    id: 'b2', type: 'Script seul', icon: 'document-text-outline', color: '#8B5CF6',
+    title: 'Scripts TikTok pour consultant SEO',
+    activity: 'Consultant SEO freelance',
+    audience: 'Entrepreneurs et PME qui veulent plus de visibilité Google',
+    subject: 'Les erreurs SEO qui tuent ton trafic',
+    tone: 'Pédagogique et direct',
+    platform: 'TikTok', postsPerMonth: 8,
+    budget: 80, deadline: '24h',
+    clientInitials: 'MR', clientName: 'Marc R.',
   },
   {
-    id: 'm3', type: 'Sous-titres', icon: 'text-outline', color: '#3B82F6',
-    title: 'Sous-titres animés pour un Reel mode',
-    problem: '80 % de l\'audience regarde sans son',
-    description: 'Reel mode 30s, sous-titres absents. Style à créer : couleur, police, animation, synchronisation parfaite.',
-    tags: ['Sous-titres', 'Instagram', 'Mode'],
-    duration: '30 sec', budget: 30, difficulty: 'Facile', deadline: '24h',
-    compatibility: 98, isRecommended: false,
-    clientInitials: 'SK', clientName: 'Sarah K.', viralScore: 71,
-    dos: ['Esthétique cohérente avec la charte', 'Sous-titres stylisés lisibles', 'Synchronisation parfaite'],
-    donts: ['Couleurs trop saturées', 'Texte générique sans style', 'Son mal calé'],
-    objective: 'Créer des sous-titres animés au style "mode" qui captent l\'attention même sans le son.',
-    creator: {
-      name: 'Sarah Khoury', username: '@sarahkstyle', initials: 'SK',
-      platform: 'Reels',
-      followers: '134K', avgViews: '41K', engagement: '7.4%', postFreq: '7/sem',
-      niche: 'Mode & Style', style: 'Élégant, épuré, aspirationnel',
-      tags: ['Mode', 'OOTD', 'Fashion'],
-      objective: 'Maximiser la portée via des Reels viraux pour lancer une collab brand en septembre.',
-      dos: ['Esthétique cohérente', 'Sous-titres stylisés', 'Transitions fluides'],
-      donts: ['Couleurs trop saturées', 'Texte générique', 'Son mal calé'],
-      collab: 2,
-    },
+    id: 'b3', type: 'Script + Montage', icon: 'videocam-outline', color: '#3B82F6',
+    title: 'Contenu TikTok pour thérapeute holistique',
+    activity: 'Thérapeute holistique et coach bien-être',
+    audience: 'Personnes 25-40 ans stressées cherchant équilibre',
+    subject: 'Techniques de gestion du stress en 60 secondes',
+    tone: 'Doux, apaisant, inspirant',
+    platform: 'TikTok', postsPerMonth: 4,
+    budget: 120, deadline: '72h',
+    clientInitials: 'AL', clientName: 'Amina L.',
   },
   {
-    id: 'm4', type: 'Script', icon: 'document-text-outline', color: '#10B981',
-    title: 'Script viral TikTok Tech — hook + narration + CTA',
-    problem: 'Aucun CTA détecté — 0 % de conversion',
-    description: 'Contenu tech 60s. Manque de structure narrative, hook faible, aucun appel à l\'action en fin de vidéo.',
-    tags: ['Script', 'TikTok', 'Tech'],
-    duration: '60 sec', budget: 80, difficulty: 'Moyen', deadline: '48h',
-    compatibility: 76, isRecommended: false,
-    clientInitials: 'AP', clientName: 'Alex P.', viralScore: 55,
-    dos: ['Structure claire (problème → solution)', 'Hook chiffré accrocheur', 'CTA explicite en fin'],
-    donts: ['Jargon technique lourd', 'Vidéo sans structure narrative', 'Pas d\'appel à l\'action'],
-    objective: 'Écrire un script de 60s structuré avec hook fort, narration fluide et CTA qui convertit.',
-    creator: {
-      name: 'Alex Petit', username: '@alexpttech', initials: 'AP',
-      platform: 'TikTok',
-      followers: '21K', avgViews: '8K', engagement: '3.1%', postFreq: '4/sem',
-      niche: 'Tech & Productivité', style: 'Pédagogique, structuré, efficace',
-      tags: ['Tech', 'IA', 'Productivité'],
-      objective: 'Passer à 50K et monétiser via des formations grâce à des vidéos avec un fort CTA.',
-      dos: ['Structure claire (problème → solution)', 'Hook chiffré', 'CTA explicite'],
-      donts: ['Jargon technique lourd', 'Vidéo sans structure', 'Pas d\'appel à l\'action'],
-      collab: 0,
-    },
+    id: 'b4', type: 'Pack mensuel', icon: 'calendar-outline', color: '#10B981',
+    title: 'Pack 8 vidéos/mois pour formateur Excel',
+    activity: 'Formateur Excel et productivité pour salariés',
+    audience: 'Salariés 25-45 ans qui veulent progresser rapidement',
+    subject: 'Raccourcis Excel que personne ne connaît',
+    tone: 'Pratique, concis, surprenant',
+    platform: 'TikTok + Instagram', postsPerMonth: 8,
+    budget: 400, deadline: '5j',
+    clientInitials: 'JT', clientName: 'Julie T.',
   },
   {
-    id: 'm5', type: 'Effets', icon: 'sparkles-outline', color: '#F59E0B',
-    title: 'Effets & transitions Reels tutoriel beauté',
-    problem: 'Transitions brusques — qualité perçue faible',
-    description: 'Tutoriel maquillage 40s. Montage basique, aucun effet, transitions brusques. Potentiel élevé avec le bon montage.',
-    tags: ['Effets', 'Instagram', 'Beauté'],
-    duration: '40 sec', budget: 65, difficulty: 'Moyen', deadline: '96h',
-    compatibility: 82, isRecommended: false,
-    clientInitials: 'MD', clientName: 'Marie D.', viralScore: 49,
-    dos: ['Étapes claires et courtes', 'Avant/après percutant', 'Ambiance lumineuse douce'],
-    donts: ['Transitions brusques', 'Trop de texte à l\'écran', 'Qualité vidéo médiocre'],
-    objective: 'Ajouter des effets et transitions fluides qui subliment le tutoriel et augmentent le taux de sauvegarde.',
-    creator: {
-      name: 'Marie Dupont', username: '@mariedbeauty', initials: 'MD',
-      platform: 'Reels',
-      followers: '67K', avgViews: '19K', engagement: '5.5%', postFreq: '5/sem',
-      niche: 'Beauté & Maquillage', style: 'Tutoriel step-by-step, chaleureux',
-      tags: ['Beauté', 'Makeup', 'Skincare'],
-      objective: 'Augmenter le taux de sauvegarde des Reels tutos pour être recommandée par l\'algo Instagram.',
-      dos: ['Étapes claires et courtes', 'Avant/après', 'Ambiance lumineuse'],
-      donts: ['Transitions brusques', 'Trop de texte', 'Qualité vidéo médiocre'],
-      collab: 3,
-    },
+    id: 'b5', type: 'Script seul', icon: 'document-text-outline', color: '#F59E0B',
+    title: 'Scripts pour avocat en droit du travail',
+    activity: 'Avocat spécialisé droit du travail',
+    audience: 'Salariés et cadres face à des problèmes avec leur employeur',
+    subject: 'Tes droits que ton employeur espère que tu ignores',
+    tone: 'Percutant et accessible',
+    platform: 'TikTok', postsPerMonth: 6,
+    budget: 90, deadline: '48h',
+    clientInitials: 'PB', clientName: 'Pierre B.',
   },
   {
-    id: 'm6', type: 'Son', icon: 'musical-notes-outline', color: '#EC4899',
-    title: 'Intégration son trending — vidéo voyage',
-    problem: 'Aucun son trending — portée ÷3',
-    description: 'Vlog voyage 50s avec son original non trending. Sélectionner et synchroniser un son viral en courbe montante.',
-    tags: ['Son', 'TikTok', 'Voyage'],
-    duration: '50 sec', budget: 25, difficulty: 'Facile', deadline: '24h',
-    compatibility: 91, isRecommended: false,
-    clientInitials: 'JB', clientName: 'Jules B.', viralScore: 63,
-    dos: ['Son trending synchronisé au cut', 'Plans larges + détails immersifs', 'Émotion en cut final'],
-    donts: ['Son original plat', 'Trop de texte à l\'écran', 'Cuts brusques sur la musique'],
-    objective: 'Sélectionner et synchroniser un son viral en courbe montante pour décupler la portée organique.',
-    creator: {
-      name: 'Jules Bernard', username: '@julesbtravels', initials: 'JB',
-      platform: 'TikTok',
-      followers: '38K', avgViews: '15K', engagement: '8.3%', postFreq: '3/sem',
-      niche: 'Voyage & Aventure', style: 'Immersif, émotionnel, authentique',
-      tags: ['Voyage', 'Aventure', 'Découverte'],
-      objective: 'Monétiser via des partenariats tourisme en atteignant 75K avec des vidéos à fort impact émotionnel.',
-      dos: ['Son trending synchronisé', 'Plans larges + détails', 'Émotion en cut final'],
-      donts: ['Son original plat', 'Trop de texte à l\'écran', 'Cuts brusques'],
-      collab: 0,
-    },
+    id: 'b6', type: 'Script + Montage', icon: 'videocam-outline', color: '#EC4899',
+    title: 'Ghostwriter pour nutritionniste sportive',
+    activity: 'Nutritionniste diplômée spécialisée sport',
+    audience: 'Sportifs amateurs 20-35 ans qui veulent optimiser leur alimentation',
+    subject: 'Les aliments que tu manges qui sabotent ta récupération',
+    tone: 'Énergique, scientifique mais accessible',
+    platform: 'TikTok', postsPerMonth: 4,
+    budget: 140, deadline: '48h',
+    clientInitials: 'CR', clientName: 'Célia R.',
   },
 ];
 
-const DIFF_COLOR = {
-  Facile: { color: '#22C55E', bg: '#22C55E14', border: '#22C55E30' },
-  Moyen:  { color: '#F59E0B', bg: '#F59E0B14', border: '#F59E0B30' },
-  Expert: { color: '#EF4444', bg: '#EF444414', border: '#EF444430' },
+const TYPE_COLOR = {
+  'Script seul':      { color: '#8B5CF6', bg: '#8B5CF614', border: '#8B5CF630' },
+  'Script + Montage': { color: '#EF4444', bg: '#EF444414', border: '#EF444430' },
+  'Pack mensuel':     { color: '#10B981', bg: '#10B98114', border: '#10B98130' },
 };
 
-// ── Carte mission ─────────────────────────────────────────────────────────────
+// ── Carte brief ───────────────────────────────────────────────────────────────
 
-function MissionCard({ mission }) {
-  const diff = DIFF_COLOR[mission.difficulty] ?? DIFF_COLOR.Moyen;
-  const compatHigh = mission.compatibility >= 90;
+function BriefCard({ brief }) {
+  const typeStyle = TYPE_COLOR[brief.type] ?? TYPE_COLOR['Script seul'];
 
   return (
     <View style={styles.card}>
 
       {/* ── Header gradient ── */}
       <LinearGradient
-        colors={[mission.color + '28', mission.color + '06']}
+        colors={[brief.color + '28', brief.color + '06']}
         style={styles.cardHeader}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
       >
-        {/* Type + titre + compat */}
+        {/* Icône + titre */}
         <View style={styles.hTop}>
-          <View style={[styles.typeIconBox, { backgroundColor: mission.color + '22', borderColor: mission.color + '45' }]}>
-            <Ionicons name={mission.icon} size={20} color={mission.color} />
+          <View style={[styles.typeIconBox, { backgroundColor: brief.color + '22', borderColor: brief.color + '45' }]}>
+            <Ionicons name={brief.icon} size={20} color={brief.color} />
           </View>
-          <View style={{ flex: 1, gap: 2 }}>
-            <Text style={[styles.typeLabel, { color: mission.color }]}>{mission.type.toUpperCase()}</Text>
-            <Text style={styles.missionTitle} numberOfLines={1}>{mission.title}</Text>
+          <View style={{ flex: 1, gap: 3 }}>
+            <Text style={[styles.typeLabel, { color: brief.color }]}>{brief.type.toUpperCase()}</Text>
+            <Text style={styles.missionTitle} numberOfLines={2}>{brief.title}</Text>
           </View>
-          <View style={styles.hBadges}>
-            <View style={[styles.compatBadge, {
-              backgroundColor: compatHigh ? '#22C55E18' : '#F59E0B18',
-              borderColor:     compatHigh ? '#22C55E45' : '#F59E0B45',
-            }]}>
-              <Ionicons name="sparkles" size={9} color={compatHigh ? '#22C55E' : '#F59E0B'} />
-              <Text style={[styles.compatText, { color: compatHigh ? '#22C55E' : '#F59E0B' }]}>
-                {mission.compatibility}%
-              </Text>
-            </View>
-            {mission.isRecommended && (
-              <View style={styles.recoBadge}>
-                <Ionicons name="ribbon" size={9} color={COLORS.prestataire} />
-                <Text style={styles.recoText}>Pour toi</Text>
-              </View>
-            )}
+          <View style={[styles.typeBadge, { backgroundColor: typeStyle.bg, borderColor: typeStyle.border }]}>
+            <Text style={[styles.typeBadgeText, { color: typeStyle.color }]}>{brief.postsPerMonth} vidéos/mois</Text>
           </View>
         </View>
 
-        {/* Client + viral score */}
+        {/* Client + plateforme */}
         <View style={styles.clientRow}>
-          <View style={[styles.clientAvatar, { backgroundColor: mission.color + '28' }]}>
-            <Text style={[styles.clientInitials, { color: mission.color }]}>{mission.clientInitials}</Text>
+          <View style={[styles.clientAvatar, { backgroundColor: brief.color + '28' }]}>
+            <Text style={[styles.clientInitials, { color: brief.color }]}>{brief.clientInitials}</Text>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.clientName}>{mission.clientName}</Text>
-          </View>
-          <View style={styles.viralPill}>
-            <Ionicons name="analytics-outline" size={10} color={COLORS.textMuted} />
-            <Text style={styles.viralText}>Score viral {mission.viralScore}/100</Text>
+          <Text style={styles.clientName}>{brief.clientName}</Text>
+          <View style={styles.platformPill}>
+            <Ionicons name="logo-tiktok" size={10} color={COLORS.textMuted} />
+            <Text style={styles.platformText}>{brief.platform}</Text>
           </View>
         </View>
       </LinearGradient>
@@ -238,62 +143,47 @@ function MissionCard({ mission }) {
       {/* ── Corps ── */}
       <View style={styles.cardBody}>
 
-        {/* Méta : budget · difficulté · deadline · durée */}
+        {/* Budget + deadline */}
         <View style={styles.metaRow}>
           <View style={[styles.metaChip, { borderColor: '#22C55E35', backgroundColor: '#22C55E0A' }]}>
             <Ionicons name="cash-outline" size={11} color="#22C55E" />
-            <Text style={[styles.metaText, { color: '#22C55E', fontWeight: '800' }]}>{mission.budget}€</Text>
-          </View>
-          <View style={[styles.metaChip, { borderColor: diff.border, backgroundColor: diff.bg }]}>
-            <Ionicons name="bar-chart-outline" size={11} color={diff.color} />
-            <Text style={[styles.metaText, { color: diff.color }]}>{mission.difficulty}</Text>
+            <Text style={[styles.metaText, { color: '#22C55E', fontWeight: '800' }]}>{brief.budget}€</Text>
           </View>
           <View style={styles.metaChip}>
             <Ionicons name="alarm-outline" size={11} color={COLORS.textMuted} />
-            <Text style={styles.metaText}>{mission.deadline}</Text>
+            <Text style={styles.metaText}>{brief.deadline}</Text>
           </View>
-          <View style={styles.metaChip}>
-            <Ionicons name="videocam-outline" size={11} color={COLORS.textMuted} />
-            <Text style={styles.metaText}>{mission.duration}</Text>
+          <View style={[styles.metaChip, { borderColor: '#F59E0B30', backgroundColor: '#F59E0B0A' }]}>
+            <Ionicons name="mic-outline" size={11} color="#F59E0B" />
+            <Text style={[styles.metaText, { color: '#F59E0B' }]}>{brief.tone}</Text>
           </View>
         </View>
 
-        {/* Problème détecté */}
-        <View style={[styles.problemBox, { borderColor: '#EF444430', backgroundColor: '#EF44440A' }]}>
-          <View style={styles.problemHeader}>
-            <Ionicons name="alert-circle-outline" size={11} color="#EF4444" />
-            <Text style={styles.problemLabel}>PROBLÈME DÉTECTÉ PAR L'IA</Text>
+        {/* Activité */}
+        <View style={[styles.sectionBox, { borderColor: brief.color + '30', backgroundColor: brief.color + '08' }]}>
+          <View style={styles.sectionBoxHeader}>
+            <Ionicons name="briefcase-outline" size={11} color={brief.color} />
+            <Text style={[styles.sectionBoxLabel, { color: brief.color }]}>ACTIVITÉ DU CLIENT</Text>
           </View>
-          <Text style={styles.problemText}>{mission.problem}</Text>
+          <Text style={styles.sectionBoxText}>{brief.activity}</Text>
         </View>
 
-        {/* Objectif */}
-        <View style={[styles.objectiveBox, { borderColor: COLORS.prestataire + '30', backgroundColor: COLORS.prestataire + '08' }]}>
-          <Ionicons name="trophy-outline" size={11} color={COLORS.prestataire} style={{ marginTop: 1 }} />
-          <Text style={styles.objectiveText} numberOfLines={2}>{mission.objective}</Text>
+        {/* Audience */}
+        <View style={[styles.sectionBox, { borderColor: COLORS.primary + '30', backgroundColor: COLORS.primary + '08' }]}>
+          <View style={styles.sectionBoxHeader}>
+            <Ionicons name="people-outline" size={11} color={COLORS.primary} />
+            <Text style={[styles.sectionBoxLabel, { color: COLORS.primary }]}>AUDIENCE CIBLE</Text>
+          </View>
+          <Text style={styles.sectionBoxText}>{brief.audience}</Text>
         </View>
 
-        {/* À faire / À éviter */}
-        <View style={styles.dosRow}>
-          <View style={styles.dosCol}>
-            <View style={styles.dosColHeader}>
-              <Ionicons name="checkmark-circle" size={11} color="#22C55E" />
-              <Text style={styles.dosTitle}>À faire</Text>
-            </View>
-            {mission.dos.slice(0, 2).map((d, i) => (
-              <Text key={i} style={styles.dosItem} numberOfLines={1}>· {d}</Text>
-            ))}
+        {/* Sujet */}
+        <View style={[styles.sectionBox, { borderColor: COLORS.prestataire + '30', backgroundColor: COLORS.prestataire + '08' }]}>
+          <View style={styles.sectionBoxHeader}>
+            <Ionicons name="bulb-outline" size={11} color={COLORS.prestataire} />
+            <Text style={[styles.sectionBoxLabel, { color: COLORS.prestataire }]}>SUJET À TRAITER</Text>
           </View>
-          <View style={styles.dosColDivider} />
-          <View style={styles.dosCol}>
-            <View style={styles.dosColHeader}>
-              <Ionicons name="close-circle" size={11} color="#EF4444" />
-              <Text style={styles.dontsTitle}>À éviter</Text>
-            </View>
-            {mission.donts.slice(0, 2).map((d, i) => (
-              <Text key={i} style={styles.dontItem} numberOfLines={1}>· {d}</Text>
-            ))}
-          </View>
+          <Text style={styles.sectionBoxText} numberOfLines={2}>"{brief.subject}"</Text>
         </View>
 
       </View>
@@ -305,7 +195,7 @@ function MissionCard({ mission }) {
 
 export default function MissionsScreen() {
   const { acceptMission } = useMissions();
-  const [deck,    setDeck]    = useState(MOCK_MISSIONS);
+  const [deck,    setDeck]    = useState(MOCK_BRIEFS);
   const [passed,  setPassed]  = useState([]);
   const [phase,   setPhase]   = useState('swiping'); // 'swiping' | 'done'
 
@@ -378,7 +268,7 @@ export default function MissionsScreen() {
     },
   })).current;
 
-  const total    = MOCK_MISSIONS.length;
+  const total    = MOCK_BRIEFS.length;
   const done     = total - deck.length;
   const progress = done / total;
 
@@ -399,22 +289,22 @@ export default function MissionsScreen() {
             <Text style={styles.doneTitle}>Feed traité !</Text>
             <Text style={styles.doneSub}>
               {accepted > 0
-                ? `Tu as accepté ${accepted} mission${accepted > 1 ? 's' : ''}.\nVa dans Projets pour suivre ton travail.`
-                : 'Tu as passé toutes les missions.\nNouvelles missions disponibles bientôt.'}
+                ? `Tu as candidaté à ${accepted} brief${accepted > 1 ? 's' : ''}.\nVa dans Projets pour suivre tes candidatures.`
+                : 'Tu as passé tous les briefs.\nNouveaux briefs disponibles bientôt.'}
             </Text>
 
             {accepted > 0 && (
               <View style={styles.doneAcceptedBanner}>
                 <Ionicons name="checkmark-circle" size={18} color="#22C55E" />
                 <Text style={styles.doneAcceptedText}>
-                  {accepted} mission{accepted > 1 ? 's' : ''} en attente dans Projets
+                  {accepted} candidature{accepted > 1 ? 's' : ''} en attente dans Projets
                 </Text>
               </View>
             )}
 
             <TouchableOpacity
               style={styles.refreshBtn}
-              onPress={() => { setDeck(MOCK_MISSIONS); setPassed([]); setPhase('swiping'); }}
+              onPress={() => { setDeck(MOCK_BRIEFS); setPassed([]); setPhase('swiping'); }}
               activeOpacity={0.8}
             >
               <LinearGradient
@@ -446,9 +336,9 @@ export default function MissionsScreen() {
       <SafeAreaView>
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerTitle}>Missions IA</Text>
+            <Text style={styles.headerTitle}>Briefs</Text>
             <Text style={styles.headerSub}>
-              {done > 0 ? `${done} sur ${total} traitées` : `${total} missions disponibles`}
+              {done > 0 ? `${done} sur ${total} traités` : `${total} briefs disponibles`}
             </Text>
           </View>
           <View style={styles.headerRight}>
@@ -492,7 +382,7 @@ export default function MissionsScreen() {
               >
                 {/* Stamp ACCEPTÉ */}
                 <Animated.View style={[styles.stamp, styles.stampAccept, { opacity: acceptOpacity }]}>
-                  <Text style={[styles.stampText, { color: '#22C55E' }]}>ACCEPTÉ</Text>
+                  <Text style={[styles.stampText, { color: '#22C55E' }]}>CANDIDATÉ</Text>
                 </Animated.View>
 
                 {/* Stamp PASSÉ */}
@@ -500,7 +390,7 @@ export default function MissionsScreen() {
                   <Text style={[styles.stampText, { color: '#EF4444' }]}>PASSÉ</Text>
                 </Animated.View>
 
-                <MissionCard mission={mission} />
+                <BriefCard brief={mission} />
               </Animated.View>
             );
           }
@@ -510,13 +400,13 @@ export default function MissionsScreen() {
                 key={mission.id}
                 style={[styles.cardWrapper, { zIndex: 20, transform: [{ scale: nextScale }] }]}
               >
-                <MissionCard mission={mission} />
+                <BriefCard brief={mission} />
               </Animated.View>
             );
           }
           return (
             <View key={mission.id} style={[styles.cardWrapper, { zIndex: 10, transform: [{ scale: 0.87 }] }]}>
-              <MissionCard mission={mission} />
+              <BriefCard brief={mission} />
             </View>
           );
         })}
@@ -545,7 +435,7 @@ export default function MissionsScreen() {
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             >
               <Ionicons name="checkmark" size={22} color="#fff" />
-              <Text style={styles.acceptBtnLabel}>Accepter</Text>
+              <Text style={styles.acceptBtnLabel}>Candidater</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>

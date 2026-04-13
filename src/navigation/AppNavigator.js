@@ -33,6 +33,7 @@ import PendingValidationsScreen     from '../screens/transaction/PendingValidati
 import AuditOfferScreen            from '../screens/transaction/AuditOfferScreen';
 import AuditDIYScreen             from '../screens/transaction/AuditDIYScreen';
 import ReviewScreen              from '../screens/transaction/ReviewScreen';
+import MatchScreen               from '../screens/transaction/MatchScreen';
 import MessagerieScreen          from '../screens/main/MessagerieScreen';
 import NotificationsScreen       from '../screens/main/NotificationsScreen';
 import ServiceCreationScreen     from '../screens/main/ServiceCreationScreen';
@@ -201,6 +202,12 @@ export default function AppNavigator() {
               name="Review"
               component={ReviewScreen}
               options={{ animation: 'slide_from_bottom', presentation: 'modal', gestureEnabled: false }}
+            />
+            {/* 11b. MATCH — ghostwriter sélectionné par le client */}
+            <Stack.Screen
+              name="Match"
+              component={MatchScreen}
+              options={{ animation: 'fade', gestureEnabled: false, presentation: 'fullScreenModal' }}
             />
             {/* 12. Création de service (freelance) */}
             <Stack.Screen
