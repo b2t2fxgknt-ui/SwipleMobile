@@ -126,7 +126,8 @@ export default function ApplicantsScreen() {
       navigation.navigate('Match', {
         mission,
         freelancer,
-        client: { initials: 'MOI', name: 'Vous' },
+        client:   { initials: 'MOI', name: 'Vous' },
+        isClient: true,
       });
     }, 150);
   }

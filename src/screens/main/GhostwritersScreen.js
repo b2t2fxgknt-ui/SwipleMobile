@@ -331,11 +331,16 @@ export default function GhostwritersScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filtersRow}
+          style={styles.filtersScroll}
         >
-          {FILTERS.map(f => (
+          {FILTERS.map((f, i) => (
             <TouchableOpacity
               key={f.key}
-              style={[styles.filterChip, filter === f.key && styles.filterChipActive]}
+              style={[
+                styles.filterChip,
+                filter === f.key && styles.filterChipActive,
+                i < FILTERS.length - 1 && { marginRight: 8 },
+              ]}
               onPress={() => { setFilter(f.key); Haptics.selectionAsync(); }}
               activeOpacity={0.75}
             >
@@ -398,10 +403,12 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, color: COLORS.text, fontSize: 14 },
 
   // Filters
-  filtersRow: { paddingHorizontal: SPACING.lg, gap: 8, paddingBottom: SPACING.sm },
+  filtersScroll: { flexGrow: 0, marginBottom: SPACING.sm },
+  filtersRow:    { paddingHorizontal: SPACING.lg, alignItems: 'center' },
   filterChip: {
     borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.full,
-    paddingHorizontal: 14, paddingVertical: 7, backgroundColor: COLORS.card,
+    paddingHorizontal: 14, paddingVertical: 8, backgroundColor: COLORS.card,
+    flexShrink: 0,
   },
   filterChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '18' },
   filterText:       { fontSize: 13, fontWeight: '600', color: COLORS.textMuted },

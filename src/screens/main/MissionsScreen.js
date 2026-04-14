@@ -604,6 +604,19 @@ const styles = StyleSheet.create({
   metaChip:     { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: COLORS.bg, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.full, paddingHorizontal: 8, paddingVertical: 4 },
   metaText:     { fontSize: 10, color: COLORS.textMuted, fontWeight: '600' },
 
+  // Brief card — type badge + platform pill
+  typeBadge:      { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderRadius: RADIUS.full, paddingHorizontal: 8, paddingVertical: 3 },
+  typeBadgeText:  { fontSize: 10, fontWeight: '700' },
+  platformPill:   { flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 'auto', backgroundColor: COLORS.bg, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.full, paddingHorizontal: 7, paddingVertical: 3 },
+  platformText:   { fontSize: 9, color: COLORS.textMuted, fontWeight: '600' },
+
+  // Brief card — section boxes (activité / audience / sujet)
+  sectionBox:       { borderWidth: 1, borderRadius: RADIUS.md, padding: 9, gap: 4 },
+  sectionBoxHeader: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  sectionBoxLabel:  { fontSize: 8, fontWeight: '800', letterSpacing: 0.6 },
+  sectionBoxText:   { fontSize: 12, fontWeight: '600', color: COLORS.text, lineHeight: 16 },
+
+  // Legacy (unused but kept to avoid crash if referenced elsewhere)
   problemBox:   { borderWidth: 1, borderRadius: RADIUS.md, padding: 9, gap: 4 },
   problemHeader:{ flexDirection: 'row', alignItems: 'center', gap: 5 },
   problemLabel: { fontSize: 8, fontWeight: '800', color: '#EF4444', letterSpacing: 0.6 },

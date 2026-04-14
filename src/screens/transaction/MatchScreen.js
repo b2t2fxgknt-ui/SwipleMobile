@@ -51,7 +51,7 @@ function Spark({ angle, distance, color, size, delay }) {
 export default function MatchScreen() {
   const navigation = useNavigation();
   const route      = useRoute();
-  const { mission, freelancer, client } = route.params ?? {};
+  const { mission, freelancer, client, isClient } = route.params ?? {};
 
   const scaleAnim      = useRef(new Animated.Value(0)).current;
   const subAnim        = useRef(new Animated.Value(0)).current;
@@ -115,15 +115,20 @@ export default function MatchScreen() {
   }, []);
 
   function handleContinue() {
-    if (mission) {
+    if (isClient) {
+      // Client : suivi de la mission (MissionTracking)
+      navigation.replace('MissionTracking', { mission, freelancer });
+    } else if (mission) {
+      // Freelance : brief de la mission (MissionBrief)
       navigation.replace('MissionBrief', { mission, freelancer });
     } else {
       navigation.goBack();
     }
   }
 
-  const clientInitials    = client?.initials    ?? mission?.clientInitials ?? 'CL';
-  const clientName        = client?.name         ?? mission?.clientName     ?? 'Client';
+  const clientInitials     = client?.initials    ?? mission?.clientInitials ?? 'CL';
+  const clientName         = client?.name         ?? mission?.clientName     ?? 'Client';
+  const freelancerName     = freelancer?.name     ?? 'Ghostwriter';
   const freelancerInitials = freelancer?.initials ?? 'GW';
   const glowOpacity       = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.7] });
 
@@ -186,7 +191,9 @@ export default function MatchScreen() {
 
       {/* ── Sous-titre ── */}
       <Animated.Text style={[styles.matchSub, { opacity: subAnim }]}>
-        {clientName} a choisi ta candidature 🎉
+        {isClient
+          ? `Vous avez choisi ${freelancerName} pour votre brief 🎉`
+          : `${clientName} a choisi ta candidature 🎉`}
       </Animated.Text>
 
       {/* ── CTA ── */}
@@ -197,7 +204,9 @@ export default function MatchScreen() {
             style={styles.ctaGradient}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
           >
-            <Text style={styles.ctaText}>Commencer la mission</Text>
+            <Text style={styles.ctaText}>
+              {isClient ? 'Suivre la mission' : 'Commencer la mission'}
+            </Text>
             <Ionicons name="arrow-forward" size={18} color="#fff" />
           </LinearGradient>
         </TouchableOpacity>

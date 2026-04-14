@@ -4,7 +4,7 @@
  * permet d'en créer un nouveau.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar,
 } from 'react-native';
@@ -135,9 +135,11 @@ function BriefCard({ brief, onPress }) {
 export default function ClientBriefsScreen() {
   const navigation = useNavigation();
   const { briefs } = useBriefs();
+  const [tab, setTab] = useState('open'); // 'open' | 'matched'
 
   const open    = briefs.filter(b => b.status === 'open');
   const matched = briefs.filter(b => b.status === 'matched');
+  const shown   = tab === 'open' ? open : matched;
   const newApplicants = open.reduce((n, b) => n + b.applicants.length, 0);
 
   return (
@@ -147,21 +149,7 @@ export default function ClientBriefsScreen() {
 
         {/* ── Header ── */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>Mes Briefs</Text>
-            <Text style={styles.headerSub}>
-              {briefs.length === 0
-                ? 'Postez votre premier brief'
-                : `${briefs.length} brief${briefs.length > 1 ? 's' : ''} posté${briefs.length > 1 ? 's' : ''}`}
-            </Text>
-          </View>
-
-          {newApplicants > 0 && (
-            <View style={styles.notifBadge}>
-              <Text style={styles.notifText}>{newApplicants} nouvelle{newApplicants > 1 ? 's' : ''}</Text>
-            </View>
-          )}
-
+          <Text style={styles.headerTitle}>Mes Briefs</Text>
           <TouchableOpacity
             style={styles.fab}
             onPress={() => navigation.navigate('BriefCreation')}
@@ -177,13 +165,53 @@ export default function ClientBriefsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* ── Tab bar ── */}
+        <View style={styles.tabBar}>
+          <TouchableOpacity
+            style={[styles.tabBtn, tab === 'open' && styles.tabBtnActive]}
+            onPress={() => setTab('open')}
+            activeOpacity={0.75}
+          >
+            <Text style={[styles.tabBtnText, tab === 'open' && styles.tabBtnTextActive]}>
+              En attente
+            </Text>
+            {open.length > 0 && (
+              <View style={[styles.tabCount, tab === 'open' && styles.tabCountActive]}>
+                <Text style={[styles.tabCountText, tab === 'open' && styles.tabCountTextActive]}>
+                  {open.length}
+                </Text>
+              </View>
+            )}
+            {newApplicants > 0 && tab !== 'open' && (
+              <View style={styles.tabDot} />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tabBtn, tab === 'matched' && styles.tabBtnActive]}
+            onPress={() => setTab('matched')}
+            activeOpacity={0.75}
+          >
+            <Text style={[styles.tabBtnText, tab === 'matched' && styles.tabBtnTextActive]}>
+              Matchées
+            </Text>
+            {matched.length > 0 && (
+              <View style={[styles.tabCount, tab === 'matched' && styles.tabCountActive]}>
+                <Text style={[styles.tabCountText, tab === 'matched' && styles.tabCountTextActive]}>
+                  {matched.length}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
 
-          {/* ── État vide ── */}
+          {/* ── État vide global ── */}
           {briefs.length === 0 && (
             <View style={styles.emptyWrap}>
               <View style={styles.emptyIcon}>
@@ -210,33 +238,32 @@ export default function ClientBriefsScreen() {
             </View>
           )}
 
-          {/* ── Briefs ouverts ── */}
-          {open.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>En attente de ghostwriter</Text>
-              {open.map(b => (
-                <BriefCard
-                  key={b.id}
-                  brief={b}
-                  onPress={() => navigation.navigate('Applicants', { brief: b })}
-                />
-              ))}
+          {/* ── État vide de l'onglet ── */}
+          {briefs.length > 0 && shown.length === 0 && (
+            <View style={styles.tabEmptyWrap}>
+              <Ionicons
+                name={tab === 'open' ? 'hourglass-outline' : 'checkmark-circle-outline'}
+                size={32}
+                color={COLORS.textMuted}
+              />
+              <Text style={styles.tabEmptyText}>
+                {tab === 'open'
+                  ? 'Aucun brief en attente.'
+                  : 'Aucune mission matchée pour l\'instant.'}
+              </Text>
             </View>
           )}
 
-          {/* ── Briefs matchés ── */}
-          {matched.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Matchées ✓</Text>
-              {matched.map(b => (
-                <BriefCard
-                  key={b.id}
-                  brief={b}
-                  onPress={() => {}}
-                />
-              ))}
-            </View>
-          )}
+          {/* ── Liste des briefs ── */}
+          {shown.map(b => (
+            <BriefCard
+              key={b.id}
+              brief={b}
+              onPress={tab === 'open'
+                ? () => navigation.navigate('Applicants', { brief: b })
+                : () => {}}
+            />
+          ))}
 
           {/* ── CTA poster un autre ── */}
           {briefs.length > 0 && (
@@ -262,24 +289,39 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
 
   header: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: SPACING.lg, paddingTop: SPACING.sm, paddingBottom: SPACING.md,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: SPACING.lg, paddingTop: SPACING.sm, paddingBottom: SPACING.sm,
   },
   headerTitle: { fontSize: 22, fontWeight: '800', color: COLORS.text, flex: 1 },
-  headerSub:   { fontSize: 12, color: COLORS.textMuted, marginTop: 1 },
-  notifBadge:  {
-    backgroundColor: COLORS.primary + '22', borderWidth: 1, borderColor: COLORS.primary + '44',
-    borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 4,
+  fab:         { width: 42, height: 42, borderRadius: 21, overflow: 'hidden' },
+  fabGrad:     { flex: 1, alignItems: 'center', justifyContent: 'center' },
+
+  // Tab bar
+  tabBar: {
+    flexDirection: 'row',
+    marginHorizontal: SPACING.lg, marginBottom: SPACING.md,
+    backgroundColor: COLORS.card, borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: COLORS.border,
+    padding: 4,
   },
-  notifText: { fontSize: 11, fontWeight: '700', color: COLORS.primary },
-  fab:       { width: 42, height: 42, borderRadius: 21, overflow: 'hidden' },
-  fabGrad:   { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  tabBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 10, borderRadius: RADIUS.md,
+  },
+  tabBtnActive: { backgroundColor: COLORS.primary },
+  tabBtnText:   { fontSize: 14, fontWeight: '700', color: COLORS.textMuted },
+  tabBtnTextActive: { color: '#fff' },
+  tabCount:     { backgroundColor: COLORS.border, borderRadius: RADIUS.full, paddingHorizontal: 7, paddingVertical: 2, minWidth: 20, alignItems: 'center' },
+  tabCountActive:   { backgroundColor: 'rgba(255,255,255,0.25)' },
+  tabCountText:     { fontSize: 11, fontWeight: '800', color: COLORS.textMuted },
+  tabCountTextActive: { color: '#fff' },
+  tabDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#F59E0B', marginLeft: -4, marginTop: -8 },
 
   scroll:        { flex: 1 },
-  scrollContent: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xl, gap: 24 },
+  scrollContent: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xl, gap: 14 },
 
-  // Empty
-  emptyWrap:    { alignItems: 'center', paddingTop: 80, gap: 14 },
+  // Empty global
+  emptyWrap:    { alignItems: 'center', paddingTop: 60, gap: 14 },
   emptyIcon:    { width: 90, height: 90, borderRadius: 45, backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border, alignItems: 'center', justifyContent: 'center' },
   emptyTitle:   { fontSize: 20, fontWeight: '800', color: COLORS.text },
   emptySub:     { fontSize: 14, color: COLORS.textMuted, textAlign: 'center', lineHeight: 22, paddingHorizontal: SPACING.lg },
@@ -287,9 +329,9 @@ const styles = StyleSheet.create({
   emptyBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 15 },
   emptyBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 
-  // Section
-  section:      { gap: 12 },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: COLORS.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' },
+  // Empty tab
+  tabEmptyWrap: { alignItems: 'center', paddingTop: 50, gap: 10 },
+  tabEmptyText: { fontSize: 14, color: COLORS.textMuted, textAlign: 'center' },
 
   // Card
   card: {
