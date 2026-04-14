@@ -182,29 +182,35 @@ export function BriefsProvider({ children }) {
 
   // ── Ajouter un candidat à un brief ───────────────────────────────────────
 
-  async function addApplicant(briefId, freelancer) {
-    // Optimistic
+  // opts: { message?: string, proposedRate?: number }
+  async function addApplicant(briefId, freelancer, opts = {}) {
+    // Optimistic UI
     setBriefs(prev => prev.map(b => {
       if (b.id !== briefId) return b;
       if (b.applicants.some(a => a.id === freelancer.id)) return b;
       return { ...b, applicants: [...b.applicants, freelancer] };
     }));
 
-    // Persist
-    if (useSupabase) {
-      try {
-        await supabase.from('applications').upsert({
-          brief_id:            briefId,
-          freelancer_id:       freelancer.id,
-          freelancer_name:     freelancer.name,
-          freelancer_initials: freelancer.initials,
-          specialty:           freelancer.specialty,
-          rating:              freelancer.rating,
-          missions_count:      freelancer.missions,
-          bio:                 freelancer.bio,
-        }, { onConflict: 'brief_id,freelancer_id' });
-      } catch (_) {}
-    }
+    // Persist — toujours tenter même sans useSupabase (silencieux si table absente)
+    try {
+      const payload = {
+        brief_id:            briefId,
+        freelancer_id:       freelancer.id,
+        freelancer_name:     freelancer.name,
+        freelancer_initials: freelancer.initials,
+        specialty:           freelancer.specialty,
+        rating:              freelancer.rating,
+        missions_count:      freelancer.missions,
+        bio:                 freelancer.bio,
+        status:              'pending',
+      };
+      if (opts.message)      payload.message       = opts.message;
+      if (opts.proposedRate) payload.proposed_rate = Number(opts.proposedRate);
+
+      await supabase.from('applications').upsert(payload, {
+        onConflict: 'brief_id,freelancer_id',
+      });
+    } catch (_) {}
   }
 
   // ── Sélectionner un freelance (MATCH) ────────────────────────────────────

@@ -4,7 +4,7 @@
  * Flow : SearchScreen → BriefDetailScreen → (envoi message) → confirmation
  */
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView,
   Animated, StatusBar, Platform, KeyboardAvoidingView,
@@ -15,6 +15,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { supabase } from '../../lib/supabase';
+import { SessionContext } from '../../lib/SessionContext';
+import { useBriefs } from '../../lib/BriefsContext';
 import { COLORS, SPACING, FONT, RADIUS, SHADOW } from '../../lib/theme';
 
 // ─── Extended brief data ───────────────────────────────────────────────────────
@@ -98,8 +101,10 @@ const BRIEF_CAT_COLOR = {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function BriefDetailScreen() {
-  const navigation = useNavigation();
-  const route = useRoute();
+  const navigation    = useNavigation();
+  const route         = useRoute();
+  const session       = useContext(SessionContext);
+  const { addApplicant } = useBriefs();
   const brief = route.params?.brief ?? {};
   const extra = BRIEF_EXTRAS[brief.id] ?? {};
 
@@ -107,6 +112,7 @@ export default function BriefDetailScreen() {
   const [message, setMessage]    = useState('');
   const [rate, setRate]          = useState('');
   const [sent, setSent]          = useState(false);
+  const [loading, setLoading]    = useState(false);
 
   const sheetY   = useRef(new Animated.Value(600)).current;
   const backdrop = useRef(new Animated.Value(0)).current;
@@ -134,12 +140,67 @@ export default function BriefDetailScreen() {
     ]).start(() => setShowApply(false));
   }, [sheetY, backdrop]);
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     if (message.trim().length < 10) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       return;
     }
     Keyboard.dismiss();
+    setLoading(true);
+
+    // ── Construire le profil freelance depuis la session ──────────────────
+    const meta      = session?.user?.user_metadata ?? {};
+    const userId    = session?.user?.id ?? `local_${Date.now()}`;
+    const fullName  = meta.nom ?? meta.full_name ?? meta.name ?? 'Ghostwriter';
+    const initials  = fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'GW';
+    const specialty = meta.specialty ?? 'Ghostwriting TikTok';
+    const bio       = meta.bio ?? '';
+
+    const freelancerObj = {
+      id:        userId,
+      initials,
+      name:      fullName,
+      specialty,
+      rating:    meta.rating ?? 5.0,
+      missions:  meta.missions ?? 0,
+      bio,
+    };
+
+    const proposedRate = rate ? Number(rate) : undefined;
+
+    // ── 1. Mise à jour optimiste dans BriefsContext (si brief connu) ──────
+    if (brief.id) {
+      addApplicant(brief.id, freelancerObj, {
+        message:      message.trim(),
+        proposedRate,
+      });
+    }
+
+    // ── 2. Écriture directe Supabase (fallback si brief non dans contexte) ─
+    try {
+      const payload = {
+        brief_id:            brief.id ?? null,
+        brief_ref:           String(brief.id ?? ''),
+        freelancer_id:       userId,
+        freelancer_name:     fullName,
+        freelancer_initials: initials,
+        specialty,
+        rating:              meta.rating ?? 5.0,
+        missions_count:      meta.missions ?? 0,
+        bio,
+        message:             message.trim(),
+        status:              'pending',
+      };
+      if (proposedRate) payload.proposed_rate = proposedRate;
+
+      await supabase.from('applications').upsert(payload, {
+        onConflict: 'brief_id,freelancer_id',
+      });
+    } catch (_) {
+      // Table absente ou erreur réseau → on continue quand même
+    }
+
+    setLoading(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setSent(true);
     Animated.spring(successA, { toValue: 1, friction: 5, useNativeDriver: true }).start();
@@ -148,7 +209,7 @@ export default function BriefDetailScreen() {
       setSent(false);
       navigation.goBack();
     }, 2200);
-  }, [message, successA, closeApply, navigation]);
+  }, [message, rate, session, brief, addApplicant, successA, closeApply, navigation]);
 
   const primaryCat = brief.categories?.[0];
   const accentColor = BRIEF_CAT_COLOR[primaryCat] ?? COLORS.primary;
@@ -303,7 +364,7 @@ export default function BriefDetailScreen() {
                   <Ionicons name="checkmark" size={30} color="#fff" />
                 </LinearGradient>
                 <Text style={styles.sentTitle}>Candidature envoyée !</Text>
-                <Text style={styles.sentSub}>Le créateur a été notifié et vous répondra rapidement.</Text>
+                <Text style={styles.sentSub}>Le client a été notifié et vous répondra rapidement.</Text>
               </Animated.View>
             ) : (
               <>
@@ -345,9 +406,10 @@ export default function BriefDetailScreen() {
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.sendBtn, message.trim().length < 10 && styles.sendBtnDisabled]}
+                  style={[styles.sendBtn, (message.trim().length < 10 || loading) && styles.sendBtnDisabled]}
                   onPress={handleSend}
                   activeOpacity={0.88}
+                  disabled={loading}
                 >
                   <LinearGradient
                     colors={[accentColor, accentColor + 'CC']}
@@ -355,7 +417,9 @@ export default function BriefDetailScreen() {
                     style={styles.sendGrad}
                   >
                     <Ionicons name="paper-plane" size={15} color="#fff" />
-                    <Text style={styles.sendText}>Envoyer la candidature</Text>
+                    <Text style={styles.sendText}>
+                      {loading ? 'Envoi en cours…' : 'Envoyer la candidature'}
+                    </Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </>
