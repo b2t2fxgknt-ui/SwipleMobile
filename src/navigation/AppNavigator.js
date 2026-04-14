@@ -43,6 +43,7 @@ import FavoritesScreen           from '../screens/main/FavoritesScreen';
 import EditProfileScreen         from '../screens/main/EditProfileScreen';
 import BriefCreationScreen       from '../screens/main/BriefCreationScreen';
 import ApplicantsScreen          from '../screens/main/ApplicantsScreen';
+import SearchScreen              from '../screens/main/SearchScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -247,6 +248,20 @@ export default function AppNavigator() {
             <Stack.Screen
               name="Applicants"
               component={ApplicantsScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+
+            {/* 18. Recherche briefs / ghostwriters */}
+            <Stack.Screen
+              name="Search"
+              component={SearchScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+
+            {/* 19. Profil complet d'un ghostwriter */}
+            <Stack.Screen
+              name="GhostwriterProfile"
+              component={ServiceDetailScreen}
               options={{ animation: 'slide_from_right' }}
             />
 

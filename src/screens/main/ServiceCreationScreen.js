@@ -25,14 +25,12 @@ const SW = Dimensions.get('window').width;
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 const CATEGORIES = [
-  { id: 'video_montage',     label: 'Vidéo & Montage',    icon: 'videocam-outline',        color: '#EF4444' },
-  { id: 'copywriting',       label: 'Copywriting',         icon: 'create-outline',           color: '#3B82F6' },
-  { id: 'reseaux_sociaux',   label: 'Réseaux sociaux',    icon: 'phone-portrait-outline',   color: '#F59E0B' },
-  { id: 'design',            label: 'Design & Branding',  icon: 'color-palette-outline',    color: '#8B5CF6' },
-  { id: 'ia_automatisation', label: 'IA & Automatisation', icon: 'flash-outline',            color: '#10B981' },
-  { id: 'site_web',          label: 'Site web',            icon: 'globe-outline',            color: '#6366F1' },
-  { id: 'legal_admin',       label: 'Légal & Admin',      icon: 'document-text-outline',    color: '#EC4899' },
-  { id: 'comptabilite',      label: 'Comptabilité',        icon: 'calculator-outline',       color: '#14B8A6' },
+  { id: 'script_seul',     label: 'Script seul',       icon: 'document-text-outline', color: '#8B5CF6' },
+  { id: 'script_montage',  label: 'Script + Montage',  icon: 'videocam-outline',       color: '#EF4444' },
+  { id: 'pack_mensuel',    label: 'Pack mensuel',      icon: 'calendar-outline',       color: '#10B981' },
+  { id: 'montage_seul',    label: 'Montage seul',      icon: 'cut-outline',            color: '#3B82F6' },
+  { id: 'strategie',       label: 'Stratégie édito',   icon: 'analytics-outline',      color: '#F59E0B' },
+  { id: 'sous_titres',     label: 'Sous-titres',       icon: 'text-outline',           color: '#06B6D4' },
 ];
 
 const DELIVERY_OPTIONS = [
@@ -52,14 +50,12 @@ const REVISION_OPTIONS = [
 ];
 
 const TAGS_BY_CATEGORY = {
-  video_montage:     ['Reels', 'TikTok', 'YouTube', 'Motion design', 'Sous-titres', 'Montage', 'UGC'],
-  copywriting:       ['Hook', 'Script', 'Caption', 'Thread', 'Email', 'Landing page', 'Storytelling'],
-  reseaux_sociaux:   ['Instagram', 'TikTok', 'LinkedIn', 'Twitter/X', 'Pinterest', 'YouTube'],
-  design:            ['Logo', 'Identité visuelle', 'Bannière', 'Thumbnail', 'Infographie', 'Carroussels'],
-  ia_automatisation: ['ChatGPT', 'Make', 'Zapier', 'n8n', 'Automation', 'Prompt engineering'],
-  site_web:          ['WordPress', 'Webflow', 'Shopify', 'React', 'Landing page', 'E-commerce'],
-  legal_admin:       ['Statuts', 'Contrats', 'CGV', 'Mentions légales', 'RGPD'],
-  comptabilite:      ['Bilan', 'Déclaration TVA', 'Facturation', 'Trésorerie'],
+  script_seul:    ['Hook viral', 'Accroche percutante', 'CTA fort', 'Storytelling', 'Ton naturel', 'Format court'],
+  script_montage: ['Script', 'Montage', 'Sous-titres', 'Hook 0-3s', 'Format 9:16', 'Transitions'],
+  pack_mensuel:   ['4 vidéos/mois', '8 vidéos/mois', 'Planning éditorial', 'Stratégie', 'Récurrence', 'Consistance'],
+  montage_seul:   ['CapCut', 'Premiere Pro', 'DaVinci', 'Captions animées', 'Montage dynamique', 'Rythme musical'],
+  strategie:      ['Audit TikTok', 'Calendrier éditorial', 'Angle de contenu', 'Niche', 'Positionnement', 'Croissance'],
+  sous_titres:    ['Sous-titres animés', 'Style podcast', 'CapCut', 'Mot à mot', 'Couleurs', 'Engagement'],
 };
 
 // ─── ProgressBar ──────────────────────────────────────────────────────────────

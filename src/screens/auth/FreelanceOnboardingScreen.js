@@ -25,33 +25,35 @@ const TOTAL_STEPS  = 6;
 
 // ── Data ───────────────────────────────────────────────────────────────────────
 
+// Spécialités ghostwriting TikTok
 const DOMAINS = [
-  { id: 'tiktok',   label: 'TikTok / Reels',  icon: 'phone-portrait-outline' },
-  { id: 'video',    label: 'Vidéo & Montage',  icon: 'film-outline'           },
-  { id: 'hook',     label: 'Hook & Script',    icon: 'flash-outline'          },
-  { id: 'caption',  label: 'Sous-titres',      icon: 'text-outline'           },
-  { id: 'voice',    label: 'Voix & VO',        icon: 'mic-outline'            },
-  { id: 'motion',   label: 'Motion Design',    icon: 'layers-outline'         },
-  { id: 'design',   label: 'Design & UI/UX',   icon: 'brush-outline'          },
-  { id: 'copy',     label: 'Copywriting',      icon: 'create-outline'         },
-  { id: 'social',   label: 'Social Media',     icon: 'share-social-outline'   },
-  { id: 'photo',    label: 'Photo & Visuel',   icon: 'camera-outline'         },
-  { id: 'audio',    label: 'Audio & Podcast',  icon: 'musical-notes-outline'  },
-  { id: 'data',     label: 'Data & Analytics', icon: 'bar-chart-outline'      },
+  { id: 'script',     label: 'Script seul',         icon: 'document-text-outline'  },
+  { id: 'montage',    label: 'Script + Montage',     icon: 'film-outline'           },
+  { id: 'pack',       label: 'Pack mensuel',         icon: 'calendar-outline'       },
+  { id: 'hook',       label: 'Hook & Accroche',      icon: 'flash-outline'          },
+  { id: 'story',      label: 'Storytelling',         icon: 'book-outline'           },
+  { id: 'copy',       label: 'Copywriting viral',    icon: 'create-outline'         },
+  { id: 'caption',    label: 'Sous-titres animés',   icon: 'text-outline'           },
+  { id: 'strategy',   label: 'Stratégie éditoriale', icon: 'trending-up-outline'    },
+  { id: 'ugc',        label: 'UGC & Scripting',      icon: 'videocam-outline'       },
+  { id: 'short',      label: 'Format court',         icon: 'phone-portrait-outline' },
+  { id: 'ads',        label: 'Script pub TikTok',    icon: 'megaphone-outline'      },
+  { id: 'voice',      label: 'Script voix off',      icon: 'mic-outline'            },
 ];
 
 const LEVELS = [
-  { id: 'junior',   label: 'Junior',    sub: '0–2 ans', icon: 'leaf-outline',         color: '#22C55E' },
-  { id: 'confirme', label: 'Confirmé',  sub: '3–5 ans', icon: 'trending-up-outline',  color: '#3B82F6' },
-  { id: 'expert',   label: 'Expert',    sub: '6+ ans',  icon: 'diamond-outline',      color: '#8B5CF6' },
+  { id: 'junior',   label: 'Débutant',  sub: '< 10 scripts', icon: 'leaf-outline',         color: '#22C55E' },
+  { id: 'confirme', label: 'Confirmé',  sub: '10–50 scripts', icon: 'trending-up-outline',  color: '#3B82F6' },
+  { id: 'expert',   label: 'Expert',    sub: '50+ scripts',  icon: 'diamond-outline',      color: '#8B5CF6' },
 ];
 
 const SKILLS_POOL = [
-  'Hook 0–3s', 'Script viral', 'Montage TikTok', 'CapCut Pro', 'Premiere Pro',
-  'After Effects', 'Sous-titres animés', 'Son trending', 'Color grading',
-  'Rétention', 'Watch time', 'Accroche TikTok', 'Distribution', 'Miniatures',
-  'Voix off', 'Storytelling', 'Format court', 'Podcast', 'Pub vidéo',
-  'UGC Content', 'Reels Instagram', 'YouTube Shorts', 'Transitions créatives',
+  'Hook 0–3s', 'Script viral', 'Storytelling', 'Copywriting persuasif',
+  'Accroche TikTok', 'CTA efficace', 'Ton authentique', 'Montage CapCut',
+  'Montage Premiere', 'Sous-titres animés', 'Format court', 'Script pub',
+  'Stratégie éditoriale', 'Niche business', 'Niche bien-être', 'Niche finance',
+  'Niche juridique', 'UGC scripting', 'Voix off', 'Script YouTube Shorts',
+  'Script Instagram Reels', 'Adaptation au ton client', 'Brief-to-script rapide',
 ];
 
 const AVATAR_COLORS = [
@@ -63,7 +65,7 @@ const DELIVERY_OPTIONS = ['12h', '24h', '48h', '72h', '1 semaine'];
 const RESPONSE_OPTIONS  = ['< 1h', '2h', '4h', '12h', '24h'];
 const PROJECT_EMOJIS    = ['🎬', '🎯', '📱', '✏️', '🎵', '📊', '🚀', '⚡', '🌟', '💡'];
 
-const STEP_LABELS = ['Identité', 'Domaines', 'Compétences', 'Présentation', 'Portfolio', 'Compte'];
+const STEP_LABELS = ['Identité', 'Spécialités', 'Compétences', 'Présentation', 'Portfolio', 'Compte'];
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -339,7 +341,7 @@ export default function FreelanceOnboardingScreen() {
   function Step0() {
     return (
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <Text style={s.stepTitle}>Qui es-tu ?</Text>
+        <Text style={s.stepTitle}>Ton profil ghostwriter</Text>
         <Text style={s.stepSub}>Ces infos apparaissent sur ta carte profil vue par les clients.</Text>
 
         {/* Avatar preview + color picker */}
@@ -380,8 +382,8 @@ export default function FreelanceOnboardingScreen() {
   function Step1() {
     return (
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <Text style={s.stepTitle}>Tes domaines</Text>
-        <Text style={s.stepSub}>Dans quoi est-ce que tu excelles ? Plusieurs choix possibles.</Text>
+        <Text style={s.stepTitle}>Tes spécialités</Text>
+        <Text style={s.stepSub}>Quel type de contenu ghostwriting tu maîtrises ? Plusieurs choix possibles.</Text>
 
         <View style={s.chipGrid}>
           {DOMAINS.map(d => (
@@ -415,7 +417,7 @@ export default function FreelanceOnboardingScreen() {
   function Step2() {
     return (
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <Text style={s.stepTitle}>Compétences & tarifs</Text>
+        <Text style={s.stepTitle}>Tes compétences</Text>
         <Text style={s.stepSub}>Ce que tu sais faire et ce que tu factures.</Text>
 
         <SLabel text="TES COMPÉTENCES" />
@@ -628,7 +630,7 @@ export default function FreelanceOnboardingScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={s.stepTitle}>Créer mon compte</Text>
-          <Text style={s.stepSub}>Ton profil sera en ligne immédiatement après inscription.</Text>
+          <Text style={s.stepSub}>Ton profil ghostwriter sera visible par les clients dès l'inscription.</Text>
 
           {/* Récapitulatif */}
           <View style={s.recapCard}>

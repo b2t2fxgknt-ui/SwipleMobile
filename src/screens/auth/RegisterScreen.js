@@ -23,29 +23,30 @@ import BubbleBackground from '../../components/ui/BubbleBackground';
 const { width } = Dimensions.get('window');
 
 const ROLE_META = {
-  acheteur:    { label: 'Acheteur',  color: COLORS.acheteur,    bg: COLORS.acheteurBg,    desc: 'Tu cherches un freelance' },
-  prestataire: { label: 'Freelance', color: COLORS.prestataire,  bg: COLORS.prestataireBg, desc: 'Tu proposes tes services'  },
+  acheteur:    { label: 'Client',      color: COLORS.acheteur,    bg: COLORS.acheteurBg,    desc: 'Tu veux du contenu TikTok pour ton business' },
+  prestataire: { label: 'Ghostwriter', color: COLORS.prestataire, bg: COLORS.prestataireBg, desc: 'Tu écris des scripts TikTok pour des clients' },
 };
 
+// Niches business — mêmes options pour client (sa niche) et ghostwriter (ses spécialités)
 const DOMAINS = [
-  { id: 'dev',       label: 'Développement',  sub: 'Web, back-end, API'      },
-  { id: 'design',    label: 'Design & UI/UX', sub: 'Interfaces, produit'     },
-  { id: 'mobile',    label: 'Mobile',         sub: 'iOS, Android'            },
-  { id: 'marketing', label: 'Marketing',      sub: 'Growth, paid, CRM'       },
-  { id: 'content',   label: 'Contenu & SEO',  sub: 'Rédaction, copywriting'  },
-  { id: 'video',     label: 'Vidéo & Motion', sub: 'Montage, animation'      },
-  { id: 'data',      label: 'Data & IA',      sub: 'Analyse, modèles'        },
-  { id: 'branding',  label: 'Branding',       sub: 'Identité, logo'          },
-  { id: 'photo',     label: 'Photo',          sub: 'Corporate, produit'      },
-  { id: 'social',    label: 'Social Media',   sub: 'Community, stratégie'    },
-  { id: '3d',        label: '3D & Archi',     sub: 'Modélisation, rendu'     },
-  { id: 'audio',     label: 'Audio',          sub: 'Son, musique, podcast'   },
+  { id: 'business',   label: 'Business & Coaching',    sub: 'Coach, consultant, mentor'      },
+  { id: 'formation',  label: 'Formation & Éducation',  sub: 'Formateur, e-learning'           },
+  { id: 'sante',      label: 'Santé & Bien-être',      sub: 'Thérapeute, naturopathe'         },
+  { id: 'finance',    label: 'Finance & Investissement',sub: 'Crypto, bourse, épargne'        },
+  { id: 'marketing',  label: 'Marketing & Vente',      sub: 'Growth, personal branding'       },
+  { id: 'droit',      label: 'Droit & Juridique',      sub: 'Avocat, notaire, RH'             },
+  { id: 'mode',       label: 'Mode & Beauté',          sub: 'Fashion, cosmétiques, lifestyle' },
+  { id: 'food',       label: 'Food & Restauration',    sub: 'Chef, recettes, nutrition'       },
+  { id: 'sport',      label: 'Sport & Fitness',        sub: 'Coach sportif, nutrition'        },
+  { id: 'tech',       label: 'Tech & Digital',         sub: 'SaaS, apps, IA'                 },
+  { id: 'immo',       label: 'Immobilier',             sub: 'Agent, investisseur, promoteur'  },
+  { id: 'devperso',   label: 'Développement perso',    sub: 'Mindset, productivité, confiance'},
 ];
 
 const LEVELS = [
-  { id: 'junior',   label: 'Junior',    sub: '0 – 2 ans' },
-  { id: 'confirme', label: 'Confirmé',  sub: '3 – 5 ans' },
-  { id: 'expert',   label: 'Expert',    sub: '6 ans +'   },
+  { id: 'debutant',  label: 'Débutant',   sub: '< 5 clients' },
+  { id: 'confirme',  label: 'Confirmé',   sub: '5 – 20 clients' },
+  { id: 'expert',    label: 'Expert',     sub: '20+ clients' },
 ];
 
 const CARD_W = (width - SPACING.lg * 2 - SPACING.sm) / 2;
@@ -200,16 +201,16 @@ export default function RegisterScreen({ navigation, route }) {
           >
             {isAcheteur ? (
               <>
-                <Text style={styles.title}>Tu cherches quoi ?</Text>
+                <Text style={styles.title}>Dans quelle niche ?</Text>
                 <Text style={styles.subtitle}>
-                  Sélectionne les domaines qui t'intéressent.{'\n'}Tu peux en choisir plusieurs.
+                  Sélectionne la ou les niches de ton business.{'\n'}On trouve les ghostwriters qui te correspondent.
                 </Text>
               </>
             ) : (
               <>
-                <Text style={styles.title}>Tu fais quoi ?</Text>
+                <Text style={styles.title}>Tes spécialités ?</Text>
                 <Text style={styles.subtitle}>
-                  Sélectionne tes domaines d'expertise.{'\n'}Tu peux en choisir plusieurs.
+                  Sélectionne les niches dans lesquelles tu écris.{'\n'}Tu peux en choisir plusieurs.
                 </Text>
               </>
             )}
@@ -238,10 +239,10 @@ export default function RegisterScreen({ navigation, route }) {
               })}
             </View>
 
-            {/* Sélecteur niveau — prestataire uniquement */}
+            {/* Sélecteur niveau — ghostwriter uniquement */}
             {!isAcheteur && (
               <>
-                <Text style={styles.sectionLabel}>Ton niveau</Text>
+                <Text style={styles.sectionLabel}>Ton expérience en ghostwriting</Text>
                 <View style={styles.levelRow}>
                   {LEVELS.map(lv => {
                     const sel = selectedLevel === lv.id;
@@ -359,7 +360,7 @@ export default function RegisterScreen({ navigation, route }) {
                 style={styles.switchBtn}
               >
                 <Text style={styles.switchText}>
-                  Continuer en tant que {ROLE_META[otherRole].label}
+                  Je suis {role === 'acheteur' ? 'un ghostwriter' : 'un client'}
                 </Text>
               </TouchableOpacity>
             </ScrollView>

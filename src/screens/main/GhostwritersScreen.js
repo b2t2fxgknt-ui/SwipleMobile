@@ -175,7 +175,7 @@ const pickerStyles = StyleSheet.create({
 
 // ── Carte ghostwriter ─────────────────────────────────────────────────────────
 
-function GhostwriterCard({ gw, onInvite }) {
+function GhostwriterCard({ gw, onInvite, onViewProfile }) {
   const tc = {
     'Script seul':      { color: '#8B5CF6', bg: '#8B5CF614', border: '#8B5CF630' },
     'Script + Montage': { color: '#EF4444', bg: '#EF444414', border: '#EF444430' },
@@ -238,15 +238,25 @@ function GhostwriterCard({ gw, onInvite }) {
         </View>
       </View>
 
-      {/* ── CTA ── */}
-      <TouchableOpacity
-        style={[styles.inviteBtn, { borderColor: gw.color + '55', backgroundColor: gw.color + '0E' }]}
-        onPress={() => onInvite(gw)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="paper-plane-outline" size={15} color={gw.color} />
-        <Text style={[styles.inviteBtnText, { color: gw.color }]}>Inviter sur un brief</Text>
-      </TouchableOpacity>
+      {/* ── CTAs ── */}
+      <View style={styles.cardBtns}>
+        <TouchableOpacity
+          style={[styles.profileBtn, { borderColor: gw.color + '45' }]}
+          onPress={() => onViewProfile(gw)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="person-outline" size={14} color={gw.color} />
+          <Text style={[styles.profileBtnText, { color: gw.color }]}>Voir profil</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.inviteBtn, { borderColor: gw.color + '55', backgroundColor: gw.color + '0E', flex: 1 }]}
+          onPress={() => onInvite(gw)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="paper-plane-outline" size={15} color={gw.color} />
+          <Text style={[styles.inviteBtnText, { color: gw.color }]}>Inviter sur un brief</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -280,6 +290,11 @@ export default function GhostwritersScreen() {
     setPicker(gw);
   }
 
+  function handleViewProfile(gw) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate('GhostwriterProfile', { ghostwriter: gw });
+  }
+
   function handlePick(brief) {
     const gw = picker;
     setPicker(null);
@@ -307,6 +322,13 @@ export default function GhostwritersScreen() {
             <Text style={styles.headerTitle}>Ghostwriters</Text>
             <Text style={styles.headerSub}>{filtered.length} profil{filtered.length > 1 ? 's' : ''} disponible{filtered.length > 1 ? 's' : ''}</Text>
           </View>
+          <TouchableOpacity
+            style={styles.searchHeaderBtn}
+            onPress={() => navigation.navigate('Search', { role: 'acheteur' })}
+            activeOpacity={0.75}
+          >
+            <Ionicons name="search-outline" size={18} color={COLORS.text} />
+          </TouchableOpacity>
         </View>
 
         {/* ── Search ── */}
@@ -363,7 +385,7 @@ export default function GhostwritersScreen() {
             </View>
           ) : (
             filtered.map(gw => (
-              <GhostwriterCard key={gw.id} gw={gw} onInvite={handleInvite} />
+              <GhostwriterCard key={gw.id} gw={gw} onInvite={handleInvite} onViewProfile={handleViewProfile} />
             ))
           )}
         </ScrollView>
@@ -387,10 +409,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
 
   header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: SPACING.lg, paddingTop: SPACING.sm, paddingBottom: SPACING.sm,
   },
   headerTitle: { fontSize: 22, fontWeight: '800', color: COLORS.text },
   headerSub:   { fontSize: 12, color: COLORS.textMuted, marginTop: 1 },
+  searchHeaderBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
 
   // Search
   searchWrap: {
@@ -454,6 +482,9 @@ const styles = StyleSheet.create({
   delaiChip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   delaiText: { fontSize: 10, color: COLORS.textMuted, fontWeight: '600' },
 
-  inviteBtn:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderRadius: RADIUS.lg, paddingVertical: 12 },
+  cardBtns:      { flexDirection: 'row', gap: 8, marginTop: 4 },
+  profileBtn:    { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderRadius: RADIUS.lg, paddingVertical: 10, paddingHorizontal: 12 },
+  profileBtnText:{ fontSize: 13, fontWeight: '700' },
+  inviteBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderRadius: RADIUS.lg, paddingVertical: 12 },
   inviteBtnText: { fontSize: 14, fontWeight: '700' },
 });

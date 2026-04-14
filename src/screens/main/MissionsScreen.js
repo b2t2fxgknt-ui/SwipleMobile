@@ -9,6 +9,7 @@ import {
   View, Text, StyleSheet, Dimensions, PanResponder,
   Animated, TouchableOpacity, StatusBar, ActivityIndicator,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -198,6 +199,7 @@ function BriefCard({ brief }) {
 // ── Écran principal ───────────────────────────────────────────────────────────
 
 export default function MissionsScreen() {
+  const navigation        = useNavigation();
   const { acceptMission } = useMissions();
   const { addApplicant }  = useBriefs();
   const session           = useContext(SessionContext);
@@ -441,6 +443,13 @@ export default function MissionsScreen() {
                 {deck.reduce((s, m) => s + m.budget, 0)}€ pot.
               </Text>
             </View>
+            <TouchableOpacity
+              style={styles.searchHeaderBtn}
+              onPress={() => navigation.navigate('Search', { role: 'prestataire' })}
+              activeOpacity={0.75}
+            >
+              <Ionicons name="search-outline" size={18} color={COLORS.text} />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -557,6 +566,11 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 5,
   },
   budgetText: { fontSize: 12, fontWeight: '700', color: '#22C55E' },
+  searchHeaderBtn: {
+    width: 34, height: 34, borderRadius: 17,
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
 
   // Progress
   progressTrack: { height: 3, backgroundColor: COLORS.border, marginHorizontal: SPACING.lg, borderRadius: 2, overflow: 'hidden' },
