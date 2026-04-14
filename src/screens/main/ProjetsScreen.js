@@ -17,7 +17,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
 import { useMissions } from '../../lib/MissionsContext';
-import { CreatorProfileSheet } from '../../components/ui/CreatorCard';
 
 // ── Config statuts ─────────────────────────────────────────────────────────────
 const STATUS_CFG = {
@@ -38,16 +37,6 @@ const TABS = [
 function ProjetCard({ mission, onOpenBrief, onValidate }) {
   const navigation = useNavigation();
   const status = STATUS_CFG[mission.status] ?? STATUS_CFG.en_cours;
-  const [profileOpen, setProfileOpen] = useState(false);
-
-  const effectiveCreator = mission.creator ?? {
-    name: mission.clientName ?? 'Client',
-    username: '',
-    initials: mission.clientInitials ?? (mission.clientName?.charAt(0) ?? '?'),
-    platform: 'TikTok', niche: mission.type ?? '',
-    style: '', tags: [], objective: mission.objective ?? '',
-    dos: mission.dos ?? [], donts: mission.donts ?? [], collab: 0,
-  };
 
   const deadlineH = parseInt(mission.deadline, 10) || 48;
   const elapsed   = Math.floor((Date.now() - new Date(mission.acceptedAt).getTime()) / 3600000);
@@ -57,13 +46,6 @@ function ProjetCard({ mission, onOpenBrief, onValidate }) {
 
   return (
     <>
-    <CreatorProfileSheet
-      visible={profileOpen}
-      creator={effectiveCreator}
-      accentColor={mission.color}
-      onClose={() => setProfileOpen(false)}
-      onChat={() => { setProfileOpen(false); navigation.navigate('Messagerie', { missionId: mission.id }); }}
-    />
     <View style={styles.card}>
       <LinearGradient
         colors={[mission.color + '0D', 'transparent']}
@@ -89,7 +71,11 @@ function ProjetCard({ mission, onOpenBrief, onValidate }) {
 
       {/* ── Ligne infos : client · budget · deadline ── */}
       <View style={styles.infoRow}>
-        <TouchableOpacity style={styles.clientChip} onPress={() => setProfileOpen(true)} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.clientChip}
+          onPress={() => navigation.navigate('MissionBrief', { mission })}
+          activeOpacity={0.7}
+        >
           <Ionicons name="person-circle-outline" size={12} color={COLORS.textMuted} />
           <Text style={styles.clientChipText}>{mission.clientName}</Text>
           <Ionicons name="chevron-forward" size={9} color={COLORS.textMuted} />
@@ -305,10 +291,9 @@ export default function ProjetsScreen() {
             </View>
             <Text style={styles.emptyTitle}>Aucun projet en cours</Text>
             <Text style={styles.emptySub}>
-              Swipe des missions dans l'onglet{' '}
+              Swipe des briefs dans l'onglet{' '}
               <Text style={{ fontWeight: '800', color: COLORS.prestataire }}>Missions</Text>
-              {'\n'}ou commande un expert depuis l'onglet{' '}
-              <Text style={{ fontWeight: '800', color: COLORS.primary }}>Experts</Text>
+              {'\n'}pour décrocher tes premiers contrats ghostwriting
             </Text>
           </View>
         )}

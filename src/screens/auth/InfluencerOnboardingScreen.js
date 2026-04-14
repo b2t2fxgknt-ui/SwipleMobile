@@ -1,14 +1,8 @@
 /**
- * InfluencerOnboardingScreen.js
- * Wizard de création de profil influenceur/créateur — 6 étapes.
- * 0 Identité → 1 Plateformes & Niche → 2 Audience & Stats
- *            → 3 Objectifs & Besoins → 4 Budget & Préférences → 5 Compte
- *
- * Cohérent avec :
- *  - AuditScreen         (plateforme, niche, objectifs → audit ciblé)
- *  - SwipeScreen         (catégories de besoins → matching freelancers)
- *  - ExpertsScreen       (budget, délai → commande directe)
- *  - ProfileScreen       (pseudo, handle, followers, niche → fiche client)
+ * InfluencerOnboardingScreen.js — rebrandé en Client Onboarding
+ * Wizard de création de profil client (entrepreneur / coach) — 6 étapes.
+ * 0 Identité → 1 Ton activité → 2 Ton audience
+ *            → 3 Tes objectifs TikTok → 4 Budget & volume → 5 Compte
  */
 
 import React, { useState, useRef } from 'react';
@@ -32,105 +26,72 @@ const TOTAL_STEPS = 6;
 
 // ── Data ───────────────────────────────────────────────────────────────────────
 
-const PLATFORMS = [
-  { id: 'tiktok',    label: 'TikTok',           icon: 'phone-portrait-outline', color: '#EE1D52' },
-  { id: 'instagram', label: 'Instagram Reels',  icon: 'camera-outline',         color: '#E1306C' },
-  { id: 'youtube',   label: 'YouTube Shorts',   icon: 'play-circle-outline',    color: '#FF0000' },
-  { id: 'twitch',    label: 'Twitch',           icon: 'tv-outline',             color: '#9146FF' },
-  { id: 'snapchat',  label: 'Snapchat',         icon: 'chatbubble-outline',     color: '#FFFC00' },
-  { id: 'twitter',   label: 'X / Twitter',      icon: 'logo-twitter',           color: '#1DA1F2' },
-  { id: 'linkedin',  label: 'LinkedIn',         icon: 'briefcase-outline',      color: '#0A66C2' },
-  { id: 'pinterest', label: 'Pinterest',        icon: 'images-outline',         color: '#E60023' },
+// Types d'activité / business
+const ACTIVITY_TYPES = [
+  { id: 'coach_business',  label: 'Coach business',       icon: 'briefcase-outline'       },
+  { id: 'formateur',       label: 'Formateur / E-learning',icon: 'school-outline'          },
+  { id: 'therapeute',      label: 'Thérapeute / Bien-être',icon: 'leaf-outline'            },
+  { id: 'avocat',          label: 'Avocat / Juriste',      icon: 'shield-outline'          },
+  { id: 'nutritionniste',  label: 'Nutritionniste',        icon: 'fitness-outline'         },
+  { id: 'consultant',      label: 'Consultant / Expert',   icon: 'analytics-outline'       },
+  { id: 'finance',         label: 'Finance / Investissement',icon: 'trending-up-outline'   },
+  { id: 'immobilier',      label: 'Immobilier',            icon: 'home-outline'            },
+  { id: 'ecommerce',       label: 'E-commerce / Marque',   icon: 'storefront-outline'      },
+  { id: 'artisan',         label: 'Artisan / Créateur',    icon: 'hammer-outline'          },
+  { id: 'food',            label: 'Food / Restaurant',     icon: 'restaurant-outline'      },
+  { id: 'autre',           label: 'Autre activité',        icon: 'ellipsis-horizontal-outline' },
 ];
 
-const NICHES = [
-  { id: 'lifestyle',  label: 'Lifestyle',    icon: 'sunny-outline'          },
-  { id: 'gaming',     label: 'Gaming',       icon: 'game-controller-outline' },
-  { id: 'beauty',     label: 'Beauté',       icon: 'sparkles-outline'       },
-  { id: 'food',       label: 'Food',         icon: 'restaurant-outline'     },
-  { id: 'sport',      label: 'Sport & Fit',  icon: 'fitness-outline'        },
-  { id: 'tech',       label: 'Tech',         icon: 'hardware-chip-outline'  },
-  { id: 'comedy',     label: 'Humour',       icon: 'happy-outline'          },
-  { id: 'music',      label: 'Musique',      icon: 'musical-notes-outline'  },
-  { id: 'travel',     label: 'Voyage',       icon: 'airplane-outline'       },
-  { id: 'finance',    label: 'Finance',      icon: 'trending-up-outline'    },
-  { id: 'education',  label: 'Éducation',    icon: 'school-outline'         },
-  { id: 'fashion',    label: 'Mode',         icon: 'shirt-outline'          },
-  { id: 'business',   label: 'Business',     icon: 'rocket-outline'         },
-  { id: 'art',        label: 'Art & DIY',    icon: 'brush-outline'          },
-  { id: 'wellness',   label: 'Bien-être',    icon: 'leaf-outline'           },
-  { id: 'animals',    label: 'Animaux',      icon: 'paw-outline'            },
+// Audiences cibles
+const AUDIENCES = [
+  { id: 'entrepreneurs',  label: 'Entrepreneurs',          icon: 'rocket-outline'          },
+  { id: 'salaries',       label: 'Salariés / Cadres',      icon: 'person-outline'          },
+  { id: 'femmes',         label: 'Femmes',                 icon: 'heart-outline'           },
+  { id: 'jeunes',         label: 'Jeunes 18–30 ans',       icon: 'school-outline'          },
+  { id: 'parents',        label: 'Parents',                icon: 'people-outline'          },
+  { id: 'sportifs',       label: 'Sportifs',               icon: 'fitness-outline'         },
+  { id: 'investisseurs',  label: 'Investisseurs',          icon: 'cash-outline'            },
+  { id: 'professions',    label: 'Professions libérales',  icon: 'briefcase-outline'       },
+  { id: 'etudiants',      label: 'Étudiants',              icon: 'book-outline'            },
+  { id: 'seniors',        label: 'Seniors 50+',            icon: 'star-outline'            },
 ];
 
-const FOLLOWER_RANGES = [
-  { id: 'nano',    label: '< 10K',       sub: 'Nano',    icon: 'person-outline',   color: '#6B7280' },
-  { id: 'micro',   label: '10K – 50K',   sub: 'Micro',   icon: 'people-outline',   color: '#3B82F6' },
-  { id: 'mid',     label: '50K – 200K',  sub: 'Mid',     icon: 'trending-up-outline', color: '#8B5CF6' },
-  { id: 'macro',   label: '200K – 1M',   sub: 'Macro',   icon: 'star-outline',     color: '#F59E0B' },
-  { id: 'mega',    label: '1M+',         sub: 'Mega',    icon: 'flash-outline',    color: '#EF4444' },
+// Phase TikTok du client
+const TIKTOK_STAGES = [
+  { id: 'none',    label: 'Pas encore de compte',  sub: 'Je démarre',     icon: 'add-circle-outline', color: '#6B7280' },
+  { id: 'new',     label: '< 1 000 abonnés',       sub: 'Tout début',     icon: 'leaf-outline',       color: '#22C55E' },
+  { id: 'growing', label: '1K – 10K abonnés',      sub: 'En croissance',  icon: 'trending-up-outline',color: '#3B82F6' },
+  { id: 'active',  label: '10K – 100K abonnés',    sub: 'Actif',          icon: 'star-outline',       color: '#8B5CF6' },
+  { id: 'big',     label: '100K+ abonnés',         sub: 'Établi',         icon: 'flash-outline',      color: '#F59E0B' },
 ];
 
-const VIEW_RANGES = [
-  { id: 'v500',    label: '< 500',       },
-  { id: 'v5k',     label: '500 – 5K',   },
-  { id: 'v50k',    label: '5K – 50K',   },
-  { id: 'v200k',   label: '50K – 200K', },
-  { id: 'v1m',     label: '200K+',      },
-];
-
-const PUBLISH_FREQ = [
-  { id: 'daily',   label: 'Tous les jours', icon: 'calendar-outline'        },
-  { id: '3pw',     label: '3× / semaine',   icon: 'repeat-outline'          },
-  { id: 'weekly',  label: '1× / semaine',   icon: 'time-outline'            },
-  { id: 'monthly', label: 'Ponctuellement', icon: 'hourglass-outline'       },
-];
-
+// Objectifs TikTok
 const GOALS = [
-  { id: 'followers',   label: 'Augmenter mes abonnés',      icon: 'person-add-outline'      },
-  { id: 'engagement',  label: 'Booster l\'engagement',      icon: 'heart-outline'           },
-  { id: 'viral',       label: 'Viraliser mes vidéos',        icon: 'flash-outline'           },
-  { id: 'quality',     label: 'Améliorer la qualité',        icon: 'diamond-outline'         },
-  { id: 'monetize',    label: 'Monétiser mon compte',        icon: 'cash-outline'            },
-  { id: 'brand',       label: 'Décrocher des brand deals',   icon: 'briefcase-outline'       },
-  { id: '100k',        label: 'Passer les 100K',             icon: 'trending-up-outline'     },
-  { id: '1m',          label: 'Atteindre 1M d\'abonnés',    icon: 'star-outline'            },
-  { id: 'consistency', label: 'Publier régulièrement',       icon: 'calendar-outline'        },
-  { id: 'community',   label: 'Fédérer une communauté',      icon: 'people-outline'          },
+  { id: 'notoriete',   label: 'Développer ma notoriété',     icon: 'megaphone-outline'       },
+  { id: 'leads',       label: 'Générer des leads',            icon: 'funnel-outline'          },
+  { id: 'ventes',      label: 'Vendre mes offres',            icon: 'cash-outline'            },
+  { id: 'recrutement', label: 'Recruter des clients',         icon: 'person-add-outline'      },
+  { id: 'communaute',  label: 'Fédérer une communauté',       icon: 'people-outline'          },
+  { id: 'consistance', label: 'Publier régulièrement',        icon: 'calendar-outline'        },
+  { id: 'expert',      label: 'Me positionner en expert',     icon: 'diamond-outline'         },
+  { id: 'viral',       label: 'Viraliser mon contenu',        icon: 'flash-outline'           },
 ];
 
-// Mappage direct avec les freelancers.js categories
-const NEEDS = [
-  { id: 'hook',       label: 'Hook & Accroche',       icon: 'flash-outline',          category: 'hook'           },
-  { id: 'montage',    label: 'Montage vidéo',          icon: 'film-outline',           category: 'video_montage'  },
-  { id: 'captions',   label: 'Sous-titres animés',     icon: 'text-outline',           category: 'subtitle'       },
-  { id: 'son',        label: 'Son & Musique',           icon: 'musical-notes-outline',  category: 'sound'          },
-  { id: 'script',     label: 'Script & Copywriting',   icon: 'create-outline',         category: 'copywriting'    },
-  { id: 'strategie',  label: 'Stratégie & Croissance', icon: 'trending-up-outline',    category: 'reseaux_sociaux'},
-  { id: 'design',     label: 'Visuels & Miniatures',   icon: 'color-palette-outline',  category: 'design'         },
-  { id: 'ugc',        label: 'UGC & Tournage',          icon: 'videocam-outline',       category: 'video_montage'  },
-];
-
+// Budget mensuel pour le ghostwriting
 const BUDGET_RANGES = [
-  { id: 'b30',   label: '< 30€',        sub: 'Mission rapide'    },
-  { id: 'b60',   label: '30 – 60€',     sub: 'Standard'          },
-  { id: 'b100',  label: '60 – 100€',    sub: 'Qualité'           },
-  { id: 'b200',  label: '100 – 200€',   sub: 'Premium'           },
-  { id: 'b200p', label: '200€+',        sub: 'Sur mesure'        },
+  { id: 'b50',    label: '< 50€ / mois',      sub: 'Script ponctuel'   },
+  { id: 'b100',   label: '50 – 150€ / mois',  sub: 'Script régulier'   },
+  { id: 'b300',   label: '150 – 300€ / mois', sub: 'Script + montage'  },
+  { id: 'b500',   label: '300 – 500€ / mois', sub: 'Pack mensuel'      },
+  { id: 'b500p',  label: '500€+ / mois',       sub: 'Collaboration pro' },
 ];
 
-const DELIVERY_PREFS = [
-  { id: 'asap', label: 'Le plus vite possible' },
-  { id: '24h',  label: 'Sous 24h'              },
-  { id: '48h',  label: 'Sous 48h'              },
-  { id: 'week', label: 'Dans la semaine'        },
-  { id: 'flex', label: 'Flexible'              },
-];
-
-const MISSION_FREQ = [
-  { id: 'once',    label: 'Ponctuellement',    sub: 'Au besoin'        },
-  { id: 'monthly', label: '1× / mois',         sub: 'Récurrent léger'  },
-  { id: 'bi',      label: '2–3× / mois',       sub: 'Régulier'         },
-  { id: 'weekly',  label: 'Chaque semaine',     sub: 'Intensif'         },
+// Fréquence de publication souhaitée
+const PUBLISH_FREQ = [
+  { id: '1pw',   label: '1 vidéo / semaine',  icon: 'calendar-outline'  },
+  { id: '2pw',   label: '2–3 / semaine',      icon: 'repeat-outline'    },
+  { id: 'daily', label: 'Tous les jours',     icon: 'flash-outline'     },
+  { id: 'month', label: 'Quelques / mois',    icon: 'hourglass-outline' },
 ];
 
 const AVATAR_COLORS = [
@@ -138,7 +99,7 @@ const AVATAR_COLORS = [
   '#10B981', '#EF4444', '#06B6D4', '#84CC16',
 ];
 
-const STEP_LABELS = ['Identité', 'Plateformes', 'Audience', 'Objectifs', 'Budget', 'Compte'];
+const STEP_LABELS = ['Identité', 'Activité', 'Audience', 'Objectifs', 'Budget', 'Compte'];
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -240,23 +201,21 @@ export default function InfluencerOnboardingScreen() {
   const [tagline,      setTagline]      = useState('');
   const [avatarColor,  setAvatarColor]  = useState(AVATAR_COLORS[0]);
 
-  // ── Step 1 — Plateformes & Niche
-  const [platforms,    setPlatforms]    = useState([]);
-  const [niches,       setNiches]       = useState([]);
+  // ── Step 1 — Activité
+  const [activityType,  setActivityType]  = useState(null);
+  const [activityDesc,  setActivityDesc]  = useState('');
 
-  // ── Step 2 — Audience & Stats
-  const [followerRange, setFollowerRange] = useState(null);
-  const [viewRange,     setViewRange]     = useState(null);
-  const [publishFreq,   setPublishFreq]   = useState(null);
+  // ── Step 2 — Audience
+  const [audiences,    setAudiences]    = useState([]);
+  const [tiktokStage,  setTiktokStage]  = useState(null);
 
-  // ── Step 3 — Objectifs & Besoins
-  const [goals,  setGoals]  = useState([]);
-  const [needs,  setNeeds]  = useState([]); // IDs des besoins sélectionnés
+  // ── Step 3 — Objectifs
+  const [goals,        setGoals]        = useState([]);
+  const [publishFreq,  setPublishFreq]  = useState(null);
 
-  // ── Step 4 — Budget & Préférences
+  // ── Step 4 — Budget & Volume
   const [budget,       setBudget]       = useState(null);
-  const [deliveryPref, setDeliveryPref] = useState(null);
-  const [missionFreq,  setMissionFreq]  = useState(null);
+  const [postsPerMonth, setPostsPerMonth] = useState(null);
 
   // ── Step 5 — Compte
   const [email,    setEmail]    = useState('');
@@ -298,18 +257,16 @@ export default function InfluencerOnboardingScreen() {
         if (!pseudo.trim()) { Alert.alert('Pseudo requis', 'Entre ton nom ou pseudo créateur.'); return false; }
         return true;
       case 1:
-        if (platforms.length === 0) { Alert.alert('Plateforme requise', 'Sélectionne au moins une plateforme.'); return false; }
-        if (niches.length === 0)    { Alert.alert('Niche requise', 'Choisis au moins une niche de contenu.'); return false; }
+        if (!activityType) { Alert.alert('Activité requise', 'Sélectionne ton type d\'activité.'); return false; }
         return true;
       case 2:
-        if (!followerRange) { Alert.alert('Abonnés requis', 'Sélectionne ta tranche d\'abonnés.'); return false; }
+        if (audiences.length === 0) { Alert.alert('Audience requise', 'Sélectionne au moins une audience cible.'); return false; }
         return true;
       case 3:
-        if (goals.length === 0) { Alert.alert('Objectifs requis', 'Sélectionne au moins un objectif.'); return false; }
-        if (needs.length === 0) { Alert.alert('Besoins requis', 'Sélectionne ce dont tu as besoin.'); return false; }
+        if (goals.length === 0) { Alert.alert('Objectifs requis', 'Sélectionne au moins un objectif TikTok.'); return false; }
         return true;
       case 4:
-        if (!budget) { Alert.alert('Budget requis', 'Indique ton budget moyen par mission.'); return false; }
+        if (!budget) { Alert.alert('Budget requis', 'Indique ton budget mensuel.'); return false; }
         return true;
       case 5:
         if (!email.trim()) { Alert.alert('Email requis'); return false; }
@@ -324,26 +281,20 @@ export default function InfluencerOnboardingScreen() {
   async function handleRegister() {
     setLoading(true);
 
-    // Catégories de besoins pour le moteur de matching freelancers
-    const needCategories = needs.map(nid => NEEDS.find(n => n.id === nid)?.category).filter(Boolean);
-
     const meta = {
       role:          'acheteur',
       nom:           pseudo.trim(),
       handle:        handle.trim(),
       tagline:       tagline.trim(),
       avatarColor,
-      platforms,
-      niches,
-      followerRange,
-      viewRange,
-      publishFreq,
+      activityType,
+      activityDesc:  activityDesc.trim(),
+      audiences,
+      tiktokStage,
       goals,
-      needs,
-      needCategories,   // utilisé par matchFreelancers() dans AuditScreen
+      publishFreq,
       budget,
-      deliveryPref,
-      missionFreq,
+      postsPerMonth,
       initials,
     };
 
@@ -407,7 +358,7 @@ export default function InfluencerOnboardingScreen() {
     return (
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <Text style={s.stepTitle}>Qui es-tu ?</Text>
-        <Text style={s.stepSub}>Ces infos constituent ton profil créateur visible par les freelancers.</Text>
+        <Text style={s.stepSub}>Ces infos constituent ton profil client visible par les ghostwriters.</Text>
 
         {/* Avatar preview + color picker */}
         <View style={s.avatarRow}>
@@ -415,7 +366,7 @@ export default function InfluencerOnboardingScreen() {
             <Text style={[s.avatarInitials, { color: avatarColor }]}>{initials}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={s.avatarHint}>Couleur de ton avatar créateur</Text>
+            <Text style={s.avatarHint}>Couleur de ton avatar client</Text>
             <View style={s.colorRow}>
               {AVATAR_COLORS.map(c => (
                 <TouchableOpacity
@@ -428,11 +379,11 @@ export default function InfluencerOnboardingScreen() {
           </View>
         </View>
 
-        <Field label="Pseudo / Nom de créateur" hint="Obligatoire">
+        <Field label="Ton prénom / nom de marque" hint="Obligatoire">
           <StyledInput
             value={pseudo}
             onChangeText={setPseudo}
-            placeholder="Ex : Marie Créa, TechParLeo…"
+            placeholder="Ex : Sophie Coach, Marc Consultant…"
             autoCapitalize="words"
             {...foc('ps')}
           />
@@ -453,11 +404,11 @@ export default function InfluencerOnboardingScreen() {
           </View>
         </Field>
 
-        <Field label="Ton pitch créateur" hint={`${tagline.length}/80`}>
+        <Field label="Ta phrase d'accroche" hint={`${tagline.length}/80`}>
           <StyledInput
             value={tagline}
             onChangeText={setTagline}
-            placeholder="Ex : Je crée du contenu lifestyle & food pour GenZ"
+            placeholder="Ex : Coach business · Je veux des scripts TikTok qui convertissent"
             maxLength={80}
             {...foc('tl')}
           />
@@ -470,25 +421,25 @@ export default function InfluencerOnboardingScreen() {
   function Step1() {
     return (
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <Text style={s.stepTitle}>Tes plateformes</Text>
-        <Text style={s.stepSub}>Où publies-tu ? Sélectionne tout ce que tu utilises.</Text>
+        <Text style={s.stepTitle}>Ton activité</Text>
+        <Text style={s.stepSub}>Quel type de business tu représentes ? Le ghostwriter va adapter son écriture à ta niche.</Text>
 
         <View style={s.platformGrid}>
-          {PLATFORMS.map(p => {
-            const sel = platforms.includes(p.id);
+          {ACTIVITY_TYPES.map(a => {
+            const sel = activityType === a.id;
             return (
               <TouchableOpacity
-                key={p.id}
-                style={[s.platformCard, sel && { borderColor: p.color + '80', backgroundColor: p.color + '12' }]}
-                onPress={() => toggle(platforms, setPlatforms, p.id)}
+                key={a.id}
+                style={[s.platformCard, sel && { borderColor: ACCENT + '80', backgroundColor: ACCENT + '12' }]}
+                onPress={() => pick(setActivityType, a.id)}
                 activeOpacity={0.75}
               >
-                <View style={[s.platformIconBox, { backgroundColor: p.color + (sel ? '25' : '12') }]}>
-                  <Ionicons name={p.icon} size={22} color={sel ? p.color : COLORS.textMuted} />
+                <View style={[s.platformIconBox, { backgroundColor: sel ? ACCENT + '25' : COLORS.cardElevated }]}>
+                  <Ionicons name={a.icon} size={20} color={sel ? ACCENT : COLORS.textMuted} />
                 </View>
-                <Text style={[s.platformLabel, sel && { color: p.color }]}>{p.label}</Text>
+                <Text style={[s.platformLabel, sel && { color: ACCENT }]}>{a.label}</Text>
                 {sel && (
-                  <View style={[s.platformCheck, { backgroundColor: p.color }]}>
+                  <View style={[s.platformCheck, { backgroundColor: ACCENT }]}>
                     <Ionicons name="checkmark" size={10} color="#fff" />
                   </View>
                 )}
@@ -497,39 +448,47 @@ export default function InfluencerOnboardingScreen() {
           })}
         </View>
 
-        <SLabel text="TA NICHE DE CONTENU" />
-        <Text style={s.helperText}>Plusieurs choix possibles. Cela aide à te proposer les bons freelancers.</Text>
-        <View style={s.chipGrid}>
-          {NICHES.map(n => (
-            <Chip
-              key={n.id}
-              label={n.label}
-              icon={n.icon}
-              selected={niches.includes(n.id)}
-              onPress={() => toggle(niches, setNiches, n.id)}
-            />
-          ))}
-        </View>
+        <SLabel text="PRÉCISE TON ACTIVITÉ (optionnel)" />
+        <TextInput
+          style={s.textInput}
+          value={activityDesc}
+          onChangeText={setActivityDesc}
+          placeholder="Ex : Coach business pour femmes entrepreneures qui veulent quitter leur CDI"
+          placeholderTextColor={COLORS.textLight}
+          multiline
+        />
       </ScrollView>
     );
   }
 
-  // ── 2 · Audience & Stats ────────────────────────────────────────────────────
+  // ── 2 · Audience ────────────────────────────────────────────────────────────
   function Step2() {
     return (
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <Text style={s.stepTitle}>Ton audience</Text>
-        <Text style={s.stepSub}>Ces infos permettent de t'adapter le bon niveau de freelance. Aucune vérification, sois honnête !</Text>
+        <Text style={s.stepSub}>Qui tu vises avec tes vidéos TikTok ? Plusieurs choix possibles.</Text>
 
-        <SLabel text="NOMBRE D'ABONNÉS (PLATEFORME PRINCIPALE)" />
+        <View style={s.chipGrid}>
+          {AUDIENCES.map(a => (
+            <Chip
+              key={a.id}
+              label={a.label}
+              icon={a.icon}
+              selected={audiences.includes(a.id)}
+              onPress={() => toggle(audiences, setAudiences, a.id)}
+            />
+          ))}
+        </View>
+
+        <SLabel text="OÙ EN ES-TU SUR TIKTOK ?" />
         <View style={s.followerGrid}>
-          {FOLLOWER_RANGES.map(r => {
-            const sel = followerRange === r.id;
+          {TIKTOK_STAGES.map(r => {
+            const sel = tiktokStage === r.id;
             return (
               <TouchableOpacity
                 key={r.id}
                 style={[s.followerCard, sel && { borderColor: r.color, backgroundColor: r.color + '12' }]}
-                onPress={() => pick(setFollowerRange, r.id)}
+                onPress={() => pick(setTiktokStage, r.id)}
                 activeOpacity={0.75}
               >
                 <Ionicons name={r.icon} size={20} color={sel ? r.color : COLORS.textMuted} />
@@ -539,20 +498,30 @@ export default function InfluencerOnboardingScreen() {
             );
           })}
         </View>
+      </ScrollView>
+    );
+  }
 
-        <SLabel text="VUES MOYENNES PAR VIDÉO" />
+  // ── 3 · Objectifs TikTok ────────────────────────────────────────────────────
+  function Step3() {
+    return (
+      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <Text style={s.stepTitle}>Tes objectifs TikTok</Text>
+        <Text style={s.stepSub}>Qu'attends-tu de ton contenu TikTok ? Sélectionne tes priorités.</Text>
+
         <View style={s.chipGrid}>
-          {VIEW_RANGES.map(r => (
+          {GOALS.map(g => (
             <Chip
-              key={r.id}
-              label={r.label}
-              selected={viewRange === r.id}
-              onPress={() => pick(setViewRange, r.id)}
+              key={g.id}
+              label={g.label}
+              icon={g.icon}
+              selected={goals.includes(g.id)}
+              onPress={() => toggle(goals, setGoals, g.id)}
             />
           ))}
         </View>
 
-        <SLabel text="FRÉQUENCE DE PUBLICATION" />
+        <SLabel text="FRÉQUENCE DE PUBLICATION SOUHAITÉE" />
         <View style={s.freqRow}>
           {PUBLISH_FREQ.map(f => {
             const sel = publishFreq === f.id;
@@ -573,65 +542,16 @@ export default function InfluencerOnboardingScreen() {
     );
   }
 
-  // ── 3 · Objectifs & Besoins ─────────────────────────────────────────────────
-  function Step3() {
-    return (
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <Text style={s.stepTitle}>Tes objectifs</Text>
-        <Text style={s.stepSub}>Qu'est-ce que tu veux accomplir ? Sélectionne tes priorités.</Text>
-
-        <View style={s.chipGrid}>
-          {GOALS.map(g => (
-            <Chip
-              key={g.id}
-              label={g.label}
-              icon={g.icon}
-              selected={goals.includes(g.id)}
-              onPress={() => toggle(goals, setGoals, g.id)}
-            />
-          ))}
-        </View>
-
-        <SLabel text="DE QUOI AS-TU BESOIN ?" />
-        <Text style={s.helperText}>
-          Ces choix alimentent directement le matching avec les bons freelancers et tes audits IA.
-        </Text>
-        <View style={s.needsGrid}>
-          {NEEDS.map(n => {
-            const sel = needs.includes(n.id);
-            return (
-              <TouchableOpacity
-                key={n.id}
-                style={[s.needCard, sel && { borderColor: ACCENT, backgroundColor: ACCENT + '12' }]}
-                onPress={() => toggle(needs, setNeeds, n.id)}
-                activeOpacity={0.75}
-              >
-                <View style={[s.needIconBox, { backgroundColor: sel ? ACCENT + '20' : COLORS.cardElevated }]}>
-                  <Ionicons name={n.icon} size={20} color={sel ? ACCENT : COLORS.textMuted} />
-                </View>
-                <Text style={[s.needLabel, sel && { color: ACCENT }]}>{n.label}</Text>
-                {sel && (
-                  <View style={s.needCheck}>
-                    <Ionicons name="checkmark-circle" size={16} color={ACCENT} />
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </ScrollView>
-    );
-  }
-
-  // ── 4 · Budget & Préférences ────────────────────────────────────────────────
+  // ── 4 · Budget & Volume ─────────────────────────────────────────────────────
   function Step4() {
     const selBudget = BUDGET_RANGES.find(b => b.id === budget);
+    const POSTS_OPTIONS = [2, 4, 6, 8, 12];
     return (
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <Text style={s.stepTitle}>Budget & Préférences</Text>
-        <Text style={s.stepSub}>Comment tu travailles avec les freelancers au quotidien.</Text>
+        <Text style={s.stepTitle}>Budget & volume</Text>
+        <Text style={s.stepSub}>Ces infos permettent aux ghostwriters de te proposer l'offre adaptée.</Text>
 
-        <SLabel text="BUDGET MOYEN PAR MISSION" />
+        <SLabel text="BUDGET MENSUEL POUR LE GHOSTWRITING" />
         <View style={s.budgetGrid}>
           {BUDGET_RANGES.map(b => {
             const sel = budget === b.id;
@@ -650,71 +570,46 @@ export default function InfluencerOnboardingScreen() {
           })}
         </View>
 
-        <SLabel text="DÉLAI DE LIVRAISON SOUHAITÉ" />
+        <SLabel text="NOMBRE DE VIDÉOS PAR MOIS" />
         <View style={s.chipGrid}>
-          {DELIVERY_PREFS.map(d => (
+          {POSTS_OPTIONS.map(n => (
             <Chip
-              key={d.id}
-              label={d.label}
-              selected={deliveryPref === d.id}
-              onPress={() => pick(setDeliveryPref, d.id)}
+              key={n}
+              label={`${n} vidéos/mois`}
+              selected={postsPerMonth === n}
+              onPress={() => pick(setPostsPerMonth, n)}
             />
           ))}
-        </View>
-
-        <SLabel text="FRÉQUENCE DES MISSIONS" />
-        <View style={s.mfreqGrid}>
-          {MISSION_FREQ.map(f => {
-            const sel = missionFreq === f.id;
-            return (
-              <TouchableOpacity
-                key={f.id}
-                style={[s.mfreqCard, sel && { borderColor: ACCENT, backgroundColor: ACCENT + '12' }]}
-                onPress={() => pick(setMissionFreq, f.id)}
-                activeOpacity={0.75}
-              >
-                <Text style={[s.mfreqLabel, sel && { color: ACCENT }]}>{f.label}</Text>
-                <Text style={s.mfreqSub}>{f.sub}</Text>
-              </TouchableOpacity>
-            );
-          })}
         </View>
 
         {/* Preview carte profil client */}
         {pseudo.trim() && (
           <View style={{ marginTop: SPACING.sm }}>
-            <SLabel text="APERÇU DE TA CARTE CRÉATEUR" />
+            <SLabel text="APERÇU DE TON PROFIL CLIENT" />
             <View style={s.previewCard}>
               <LinearGradient colors={[avatarColor + '14', 'transparent']} style={StyleSheet.absoluteFill} borderRadius={RADIUS.xl} />
               <View style={[s.previewAvatar, { backgroundColor: avatarColor + '22', borderColor: avatarColor + '55' }]}>
                 <Text style={[s.previewInitials, { color: avatarColor }]}>{initials}</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                  <Text style={s.previewName}>{pseudo}</Text>
-                  {handle ? <Text style={s.previewHandle}>@{handle}</Text> : null}
-                </View>
-                <Text style={s.previewTagline} numberOfLines={1}>{tagline || 'Créateur de contenu'}</Text>
+                <Text style={s.previewName}>{pseudo}</Text>
+                <Text style={s.previewTagline} numberOfLines={1}>
+                  {ACTIVITY_TYPES.find(a => a.id === activityType)?.label ?? 'Entrepreneur · Client'}
+                </Text>
                 <View style={s.previewPillsRow}>
-                  {platforms.slice(0, 2).map(pid => {
-                    const pl = PLATFORMS.find(p => p.id === pid);
-                    return pl ? (
-                      <View key={pid} style={[s.previewPlatformPill, { backgroundColor: pl.color + '15', borderColor: pl.color + '30' }]}>
-                        <Ionicons name={pl.icon} size={10} color={pl.color} />
-                        <Text style={[s.previewPlatformText, { color: pl.color }]}>{pl.label}</Text>
-                      </View>
-                    ) : null;
-                  })}
-                  {followerRange && (
+                  {selBudget && (
                     <View style={s.previewFollowerPill}>
-                      <Ionicons name="people-outline" size={10} color={ACCENT} />
-                      <Text style={s.previewFollowerText}>{FOLLOWER_RANGES.find(r => r.id === followerRange)?.label}</Text>
+                      <Ionicons name="cash-outline" size={10} color={ACCENT} />
+                      <Text style={s.previewFollowerText}>{selBudget.label}</Text>
+                    </View>
+                  )}
+                  {postsPerMonth && (
+                    <View style={[s.previewFollowerPill, { marginLeft: 4 }]}>
+                      <Ionicons name="film-outline" size={10} color={ACCENT} />
+                      <Text style={s.previewFollowerText}>{postsPerMonth} vidéos/mois</Text>
                     </View>
                   )}
                 </View>
-                {selBudget && (
-                  <Text style={s.previewBudget}>Budget moyen : {selBudget.label}</Text>
-                )}
               </View>
             </View>
           </View>
@@ -725,16 +620,16 @@ export default function InfluencerOnboardingScreen() {
 
   // ── 5 · Compte ──────────────────────────────────────────────────────────────
   function Step5() {
-    const selFollower = FOLLOWER_RANGES.find(r => r.id === followerRange);
     const selBudget   = BUDGET_RANGES.find(b => b.id === budget);
+    const selActivity = ACTIVITY_TYPES.find(a => a.id === activityType);
 
     return (
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={s.stepTitle}>Créer mon compte</Text>
-          <Text style={s.stepSub}>Ton profil créateur sera actif immédiatement après inscription.</Text>
+          <Text style={s.stepSub}>Ton profil client sera actif immédiatement après inscription.</Text>
 
-          {/* Récapitulatif créateur */}
+          {/* Récapitulatif client */}
           <View style={s.recapCard}>
             <LinearGradient colors={[avatarColor + '14', 'transparent']} style={StyleSheet.absoluteFill} borderRadius={RADIUS.xl} />
             <View style={[s.recapAvatar, { backgroundColor: avatarColor + '22', borderColor: avatarColor + '55' }]}>
@@ -745,37 +640,30 @@ export default function InfluencerOnboardingScreen() {
                 <Text style={s.recapName}>{pseudo}</Text>
                 {handle ? <Text style={s.recapHandle}>@{handle}</Text> : null}
               </View>
-              <Text style={s.recapTagline} numberOfLines={1}>{tagline || 'Créateur de contenu'}</Text>
+              <Text style={s.recapTagline} numberOfLines={1}>
+                {tagline || (selActivity?.label ?? 'Entrepreneur · Client')}
+              </Text>
               <View style={s.recapRow}>
-                {platforms.slice(0, 3).map(pid => {
-                  const pl = PLATFORMS.find(p => p.id === pid);
-                  return pl ? (
-                    <View key={pid} style={[s.recapPlatformBadge, { borderColor: pl.color + '40', backgroundColor: pl.color + '12' }]}>
-                      <Ionicons name={pl.icon} size={9} color={pl.color} />
-                      <Text style={[s.recapPlatformText, { color: pl.color }]}>{pl.label}</Text>
-                    </View>
-                  ) : null;
-                })}
-                {platforms.length > 3 && <Text style={s.recapMore}>+{platforms.length - 3}</Text>}
+                {selActivity && (
+                  <View style={[s.recapPlatformBadge, { borderColor: ACCENT + '40', backgroundColor: ACCENT + '12' }]}>
+                    <Ionicons name={selActivity.icon} size={9} color={ACCENT} />
+                    <Text style={[s.recapPlatformText, { color: ACCENT }]}>{selActivity.label}</Text>
+                  </View>
+                )}
+                {selBudget && (
+                  <View style={[s.recapPlatformBadge, { borderColor: '#22C55E40', backgroundColor: '#22C55E12', marginLeft: 4 }]}>
+                    <Ionicons name="cash-outline" size={9} color="#22C55E" />
+                    <Text style={[s.recapPlatformText, { color: '#22C55E' }]}>{selBudget.label}</Text>
+                  </View>
+                )}
               </View>
-            </View>
-            <View style={s.recapRight}>
-              {selFollower && (
-                <>
-                  <Text style={[s.recapFollowerVal, { color: avatarColor }]}>{selFollower.label}</Text>
-                  <Text style={s.recapFollowerSub}>abonnés</Text>
-                </>
-              )}
-              {selBudget && (
-                <Text style={s.recapBudgetTxt}>{selBudget.label} / mission</Text>
-              )}
             </View>
           </View>
 
           {/* Résumé objectifs */}
           {goals.length > 0 && (
             <View style={s.goalsSummary}>
-              <Text style={s.goalsSummaryTitle}>Tes objectifs</Text>
+              <Text style={s.goalsSummaryTitle}>Tes objectifs TikTok</Text>
               <View style={s.goalsSummaryRow}>
                 {goals.slice(0, 4).map(gid => {
                   const g = GOALS.find(x => x.id === gid);
@@ -888,7 +776,7 @@ export default function InfluencerOnboardingScreen() {
               ) : isLast ? (
                 <>
                   <Ionicons name="rocket-outline" size={18} color="#fff" />
-                  <Text style={s.ctaTxt}>Créer mon profil créateur</Text>
+                  <Text style={s.ctaTxt}>Créer mon compte client</Text>
                 </>
               ) : (
                 <>
