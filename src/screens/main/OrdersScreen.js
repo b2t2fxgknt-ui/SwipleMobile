@@ -195,20 +195,21 @@ function missionToOrder(m) {
 
 // ── Convertit un ordre Supabase en ordre unifié ────────────────────────────────
 function supabaseToOrder(o) {
-  const service    = o.service    ?? {};
-  const freelancer = o.freelancer ?? {};
   return {
-    id:            o.id,
-    title:         service.title ?? 'Service',
-    type:          service.category ?? 'Service',
-    freelancerName:freelancer.name ?? 'Freelance',
-    status:        o.status ?? 'pending',
-    amount:        o.price ?? 0,
-    date:          o.created_at,
-    color:         COLORS.primary,
-    icon:          'briefcase-outline',
-    source:        'supabase',
-    rawOrder:      o,
+    id:              o.id,
+    title:           o.title           ?? 'Mission',
+    type:            o.type            ?? 'Mission',
+    freelancerName:  o.freelancer_name ?? 'Freelance',
+    status:          o.status          ?? 'pending',
+    amount:          o.price           ?? o.budget ?? 0,
+    date:            o.created_at,
+    color:           o.color           ?? COLORS.primary,
+    icon:            o.icon            ?? 'briefcase-outline',
+    source:          'supabase',
+    deliveryUrl:     o.delivery_url,
+    deliveryMessage: o.delivery_message,
+    deadline:        o.deadline,
+    rawOrder:        o,
   };
 }
 
@@ -335,15 +336,17 @@ export default function OrdersScreen() {
     if (!userId) return;
     if (isRefresh) setRefreshing(true);
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('orders')
-        .select(`id, price, status, created_at,
-          service:services!service_id(id, title, category),
-          freelancer:users!freelancer_id(id, name)`)
+        .select(`id, title, type, budget, price, status, color, deadline,
+          delivery_url, delivery_message, freelancer_name, freelancer_initials, created_at`)
         .eq('client_id', userId)
         .order('created_at', { ascending: false });
+      if (error) console.warn('[OrdersScreen] fetchSupabase error:', error.message);
       setSupabaseOrders(data ?? []);
-    } catch (_) {}
+    } catch (err) {
+      console.warn('[OrdersScreen] fetchSupabase error:', err?.message ?? err);
+    }
     finally { setRefreshing(false); }
   }, [userId]);
 
@@ -402,6 +405,7 @@ export default function OrdersScreen() {
           revisions:       2,
           deliveryUrl:     order.deliveryUrl,
           deliveryMessage: order.deliveryMessage,
+          freelancerName:  order.freelancerName,
         };
 
     const freelancer = {
