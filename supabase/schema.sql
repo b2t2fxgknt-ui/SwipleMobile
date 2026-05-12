@@ -217,8 +217,8 @@ create policy "messages_select" on public.messages for select
       where o.id::text = conversation_id
         and (o.freelancer_id = auth.uid() or o.client_id = auth.uid())
     )
-    or sender_id = 'system'
-    or sender_id = auth.uid()::text
+    or sender_id::text = 'system'
+    or sender_id::text = auth.uid()::text
   );
 
 create policy "messages_insert" on public.messages for insert
