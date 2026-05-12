@@ -130,7 +130,10 @@ export function MissionsProvider({ children }) {
   // ─────────────────────────────────────────────────────────────────────────
 
   const acceptMission = useCallback((mission) => {
-    // 1. Ajout optimiste en RAM
+    // Ajout optimiste en RAM uniquement.
+    // L'ordre Supabase est créé par le CLIENT via ApplicantsScreen.handleSelect.
+    // Cela évite les doublons : swipe = candidature (applications table),
+    // sélection client = mission (orders table).
     setAcceptedMissions(prev => {
       if (prev.find(m => m.id === mission.id)) return prev;
       return [
@@ -138,43 +141,6 @@ export function MissionsProvider({ children }) {
         ...prev,
       ];
     });
-
-    // 2. Pour les vrais briefs Supabase (UUID, pas mock) :
-    //    créer l'ordre immédiatement en DB, puis remplacer l'ID brief par l'ID order en RAM
-    if (!isMockId(mission.id)) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        const uid = session?.user?.id;
-        if (!uid) return;
-        supabase
-          .from('orders')
-          .insert({
-            freelancer_id:   uid,
-            brief_id:        mission.id,
-            title:           mission.title           ?? 'Mission',
-            type:            mission.type            ?? 'Script',
-            budget:          Number(mission.budget)  || 0,
-            status:          'in_progress',
-            color:           mission.color           ?? '#10B981',
-            deadline:        mission.deadline        ?? '48h',
-            client_name:     mission.clientName      ?? 'Client',
-            client_initials: mission.clientInitials  ?? 'CL',
-          })
-          .select()
-          .single()
-          .then(({ data, error }) => {
-            if (error) {
-              console.warn('[MissionsContext] acceptMission insert order error:', error.message);
-              return;
-            }
-            if (data) {
-              // L'order a son propre UUID — on l'utilise pour les futures mise à jour de statut
-              setAcceptedMissions(prev =>
-                prev.map(m => m.id === mission.id ? { ...m, id: data.id } : m)
-              );
-            }
-          });
-      });
-    }
   }, []);
 
   const updateStatus = useCallback((id, status, extraData = {}, missionData = null) => {

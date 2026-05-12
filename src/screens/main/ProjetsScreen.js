@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  StatusBar,
+  StatusBar, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,6 +17,9 @@ import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/nativ
 import { COLORS, SPACING, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
 import { useMissions } from '../../lib/MissionsContext';
+import { supabase } from '../../lib/supabase';
+import { useContext } from 'react';
+import { SessionContext } from '../../lib/SessionContext';
 
 // ── Config statuts ─────────────────────────────────────────────────────────────
 const STATUS_CFG = {
@@ -172,11 +175,26 @@ function ProjetCard({ mission, onOpenBrief, onValidate }) {
 export default function ProjetsScreen() {
   const navigation = useNavigation();
   const route      = useRoute();
+  const session    = useContext(SessionContext);
   const { acceptedMissions, updateStatus, refreshMissions } = useMissions();
-  const [activeTab, setActiveTab] = useState('en_cours');
+  const [activeTab,    setActiveTab]    = useState('en_cours');
+  const [pendingApps,  setPendingApps]  = useState([]);
 
-  // Rafraîchit les missions depuis Supabase à chaque focus de l'onglet
-  useFocusEffect(useCallback(() => { refreshMissions(); }, [refreshMissions]));
+  // Rafraîchit missions + candidatures à chaque focus
+  useFocusEffect(useCallback(() => {
+    refreshMissions();
+    const userId = session?.user?.id;
+    if (!userId) return;
+    supabase
+      .from('applications')
+      .select('id, brief_id, status, created_at, briefs(title, type, color, budget, deadline)')
+      .eq('freelancer_id', userId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        setPendingApps(data ?? []);
+      });
+  }, [refreshMissions, session?.user?.id]));
 
   // Auto-switch tab si on arrive depuis un écran transaction avec un initialTab
   useEffect(() => {
@@ -286,8 +304,48 @@ export default function ProjetsScreen() {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* Aucune mission du tout */}
-        {acceptedMissions.length === 0 && (
+        {/* ── Candidatures en attente ───────────────────────────────── */}
+        {pendingApps.length > 0 && (
+          <View style={styles.pendingSection}>
+            <View style={styles.pendingHeader}>
+              <View style={styles.pendingDot} />
+              <Text style={styles.pendingTitle}>
+                {pendingApps.length} candidature{pendingApps.length > 1 ? 's' : ''} en attente
+              </Text>
+              <Text style={styles.pendingHint}>En cours de sélection</Text>
+            </View>
+            {pendingApps.map(app => {
+              const brief = app.briefs ?? {};
+              const color = brief.color ?? COLORS.prestataire;
+              return (
+                <View key={app.id} style={[styles.pendingCard, { borderColor: color + '30' }]}>
+                  <View style={[styles.pendingColorBar, { backgroundColor: color }]} />
+                  <View style={styles.pendingCardBody}>
+                    <Text style={[styles.pendingType, { color }]}>{brief.type ?? 'Brief'}</Text>
+                    <Text style={styles.pendingCardTitle} numberOfLines={1}>
+                      {brief.title ?? 'Brief en cours'}
+                    </Text>
+                    <View style={styles.pendingChips}>
+                      {brief.budget > 0 && (
+                        <Text style={styles.pendingChipGreen}>{brief.budget}€</Text>
+                      )}
+                      {brief.deadline && (
+                        <Text style={styles.pendingChipMuted}>{brief.deadline}</Text>
+                      )}
+                    </View>
+                  </View>
+                  <View style={[styles.pendingStatus, { backgroundColor: '#F59E0B18', borderColor: '#F59E0B30' }]}>
+                    <Ionicons name="hourglass-outline" size={12} color="#F59E0B" />
+                    <Text style={[styles.pendingStatusText, { color: '#F59E0B' }]}>Attente</Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Aucune mission et aucune candidature */}
+        {acceptedMissions.length === 0 && pendingApps.length === 0 && (
           <View style={styles.emptyFull}>
             <View style={styles.emptyIconBox}>
               <Ionicons name="layers-outline" size={36} color={COLORS.textMuted} />
@@ -381,6 +439,35 @@ const styles = StyleSheet.create({
   emptySub:   { fontSize: 13, color: COLORS.textMuted, textAlign: 'center', lineHeight: 20 },
   emptyTab:   { alignItems: 'center', paddingTop: SPACING.xl * 2, gap: 10 },
   emptyTabText: { fontSize: 14, color: COLORS.textMuted, fontWeight: '600' },
+
+  // Candidatures en attente
+  pendingSection: { marginBottom: SPACING.lg, gap: 8 },
+  pendingHeader:  { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  pendingDot:     { width: 7, height: 7, borderRadius: 4, backgroundColor: '#F59E0B' },
+  pendingTitle:   { fontSize: 13, fontWeight: '800', color: COLORS.text, flex: 1 },
+  pendingHint:    { fontSize: 11, color: COLORS.textMuted },
+
+  pendingCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.card, borderWidth: 1,
+    borderRadius: RADIUS.lg, overflow: 'hidden',
+    ...SHADOW.sm,
+  },
+  pendingColorBar: { width: 3, alignSelf: 'stretch' },
+  pendingCardBody: { flex: 1, padding: SPACING.sm, gap: 3 },
+  pendingType:     { fontSize: 10, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase' },
+  pendingCardTitle:{ fontSize: 13, fontWeight: '700', color: COLORS.text },
+  pendingChips:    { flexDirection: 'row', gap: 8 },
+  pendingChipGreen:{ fontSize: 11, fontWeight: '700', color: '#22C55E' },
+  pendingChipMuted:{ fontSize: 11, color: COLORS.textMuted },
+
+  pendingStatus: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    borderWidth: 1, borderRadius: RADIUS.full,
+    paddingHorizontal: 8, paddingVertical: 4,
+    marginRight: SPACING.sm,
+  },
+  pendingStatusText: { fontSize: 10, fontWeight: '700' },
 
   // Card
   card: {
