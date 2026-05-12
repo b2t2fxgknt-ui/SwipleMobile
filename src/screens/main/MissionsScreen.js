@@ -198,17 +198,23 @@ function BriefCard({ brief }) {
 
 // ── Écran principal ───────────────────────────────────────────────────────────
 
+// UUID v4 check — pour éviter d'écrire des IDs mock dans Supabase
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isRealId = (id) => UUID_RE.test(String(id ?? ''));
+
 export default function MissionsScreen() {
   const navigation        = useNavigation();
   const { acceptMission } = useMissions();
   const { addApplicant }  = useBriefs();
   const session           = useContext(SessionContext);
-  const [deck,    setDeck]    = useState(MOCK_BRIEFS);
-  const [loading, setLoading] = useState(false);
-  const [passed,  setPassed]  = useState([]);
-  const [phase,   setPhase]   = useState('swiping'); // 'swiping' | 'done'
+  const [deck,       setDeck]       = useState(MOCK_BRIEFS);
+  const [totalCards, setTotalCards] = useState(MOCK_BRIEFS.length);
+  const [loading,    setLoading]    = useState(false);
+  const [passed,     setPassed]     = useState([]);
+  const [phase,      setPhase]      = useState('swiping'); // 'swiping' | 'done'
+  const [reloadKey,  setReloadKey]  = useState(0);
 
-  // ── Fetch briefs depuis Supabase au montage ───────────────────────────────
+  // ── Fetch briefs depuis Supabase ──────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     async function fetchBriefs() {
@@ -268,6 +274,8 @@ export default function MissionsScreen() {
 
         if (!cancelled && briefs.length > 0) {
           setDeck(briefs);
+          setTotalCards(briefs.length);
+          setPassed([]);
           setPhase('swiping');
         }
       } catch (err) {
@@ -279,7 +287,7 @@ export default function MissionsScreen() {
     }
     fetchBriefs();
     return () => { cancelled = true; };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, reloadKey]);
 
   const position = useRef(new Animated.ValueXY()).current;
 
@@ -315,12 +323,15 @@ export default function MissionsScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       acceptMission(top); // → ProjetsScreen instantanément
 
-      // Enregistrer la candidature côté client
-      const meta = session?.user?.user_metadata ?? {};
-      const fullName = meta.full_name ?? meta.name ?? 'Ghostwriter';
-      const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'GW';
+      // Profil du freelance connecté
+      const meta      = session?.user?.user_metadata ?? {};
+      const userId    = session?.user?.id;
+      const fullName  = meta.nom ?? meta.full_name ?? meta.name ?? 'Ghostwriter';
+      const initials  = fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'GW';
+
+      // Mise à jour context optimiste (côté client du brief)
       addApplicant(top.id, {
-        id:        session?.user?.id ?? `local_${Date.now()}`,
+        id:        userId ?? `local_${Date.now()}`,
         initials,
         name:      fullName,
         specialty: top.type ?? 'Ghostwriting TikTok',
@@ -328,6 +339,20 @@ export default function MissionsScreen() {
         missions:  0,
         bio:       '',
       });
+
+      // ── Persistance Supabase (seulement pour les vrais briefs) ─────────
+      if (isRealId(top.id) && isRealId(userId)) {
+        supabase.from('applications').insert({
+          brief_id:            top.id,
+          freelancer_id:       userId,
+          freelancer_name:     fullName,
+          freelancer_initials: initials,
+          specialty:           top.type ?? 'Ghostwriting TikTok',
+          status:              'pending',
+        }).then(({ error }) => {
+          if (error) console.warn('[MissionsScreen] application insert:', error.message);
+        });
+      }
     } else {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       if (top) setPassed(prev => [...prev, top]);
@@ -364,9 +389,9 @@ export default function MissionsScreen() {
     },
   })).current;
 
-  const total    = MOCK_BRIEFS.length;
+  const total    = totalCards;
   const done     = total - deck.length;
-  const progress = done / total;
+  const progress = total > 0 ? done / total : 0;
 
   // ── Écran "tout traité" ───────────────────────────────────────────────
   if (phase === 'done') {
@@ -400,7 +425,7 @@ export default function MissionsScreen() {
 
             <TouchableOpacity
               style={styles.refreshBtn}
-              onPress={() => { setDeck(MOCK_BRIEFS); setPassed([]); setPhase('swiping'); }}
+              onPress={() => setReloadKey(k => k + 1)}
               activeOpacity={0.8}
             >
               <LinearGradient

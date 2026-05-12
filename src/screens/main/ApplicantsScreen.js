@@ -184,7 +184,7 @@ export default function ApplicantsScreen() {
           type:                brief.type          ?? 'Script seul',
           budget:              Number(brief.budget) || 0,
           deadline:            brief.deadline      ?? '48h',
-          status:              'en_cours',
+          status:              'in_progress',
           color:               brief.color         ?? COLORS.primary,
         })
         .select('id')
