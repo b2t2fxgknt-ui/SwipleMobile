@@ -218,11 +218,10 @@ export default function ApplicantsScreen() {
     };
 
     setTimeout(() => {
-      navigation.navigate('Match', {
+      navigation.navigate('MissionConfirmation', {
         mission,
         freelancer,
-        client:   { initials: clientInitials, name: clientName },
-        isClient: true,
+        client: { initials: clientInitials, name: clientName },
       });
     }, 150);
   }

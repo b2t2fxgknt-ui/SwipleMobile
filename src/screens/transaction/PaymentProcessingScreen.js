@@ -188,7 +188,12 @@ export default function PaymentProcessingScreen() {
                 style={styles.ctaBtn}
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  navigation.replace('MissionTracking', { mission, freelancer });
+                  navigation.replace('Match', {
+                    mission,
+                    freelancer,
+                    client: { initials: mission?.clientInitials ?? '?', name: mission?.clientName ?? 'Client' },
+                    isClient: true,
+                  });
                 }}
                 activeOpacity={0.88}
               >
