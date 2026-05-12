@@ -288,10 +288,36 @@ export default function FreelanceOnboardingScreen() {
       return;
     }
 
-    const { error: inErr } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: inErr } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
+
+    // ── Enrichir la table users avec toutes les infos du profil ──────────────
+    if (!inErr && signInData?.user?.id) {
+      try {
+        const domainLabels = (meta.domains ?? []).map(id => {
+          const found = DOMAINS.find(d => d.id === id);
+          return found ? found.label : id;
+        });
+        await supabase.from('users').update({
+          bio:             meta.bio             || null,
+          specialty:       meta.specialty       || null,
+          skills:          meta.skills?.length  ? meta.skills : domainLabels,
+          tags:            meta.domains         || [],
+          level:           meta.level           || null,
+          daily_rate:      meta.price           || null,
+          delivery_time:   meta.deliveryTime    || '48h',
+          default_delivery:meta.deliveryTime    || '48h',
+          response_time:   meta.responseTime    || '< 4h',
+          avatar_color:    meta.avatarColor     || '#10B981',
+          initials:        meta.initials        || null,
+          is_available:    true,
+        }).eq('id', signInData.user.id);
+      } catch (err) {
+        console.warn('[FreelanceOnboarding] profile update error:', err?.message ?? err);
+      }
+    }
 
     setLoading(false);
 

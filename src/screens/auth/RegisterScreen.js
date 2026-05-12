@@ -267,9 +267,12 @@ export default function RegisterScreen({ navigation, route }) {
         if (newUser?.id) {
           const domainLabels = selectedDomains.map(id => DOMAINS.find(d => d.id === id)?.label ?? id);
           await supabase.from('users').update({
-            tags:      selectedDomains,                                           // IDs pour filtrage
-            skills:    domainLabels,                                              // Labels affichés sur le profil
-            specialty: !isAcheteur ? (LEVELS.find(l => l.id === selectedLevel)?.label ?? null) : null,
+            tags:        selectedDomains,
+            skills:      domainLabels,
+            specialty:   !isAcheteur ? domainLabels[0] ?? null : null,
+            level:       !isAcheteur ? (LEVELS.find(l => l.id === selectedLevel)?.label ?? null) : null,
+            is_available:!isAcheteur ? true : null,
+            sector:      isAcheteur  ? (domainLabels[0] ?? null) : null,
           }).eq('id', newUser.id);
         }
       } catch (err) {

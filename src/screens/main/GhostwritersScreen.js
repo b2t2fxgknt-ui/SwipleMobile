@@ -292,7 +292,7 @@ export default function GhostwritersScreen() {
           .from('users')
           .select('id, name, bio, role, specialty, rating, missions_count, daily_rate, avatar_color, tags, response_time, delivery_time, is_available')
           .in('role', ['prestataire', 'freelancer'])
-          .eq('is_available', true)
+          .neq('is_available', false)
           .order('rating', { ascending: false });
 
         if (data?.length) {

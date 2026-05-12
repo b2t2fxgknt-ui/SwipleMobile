@@ -17,19 +17,31 @@ drop table if exists public.users        cascade;
 -- ── 1. TABLE USERS ────────────────────────────────────────────────────────────
 
 create table public.users (
-  id            uuid primary key references auth.users(id) on delete cascade,
-  role          text default 'client',
-  name          text,
-  initials      text,
-  bio           text,
-  specialty     text,
-  rating        numeric(3,1) default 5.0,
-  missions      integer default 0,
-  tags          text[],
-  skills        text[],
-  avatar_color  text default '#8B5CF6',
-  level         text,
-  created_at    timestamptz default now()
+  id               uuid primary key references auth.users(id) on delete cascade,
+  role             text default 'client',
+  name             text,
+  initials         text,
+  bio              text,
+  specialty        text,
+  rating           numeric(3,1) default 5.0,
+  missions         integer default 0,
+  missions_count   integer default 0,
+  tags             text[],
+  skills           text[],
+  avatar_color     text default '#8B5CF6',
+  level            text,
+  -- Colonnes freelance
+  daily_rate       integer,
+  response_time    text default '< 4h',
+  delivery_time    text default '48h',
+  default_delivery text default '48h',
+  is_available     boolean default true,
+  portfolio_url    text,
+  linkedin_url     text,
+  -- Colonnes client
+  sector           text,
+  budget_range     text,
+  created_at       timestamptz default now()
 );
 
 alter table public.users enable row level security;
