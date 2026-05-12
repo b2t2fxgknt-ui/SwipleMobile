@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
+import { activateDemoMode } from '../../navigation/AppNavigator';
 import { COLORS, SPACING, FONT, RADIUS } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
 
@@ -46,6 +47,10 @@ export default function LoginScreen({ navigation }) {
     });
     setLoading(false);
     if (error) Alert.alert('Connexion échouée', 'Email ou mot de passe incorrect.');
+  }
+
+  function handleDemoAccess() {
+    activateDemoMode();
   }
 
   return (
@@ -115,6 +120,9 @@ export default function LoginScreen({ navigation }) {
       </KeyboardAvoidingView>
 
       <View style={styles.bottomFooter}>
+        <TouchableOpacity onPress={handleDemoAccess} style={styles.demoBtn} activeOpacity={0.75}>
+          <Text style={styles.demoBtnText}>⚡ Accès démo (sans compte)</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Welcome')}>
           <Text style={styles.footerText}>
             Pas encore de compte ?{'  '}
@@ -183,7 +191,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: SPACING.md,
     paddingBottom: 38,
+    gap: 14,
   },
+  demoBtn: {
+    paddingHorizontal: 20, paddingVertical: 10,
+    borderRadius: 20, borderWidth: 1,
+    borderColor: COLORS.primary + '50',
+    backgroundColor: COLORS.primary + '12',
+  },
+  demoBtnText: { fontSize: 13, color: COLORS.primaryLight, fontWeight: '700' },
   footerText: { fontSize: 14, color: COLORS.textMuted },
   footerLink: { color: COLORS.primaryLight, ...FONT.semibold },
 });

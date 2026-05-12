@@ -44,12 +44,27 @@ import EditProfileScreen         from '../screens/main/EditProfileScreen';
 import BriefCreationScreen       from '../screens/main/BriefCreationScreen';
 import ApplicantsScreen          from '../screens/main/ApplicantsScreen';
 import SearchScreen              from '../screens/main/SearchScreen';
+import AuditScreen               from '../screens/main/AuditScreen';
+import ExpertsScreen             from '../screens/main/ExpertsScreen';
 
 const Stack = createNativeStackNavigator();
+
+// Module-level setter — permet à LoginScreen d'activer le mode démo sans session
+export let activateDemoMode = () => {};
+
+// Fake session pour le mode démo (role client par défaut)
+const DEMO_SESSION = {
+  user: {
+    id: 'demo_user',
+    user_metadata: { role: 'acheteur', nom: 'Démo' },
+    email: 'demo@swiple.fr',
+  },
+};
 
 export default function AppNavigator() {
   const [session,   setSession]   = useState(undefined);
   const [onboarded, setOnboarded] = useState(null); // null = loading
+  const [demoMode,  setDemoMode]  = useState(false);
 
   useEffect(() => {
     // Load session + onboarding flag in parallel
@@ -67,7 +82,15 @@ export default function AppNavigator() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (session === undefined || onboarded === null) {
+  // Expose le setter au niveau module pour LoginScreen
+  useEffect(() => {
+    activateDemoMode = () => setDemoMode(true);
+    return () => { activateDemoMode = () => {}; };
+  }, []);
+
+  const effectiveSession = session ?? (demoMode ? DEMO_SESSION : null);
+
+  if (!demoMode && (session === undefined || onboarded === null)) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator color={COLORS.primary} size="large" />
@@ -84,7 +107,7 @@ export default function AppNavigator() {
       <ConversationsProvider>
       <MissionsProvider>
       <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
-        {!session ? (
+        {!effectiveSession ? (
           <>
             <Stack.Screen name="Welcome"  component={WelcomeScreen}  />
             <Stack.Screen name="Login"    component={LoginScreen}    />
@@ -95,17 +118,17 @@ export default function AppNavigator() {
         ) : (
           <>
             {/* Post-inscription onboarding (shown once) */}
-            {!onboarded && (
+            {!onboarded && !demoMode && (
               <Stack.Screen
                 name="Onboarding"
                 component={OnboardingScreen}
-                initialParams={{ role: session?.user?.user_metadata?.role ?? 'acheteur' }}
+                initialParams={{ role: effectiveSession?.user?.user_metadata?.role ?? 'acheteur' }}
                 options={{ animation: 'fade', gestureEnabled: false }}
               />
             )}
 
             <Stack.Screen name="Main">
-              {() => <MainTabs session={session} />}
+              {() => <MainTabs session={effectiveSession} />}
             </Stack.Screen>
 
             {/* Page détail d'un service — slide from right */}
@@ -262,6 +285,20 @@ export default function AppNavigator() {
             <Stack.Screen
               name="GhostwriterProfile"
               component={ServiceDetailScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+
+            {/* 20. Audit TikTok */}
+            <Stack.Screen
+              name="Audit"
+              component={AuditScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+
+            {/* 21. Annuaire experts IA */}
+            <Stack.Screen
+              name="Experts"
+              component={ExpertsScreen}
               options={{ animation: 'slide_from_right' }}
             />
 
