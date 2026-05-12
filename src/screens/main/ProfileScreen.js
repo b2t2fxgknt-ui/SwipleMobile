@@ -702,9 +702,9 @@ export default function ProfileScreen() {
   const initial    = displayName[0]?.toUpperCase() ?? 'U';
   const memberYear = profile?.created_at ? new Date(profile.created_at).getFullYear() : 2024;
 
-  // Profile completion (mock logic)
+  // Profile completion
   const completionPct = isFreelancer
-    ? Math.min(100, 40 + (displayBio ? 20 : 0) + (servicesCount > 0 ? 20 : 0) + 20)
+    ? Math.min(100, 40 + (displayBio ? 20 : 0) + (specialties.length > 0 ? 20 : 0) + (dailyRate ? 20 : 0))
     : Math.min(100, 50 + (displayBio ? 30 : 0) + 20);
 
   const barWidth = completionAnim.interpolate({
@@ -856,7 +856,7 @@ export default function ProfileScreen() {
             {completionPct < 100 && (
               <Text style={styles.completionHint}>
                 {isFreelancer
-                  ? 'Ajoute des services pour booster ta visibilité'
+                  ? 'Ajoute ton tarif et tes compétences pour booster ta visibilité'
                   : 'Complète ta bio pour personnaliser ton expérience'}
               </Text>
             )}

@@ -41,6 +41,8 @@ create table public.users (
   -- Colonnes client
   sector           text,
   budget_range     text,
+  -- Portfolio & projets
+  portfolio_items  jsonb,
   created_at       timestamptz default now()
 );
 
