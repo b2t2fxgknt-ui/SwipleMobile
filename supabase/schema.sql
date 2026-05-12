@@ -1,13 +1,22 @@
 -- ============================================================
 -- Swiple — Schéma complet Ghostwriting TikTok
--- Mise à jour mai 2026 — safe à re-exécuter (drop if exists)
+-- Mise à jour mai 2026 — DROP + recreate pour types propres
 -- À coller dans SQL Editor > New query > Run
 -- ============================================================
 
 
+-- ── 0. RESET propre (ordre inverse des dépendances) ───────────────────────────
+
+drop table if exists public.messages     cascade;
+drop table if exists public.orders       cascade;
+drop table if exists public.applications cascade;
+drop table if exists public.briefs       cascade;
+drop table if exists public.users        cascade;
+
+
 -- ── 1. TABLE USERS ────────────────────────────────────────────────────────────
 
-create table if not exists public.users (
+create table public.users (
   id            uuid primary key references auth.users(id) on delete cascade,
   role          text default 'client',
   name          text,
@@ -23,17 +32,7 @@ create table if not exists public.users (
   created_at    timestamptz default now()
 );
 
--- Ajouter les colonnes manquantes si la table existe déjà
-alter table public.users add column if not exists tags         text[];
-alter table public.users add column if not exists skills       text[];
-alter table public.users add column if not exists avatar_color text default '#8B5CF6';
-alter table public.users add column if not exists level        text;
-
 alter table public.users enable row level security;
-
-drop policy if exists "users_select_all" on public.users;
-drop policy if exists "users_insert_own" on public.users;
-drop policy if exists "users_update_own" on public.users;
 
 create policy "users_select_all" on public.users for select using (true);
 create policy "users_insert_own" on public.users for insert with check (auth.uid() = id);
@@ -67,7 +66,7 @@ create trigger on_auth_user_created
 
 -- ── 2. TABLE BRIEFS ───────────────────────────────────────────────────────────
 
-create table if not exists public.briefs (
+create table public.briefs (
   id              uuid primary key default gen_random_uuid(),
   client_id       uuid references auth.users(id) on delete cascade not null,
   type            text not null,
@@ -88,11 +87,6 @@ create table if not exists public.briefs (
 
 alter table public.briefs enable row level security;
 
-drop policy if exists "briefs_insert_own" on public.briefs;
-drop policy if exists "briefs_select"     on public.briefs;
-drop policy if exists "briefs_update_own" on public.briefs;
-drop policy if exists "briefs_delete_own" on public.briefs;
-
 create policy "briefs_insert_own" on public.briefs for insert  with check (auth.uid() = client_id);
 create policy "briefs_select"     on public.briefs for select  using (status = 'open' or auth.uid() = client_id);
 create policy "briefs_update_own" on public.briefs for update  using (auth.uid() = client_id);
@@ -101,7 +95,7 @@ create policy "briefs_delete_own" on public.briefs for delete  using (auth.uid()
 
 -- ── 3. TABLE APPLICATIONS ─────────────────────────────────────────────────────
 
-create table if not exists public.applications (
+create table public.applications (
   id                  uuid primary key default gen_random_uuid(),
   brief_id            uuid references public.briefs(id) on delete cascade not null,
   freelancer_id       uuid references auth.users(id) on delete cascade not null,
@@ -118,14 +112,7 @@ create table if not exists public.applications (
   unique(brief_id, freelancer_id)
 );
 
-alter table public.applications add column if not exists message       text;
-alter table public.applications add column if not exists proposed_rate numeric(10,2);
-
 alter table public.applications enable row level security;
-
-drop policy if exists "applications_insert_own"    on public.applications;
-drop policy if exists "applications_select"        on public.applications;
-drop policy if exists "applications_update_client" on public.applications;
 
 create policy "applications_insert_own" on public.applications for insert
   with check (auth.uid() = freelancer_id);
@@ -142,7 +129,7 @@ create policy "applications_update_client" on public.applications for update
 
 -- ── 4. TABLE ORDERS ───────────────────────────────────────────────────────────
 
-create table if not exists public.orders (
+create table public.orders (
   id                  uuid primary key default gen_random_uuid(),
   freelancer_id       uuid references auth.users(id) on delete set null,
   client_id           uuid references auth.users(id) on delete set null,
@@ -169,11 +156,6 @@ create table if not exists public.orders (
 
 alter table public.orders enable row level security;
 
-drop policy if exists "orders_select_freelancer" on public.orders;
-drop policy if exists "orders_select_client"     on public.orders;
-drop policy if exists "orders_insert_freelancer" on public.orders;
-drop policy if exists "orders_update_freelancer" on public.orders;
-
 create policy "orders_select_freelancer" on public.orders for select using (auth.uid() = freelancer_id);
 create policy "orders_select_client"     on public.orders for select using (auth.uid() = client_id);
 create policy "orders_insert_freelancer" on public.orders for insert with check (auth.uid() = freelancer_id);
@@ -192,7 +174,7 @@ create trigger orders_updated_at
 
 -- ── 5. TABLE MESSAGES ─────────────────────────────────────────────────────────
 
-create table if not exists public.messages (
+create table public.messages (
   id              uuid primary key default gen_random_uuid(),
   conversation_id text not null,
   sender_id       text not null,
@@ -203,12 +185,9 @@ create table if not exists public.messages (
   created_at      timestamptz default now()
 );
 
-create index if not exists messages_conversation_idx on public.messages(conversation_id);
+create index messages_conversation_idx on public.messages(conversation_id);
 
 alter table public.messages enable row level security;
-
-drop policy if exists "messages_select" on public.messages;
-drop policy if exists "messages_insert" on public.messages;
 
 create policy "messages_select" on public.messages for select
   using (
@@ -217,8 +196,8 @@ create policy "messages_select" on public.messages for select
       where o.id::text = conversation_id
         and (o.freelancer_id = auth.uid() or o.client_id = auth.uid())
     )
-    or sender_id::text = 'system'
-    or sender_id::text = auth.uid()::text
+    or sender_id = 'system'
+    or sender_id = auth.uid()::text
   );
 
 create policy "messages_insert" on public.messages for insert
@@ -227,10 +206,10 @@ create policy "messages_insert" on public.messages for insert
 
 -- ── Index de performance ──────────────────────────────────────────────────────
 
-create index if not exists briefs_client_idx           on public.briefs(client_id);
-create index if not exists briefs_status_idx           on public.briefs(status);
-create index if not exists applications_brief_idx      on public.applications(brief_id);
-create index if not exists applications_freelancer_idx on public.applications(freelancer_id);
-create index if not exists orders_freelancer_idx       on public.orders(freelancer_id);
-create index if not exists orders_client_idx           on public.orders(client_id);
-create index if not exists orders_status_idx           on public.orders(status);
+create index briefs_client_idx           on public.briefs(client_id);
+create index briefs_status_idx           on public.briefs(status);
+create index applications_brief_idx      on public.applications(brief_id);
+create index applications_freelancer_idx on public.applications(freelancer_id);
+create index orders_freelancer_idx       on public.orders(freelancer_id);
+create index orders_client_idx           on public.orders(client_id);
+create index orders_status_idx           on public.orders(status);
