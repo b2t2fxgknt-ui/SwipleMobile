@@ -164,6 +164,10 @@ create table public.orders (
   delivery_message    text,
   delivered_at        timestamptz,
   revision_count      integer default 0,
+  -- Paiement
+  payment_status      text default 'pending',  -- pending | paid | failed | refunded
+  stripe_session_id   text,
+  stripe_payment_intent text,
   created_at          timestamptz default now(),
   updated_at          timestamptz default now()
 );

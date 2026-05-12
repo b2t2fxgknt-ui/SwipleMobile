@@ -7,17 +7,19 @@
 import React, { useRef, useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
- StatusBar, Animated,
+ StatusBar, Animated, ActivityIndicator, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as WebBrowser from 'expo-web-browser';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { COLORS, SPACING, FONT, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
 import FreelancerProfileSheet from '../../components/ui/FreelancerProfileSheet';
 import { toSheetFromMissionFreelancer } from '../../data/auditExperts';
+import { supabase } from '../../lib/supabase';
 
 // ── Mock fallback (si pas de params navigation) ───────────────────────────────
 const DEFAULT_MISSION = {
@@ -98,13 +100,63 @@ export default function MissionConfirmationScreen() {
   const serviceFee = Math.round(mission.budget * 0.1);
   const total      = mission.budget + serviceFee;
 
-  function handleConfirm() {
+  const [payLoading, setPayLoading] = useState(false);
+
+  async function handleConfirm() {
     if (!agreed) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    navigation.navigate('PaymentProcessing', { mission, freelancer, total });
+    setPayLoading(true);
+
+    try {
+      // 1. Récupérer la session courante
+      const { data: { session } } = await supabase.auth.getSession();
+      const clientEmail = session?.user?.email ?? undefined;
+
+      // 2. Créer/récupérer l'order ID
+      let orderId = mission?.id;
+      if (!orderId) {
+        const { data: order } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('brief_id', mission?.brief_id ?? '')
+          .eq('client_id', session?.user?.id ?? '')
+          .single();
+        orderId = order?.id;
+      }
+
+      // 3. Appeler l'Edge Function create-checkout
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          orderId:      orderId ?? `temp_${Date.now()}`,
+          amount:       total,
+          missionTitle: mission?.title ?? 'Mission Swiple',
+          clientEmail,
+        },
+      });
+
+      if (error || !data?.url) throw new Error(error?.message ?? 'Impossible de créer la session de paiement');
+
+      // 4. Ouvrir Stripe Checkout dans le navigateur
+      const result = await WebBrowser.openBrowserAsync(data.url, {
+        dismissButtonStyle:    'cancel',
+        presentationStyle:     WebBrowser.WebBrowserPresentationStyle.FORM_SHEET,
+      });
+
+      // 5. Après retour du navigateur → naviguer vers PaymentProcessing
+      //    (le webhook Stripe mettra à jour payment_status en arrière-plan)
+      navigation.navigate('PaymentProcessing', { mission, freelancer, total });
+
+    } catch (err) {
+      setPayLoading(false);
+      Alert.alert(
+        'Erreur de paiement',
+        err.message ?? 'Une erreur est survenue. Réessaie dans un instant.',
+        [{ text: 'OK' }]
+      );
+    }
   }
 
   return (
@@ -295,7 +347,10 @@ export default function MissionConfirmationScreen() {
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             >
               <Ionicons name="lock-closed" size={16} color="#fff" />
-              <Text style={styles.ctaText}>Confirmer et payer · {total}€</Text>
+              {payLoading
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={styles.ctaText}>Confirmer et payer · {total}€</Text>
+              }
             </LinearGradient>
           </TouchableOpacity>
           <Text style={styles.ctaSub}>Paiement 100% sécurisé · Libéré à la validation</Text>
