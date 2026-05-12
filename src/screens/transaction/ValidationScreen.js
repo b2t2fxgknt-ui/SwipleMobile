@@ -73,15 +73,16 @@ export default function ValidationScreen() {
               Votre contenu est optimisé et prêt à performer.
             </Text>
 
-            {/* Paiement libéré */}
+            {/* Statut paiement */}
             <View style={styles.paymentCard}>
-              <LinearGradient colors={['#22C55E20', '#22C55E08']} style={StyleSheet.absoluteFill} borderRadius={RADIUS.xl} />
+              <LinearGradient colors={['#F59E0B20', '#F59E0B08']} style={StyleSheet.absoluteFill} borderRadius={RADIUS.xl} />
               <View style={styles.paymentRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#22C55E" />
+                <Ionicons name="card-outline" size={18} color="#F59E0B" />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.paymentTitle}>Paiement libéré au freelance</Text>
-                  <Text style={styles.paymentSub}>Envoyé à {freelancer?.name ?? 'le freelance'}</Text>
+                  <Text style={styles.paymentTitle}>Mission validée</Text>
+                  <Text style={styles.paymentSub}>Pensez à régler {freelancer?.name ?? 'le freelance'} pour le travail effectué</Text>
                 </View>
+                <Text style={[styles.paymentAmount, { color: '#F59E0B' }]}>{mission?.budget ?? '—'}€</Text>
               </View>
             </View>
 

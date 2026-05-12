@@ -192,8 +192,8 @@ export default function MatchScreen() {
       {/* ── Sous-titre ── */}
       <Animated.Text style={[styles.matchSub, { opacity: subAnim }]}>
         {isClient
-          ? `Vous avez choisi ${freelancerName} pour votre brief 🎉`
-          : `${clientName} a choisi ta candidature 🎉`}
+          ? `Vous avez choisi ${freelancerName} pour votre brief`
+          : `${clientName} a choisi ta candidature`}
       </Animated.Text>
 
       {/* ── CTA ── */}

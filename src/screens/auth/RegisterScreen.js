@@ -1,19 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-
-  StatusBar,
-  Animated,
-  Easing,
-  Dimensions,
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  Alert, ScrollView, StatusBar, Animated, Easing, Dimensions,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
@@ -51,6 +40,119 @@ const LEVELS = [
 
 const CARD_W = (width - SPACING.lg * 2 - SPACING.sm) / 2;
 
+// ── Formulaire Step 2 ────────────────────────────────────────────────────────
+// React.memo + TextInputs non-contrôlés (defaultValue + refs, pas de value={state})
+// → aucun re-render pendant la frappe → clavier reste ouvert
+const StepTwoForm = React.memo(function StepTwoForm({
+  accentColor, onRegister, loading, selectedDomains, selectedLevel,
+  isAcheteur, navigation, role, otherRole,
+}) {
+  // Valeurs lues via refs — pas de state, pas de re-render sur frappe
+  const nomVal      = useRef('');
+  const emailVal    = useRef('');
+  const passwordVal = useRef('');
+
+  const emailInputRef    = useRef(null);
+  const passwordInputRef = useRef(null);
+
+  const summaryText = selectedDomains
+    .slice(0, 3)
+    .map(id => DOMAINS.find(x => x.id === id)?.label)
+    .join(' · ')
+    + (selectedDomains.length > 3 ? ` +${selectedDomains.length - 3}` : '')
+    + (!isAcheteur && selectedLevel ? '  ·  ' + LEVELS.find(x => x.id === selectedLevel)?.label : '');
+
+  function submit() {
+    onRegister(nomVal.current, emailVal.current, passwordVal.current);
+  }
+
+  return (
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={styles.scroll}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="none"
+    >
+      {/* Résumé des choix step 1 */}
+      <Text style={styles.summaryLine} numberOfLines={1}>{summaryText}</Text>
+
+      {/* Champs non contrôlés — pas de value= */}
+      <View style={styles.fields}>
+        <View style={styles.fieldGroup}>
+          <Text style={styles.fieldLabel}>Prénom</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Ton prénom"
+            placeholderTextColor={COLORS.textLight}
+            defaultValue=""
+            onChangeText={t => { nomVal.current = t; }}
+            autoCapitalize="words"
+            keyboardType="default"
+            returnKeyType="next"
+            blurOnSubmit={false}
+            onSubmitEditing={() => emailInputRef.current?.focus()}
+          />
+        </View>
+        <View style={styles.fieldGroup}>
+          <Text style={styles.fieldLabel}>Email</Text>
+          <TextInput
+            ref={emailInputRef}
+            style={styles.input}
+            placeholder="ton@email.com"
+            placeholderTextColor={COLORS.textLight}
+            defaultValue=""
+            onChangeText={t => { emailVal.current = t; }}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            returnKeyType="next"
+            blurOnSubmit={false}
+            onSubmitEditing={() => passwordInputRef.current?.focus()}
+          />
+        </View>
+        <View style={styles.fieldGroup}>
+          <Text style={styles.fieldLabel}>Mot de passe</Text>
+          <TextInput
+            ref={passwordInputRef}
+            style={styles.input}
+            placeholder="••••••••"
+            placeholderTextColor={COLORS.textLight}
+            defaultValue=""
+            onChangeText={t => { passwordVal.current = t; }}
+            secureTextEntry
+            autoCapitalize="none"
+            keyboardType="default"
+            returnKeyType="done"
+            blurOnSubmit
+            onSubmitEditing={submit}
+          />
+        </View>
+      </View>
+
+      <TouchableOpacity
+        style={[styles.btn, { backgroundColor: accentColor }, loading && styles.btnLoading]}
+        onPress={submit}
+        disabled={loading}
+        activeOpacity={0.82}
+      >
+        <Text style={styles.btnText}>
+          {loading ? 'Création en cours…' : 'Créer mon compte'}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => navigation.replace('Register', { role: otherRole })}
+        style={styles.switchBtn}
+      >
+        <Text style={styles.switchText}>
+          Je suis {role === 'acheteur' ? 'un ghostwriter' : 'un client'}
+        </Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+});
+
+// ── Écran inscription ──────────────────────────────────────────────────────────
 export default function RegisterScreen({ navigation, route }) {
   const role       = route.params?.role ?? 'acheteur';
   const meta       = ROLE_META[role];
@@ -63,21 +165,20 @@ export default function RegisterScreen({ navigation, route }) {
   const [selectedDomains, setSelectedDomains] = useState([]);
   const [selectedLevel,   setSelectedLevel]   = useState(null); // prestataire only
 
-  // Step 2 state
-  const [nom,      setNom]      = useState('');
-  const [email,    setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [loading,  setLoading]  = useState(false);
-  const [focused,  setFocused]  = useState(null);
+  // Loading partagé avec StepTwoForm
+  const [loading, setLoading] = useState(false);
 
-  const fadeAnim  = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(28)).current;
-  const panelX    = useRef(new Animated.Value(0)).current;
+  // Step 1 : entrée initiale + slide-out
+  const fadeAnim    = useRef(new Animated.Value(0)).current;
+  const slideAnim   = useRef(new Animated.Value(28)).current;
+  const panelX      = useRef(new Animated.Value(0)).current;
+  // Step 2 : fade-in séparé — PAS dans le même Animated.View que panelX
+  const step2Fade   = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim,  { toValue: 1, duration: 400, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
+      Animated.timing(fadeAnim,  { toValue: 1, duration: 400, useNativeDriver: false }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 400, useNativeDriver: false }),
     ]).start();
   }, []);
 
@@ -88,23 +189,30 @@ export default function RegisterScreen({ navigation, route }) {
   }
 
   function slideToStep(target, dir = 'forward') {
-    const outTo  = dir === 'forward' ? -width : width;
-    const inFrom = dir === 'forward' ?  width * 0.7 : -width * 0.7;
-    Animated.timing(panelX, {
-      toValue: outTo,
-      duration: 250,
-      useNativeDriver: true,
-      easing: Easing.in(Easing.quad),
-    }).start(() => {
-      setStep(target);
-      panelX.setValue(inFrom);
+    if (dir === 'forward') {
+      // Slide step 1 vers la gauche → step 2 fade in (hors Animated.View)
       Animated.timing(panelX, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-        easing: Easing.out(Easing.quad),
-      }).start();
-    });
+        toValue: -width, duration: 250, useNativeDriver: false, easing: Easing.in(Easing.quad),
+      }).start(() => {
+        step2Fade.setValue(0);
+        setStep(target);
+        Animated.timing(step2Fade, {
+          toValue: 1, duration: 300, useNativeDriver: false, easing: Easing.out(Easing.quad),
+        }).start();
+      });
+    } else {
+      // Retour step 1 : fade out step 2 → restore step 1
+      Animated.timing(step2Fade, {
+        toValue: 0, duration: 180, useNativeDriver: false,
+      }).start(() => {
+        panelX.setValue(0);
+        fadeAnim.setValue(0.6);
+        setStep(target);
+        Animated.timing(fadeAnim, {
+          toValue: 1, duration: 250, useNativeDriver: false,
+        }).start();
+      });
+    }
   }
 
   function handleBack() {
@@ -124,7 +232,8 @@ export default function RegisterScreen({ navigation, route }) {
     slideToStep(2, 'forward');
   }
 
-  async function handleRegister() {
+  // Reçoit nom/email/password depuis StepTwoForm
+  async function handleRegister(nom, email, password) {
     if (!nom.trim() || !email.trim() || !password) {
       Alert.alert('Champs manquants', 'Merci de remplir tous les champs.');
       return;
@@ -151,6 +260,22 @@ export default function RegisterScreen({ navigation, route }) {
       email: email.trim(),
       password,
     });
+    if (!signInError) {
+      // Enrichir la fiche users avec les domaines et le niveau choisis à l'inscription
+      try {
+        const { data: { user: newUser } } = await supabase.auth.getUser();
+        if (newUser?.id) {
+          const domainLabels = selectedDomains.map(id => DOMAINS.find(d => d.id === id)?.label ?? id);
+          await supabase.from('users').update({
+            tags:      selectedDomains,                                           // IDs pour filtrage
+            skills:    domainLabels,                                              // Labels affichés sur le profil
+            specialty: !isAcheteur ? (LEVELS.find(l => l.id === selectedLevel)?.label ?? null) : null,
+          }).eq('id', newUser.id);
+        }
+      } catch (err) {
+        console.warn('[RegisterScreen] profile enrichment error:', err?.message ?? err);
+      }
+    }
     setLoading(false);
     if (signInError) {
       // Email confirmation requise côté Supabase
@@ -169,7 +294,7 @@ export default function RegisterScreen({ navigation, route }) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
-      <BubbleBackground variant={role} />
+      {step === 1 && <BubbleBackground variant={role} />}
 
       {/* Header */}
       <SafeAreaView>
@@ -185,15 +310,14 @@ export default function RegisterScreen({ navigation, route }) {
         </View>
       </SafeAreaView>
 
-      {/* Panels */}
-      <Animated.View
-        style={[
-          styles.panels,
-          { opacity: fadeAnim, transform: [{ translateY: slideAnim }, { translateX: panelX }] },
-        ]}
-      >
-        {/* ── STEP 1 ─────────────────────────────────────────────────── */}
-        {step === 1 && (
+      {/* ── STEP 1 — dans Animated.View (slide + fade initiaux) ── */}
+      {step === 1 && (
+        <Animated.View
+          style={[
+            styles.panels,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }, { translateX: panelX }] },
+          ]}
+        >
           <ScrollView
             contentContainerStyle={styles.scroll}
             showsVerticalScrollIndicator={false}
@@ -284,89 +408,39 @@ export default function RegisterScreen({ navigation, route }) {
             </TouchableOpacity>
 
           </ScrollView>
-        )}
+        </Animated.View>
+      )}
 
-        {/* ── STEP 2 ─────────────────────────────────────────────────── */}
-        {step === 2 && (
-          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <ScrollView
-              contentContainerStyle={styles.scroll}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-            >
-              {/* Badge rôle */}
-              <View style={[styles.rolePill, { borderColor: accentColor + '55', backgroundColor: accentBg }]}>
-                <View style={[styles.rolePillDot, { backgroundColor: accentColor }]} />
-                <Text style={[styles.rolePillText, { color: accentColor }]}>{meta.desc}</Text>
-              </View>
+      {/* ── STEP 2 — HORS Animated.View pour ne jamais interférer avec le clavier ── */}
+      {step === 2 && (
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={0}
+        >
+          <Animated.View style={[styles.panels, { opacity: step2Fade }]}>
+            {/* Badge rôle + titre */}
+            <View style={[styles.rolePill, { borderColor: accentColor + '55', backgroundColor: accentBg, marginHorizontal: SPACING.lg, marginTop: SPACING.sm }]}>
+              <View style={[styles.rolePillDot, { backgroundColor: accentColor }]} />
+              <Text style={[styles.rolePillText, { color: accentColor }]}>{meta.desc}</Text>
+            </View>
+            <Text style={[styles.title, { marginHorizontal: SPACING.lg, marginTop: SPACING.sm }]}>Créer un compte</Text>
 
-              <Text style={styles.title}>Créer un compte</Text>
-
-              {/* Résumé discret */}
-              <Text style={styles.summaryLine} numberOfLines={1}>
-                {selectedDomains
-                  .slice(0, 3)
-                  .map(id => DOMAINS.find(x => x.id === id)?.label)
-                  .join(' · ')}
-                {selectedDomains.length > 3 ? ` +${selectedDomains.length - 3}` : ''}
-                {!isAcheteur && selectedLevel
-                  ? '  ·  ' + LEVELS.find(x => x.id === selectedLevel)?.label
-                  : ''}
-              </Text>
-
-              {/* Champs */}
-              <View style={styles.fields}>
-                {[
-                  { key: 'nom',      label: 'Prénom',       placeholder: 'Ton prénom',   value: nom,      set: setNom,      secure: false, kb: 'default'       },
-                  { key: 'email',    label: 'Email',        placeholder: 'ton@email.com', value: email,    set: setEmail,    secure: false, kb: 'email-address' },
-                  { key: 'password', label: 'Mot de passe', placeholder: '••••••••',      value: password, set: setPassword, secure: true,  kb: 'default'       },
-                ].map(f => {
-                  const isFocused = focused === f.key;
-                  return (
-                    <View key={f.key} style={styles.fieldGroup}>
-                      <Text style={[styles.fieldLabel, isFocused && { color: accentColor }]}>
-                        {f.label}
-                      </Text>
-                      <TextInput
-                        style={[styles.input, isFocused && { borderColor: accentColor }]}
-                        placeholder={f.placeholder}
-                        placeholderTextColor={COLORS.textLight}
-                        value={f.value}
-                        onChangeText={f.set}
-                        secureTextEntry={f.secure}
-                        autoCapitalize="none"
-                        keyboardType={f.kb}
-                        onFocus={() => setFocused(f.key)}
-                        onBlur={() => setFocused(null)}
-                      />
-                    </View>
-                  );
-                })}
-              </View>
-
-              <TouchableOpacity
-                style={[styles.btn, { backgroundColor: accentColor }, loading && styles.btnLoading]}
-                onPress={handleRegister}
-                disabled={loading}
-                activeOpacity={0.82}
-              >
-                <Text style={styles.btnText}>
-                  {loading ? 'Création en cours…' : 'Créer mon compte'}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => navigation.replace('Register', { role: otherRole })}
-                style={styles.switchBtn}
-              >
-                <Text style={styles.switchText}>
-                  Je suis {role === 'acheteur' ? 'un ghostwriter' : 'un client'}
-                </Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        )}
-      </Animated.View>
+            {/* Formulaire isolé — re-renders internes seulement */}
+            <StepTwoForm
+              accentColor={accentColor}
+              onRegister={handleRegister}
+              loading={loading}
+              selectedDomains={selectedDomains}
+              selectedLevel={selectedLevel}
+              isAcheteur={isAcheteur}
+              navigation={navigation}
+              role={role}
+              otherRole={otherRole}
+            />
+          </Animated.View>
+        </KeyboardAvoidingView>
+      )}
 
       {/* Footer épinglé en bas */}
       <View style={styles.bottomFooter}>

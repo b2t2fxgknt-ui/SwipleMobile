@@ -3,10 +3,10 @@
  * Clients : découvrir des profils, filtrer par spécialité, inviter sur un brief.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, StatusBar, Modal, FlatList,
+  TextInput, StatusBar, Modal, FlatList, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,7 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../../lib/theme';
-import { useBriefs } from '../../lib/BriefsContext';
+import { useBriefs }  from '../../lib/BriefsContext';
+import { supabase }   from '../../lib/supabase';
 
 // ── Mock ghostwriters ─────────────────────────────────────────────────────────
 
@@ -263,27 +264,81 @@ function GhostwriterCard({ gw, onInvite, onViewProfile }) {
 
 // ── Écran principal ───────────────────────────────────────────────────────────
 
+// Couleurs par spécialité pour les profils chargés depuis Supabase
+const SPECIALTY_COLORS = {
+  'Script seul':      '#8B5CF6',
+  'Script + Montage': '#EF4444',
+  'Pack mensuel':     '#10B981',
+  'Montage seul':     '#3B82F6',
+  'Stratégie':        '#F59E0B',
+  'Sous-titres':      '#6366F1',
+};
+
 export default function GhostwritersScreen() {
   const navigation = useNavigation();
   const { addApplicant } = useBriefs();
 
-  const [search,  setSearch]  = useState('');
-  const [filter,  setFilter]  = useState('all');
-  const [picker,  setPicker]  = useState(null); // ghostwriter en cours d'invitation
+  const [search,       setSearch]       = useState('');
+  const [filter,       setFilter]       = useState('all');
+  const [picker,       setPicker]       = useState(null);
+  const [ghostwriters, setGhostwriters] = useState(MOCK_GHOSTWRITERS);
+  const [gwLoading,    setGwLoading]    = useState(true);
+
+  // ── Charger les vrais ghostwriters depuis Supabase ──────────────────────────
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('users')
+          .select('id, name, bio, role, specialty, rating, missions_count, daily_rate, avatar_color, tags, response_time, delivery_time, is_available')
+          .in('role', ['prestataire', 'freelancer'])
+          .eq('is_available', true)
+          .order('rating', { ascending: false });
+
+        if (data?.length) {
+          const mapped = data.map(u => {
+            const name     = u.name ?? 'Ghostwriter';
+            const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+            const specialty = u.specialty ?? 'Script seul';
+            return {
+              id:           u.id,
+              initials,
+              name,
+              specialty,
+              color:        u.avatar_color ?? SPECIALTY_COLORS[specialty] ?? COLORS.primary,
+              rating:       Number(u.rating) || 4.8,
+              missions:     Number(u.missions_count) || 0,
+              priceFrom:    Number(u.daily_rate) || 25,
+              priceTo:      Math.round((Number(u.daily_rate) || 25) * 2.5),
+              responseTime: u.response_time ?? '< 4h',
+              deliveryTime: u.delivery_time ?? '48h',
+              bio:          u.bio ?? '',
+              tags:         Array.isArray(u.tags) ? u.tags : (u.tags ? [u.tags] : []),
+            };
+          });
+          setGhostwriters(mapped);
+        }
+      } catch (err) {
+        console.warn('[GhostwritersScreen] fetch error:', err?.message ?? err);
+        // Supabase indispo → on garde les mocks
+      }
+      setGwLoading(false);
+    })();
+  }, []);
 
   const filtered = useMemo(() => {
-    let list = MOCK_GHOSTWRITERS;
+    let list = ghostwriters;
     if (filter !== 'all') list = list.filter(g => g.specialty === filter);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(g =>
         g.name.toLowerCase().includes(q) ||
-        g.bio.toLowerCase().includes(q) ||
-        g.tags.some(t => t.toLowerCase().includes(q))
+        g.bio?.toLowerCase().includes(q) ||
+        (g.tags ?? []).some(t => t.toLowerCase().includes(q))
       );
     }
     return list;
-  }, [filter, search]);
+  }, [filter, search, ghostwriters]);
 
   function handleInvite(gw) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -378,7 +433,12 @@ export default function GhostwritersScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {filtered.length === 0 ? (
+          {gwLoading ? (
+            <View style={styles.emptyWrap}>
+              <ActivityIndicator color={COLORS.primary} size="small" />
+              <Text style={styles.emptyText}>Chargement des ghostwriters…</Text>
+            </View>
+          ) : filtered.length === 0 ? (
             <View style={styles.emptyWrap}>
               <Ionicons name="search-outline" size={36} color={COLORS.textMuted} />
               <Text style={styles.emptyText}>Aucun résultat pour cette recherche.</Text>

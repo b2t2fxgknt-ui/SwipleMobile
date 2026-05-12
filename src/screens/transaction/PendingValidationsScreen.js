@@ -19,7 +19,7 @@ import { COLORS, SPACING, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
 
 // ── Carte mission en attente ───────────────────────────────────────────────────
-function ValidationCard({ order, index, onValidate }) {
+function ValidationCard({ order, index, onView, onValidate }) {
   const slideAnim = useRef(new Animated.Value(30)).current;
   const fadeAnim  = useRef(new Animated.Value(0)).current;
 
@@ -78,15 +78,17 @@ function ValidationCard({ order, index, onValidate }) {
 
         {/* ── Actions ── */}
         <View style={styles.actions}>
+          {/* Voir le contexte complet → MissionTracking */}
           <TouchableOpacity
             style={styles.trackBtn}
-            onPress={() => onValidate(order)}
+            onPress={() => onView(order)}
             activeOpacity={0.78}
           >
             <Ionicons name="eye-outline" size={14} color={COLORS.primary} />
-            <Text style={styles.trackBtnText}>Voir la livraison</Text>
+            <Text style={styles.trackBtnText}>Voir</Text>
           </TouchableOpacity>
 
+          {/* Valider directement → Delivery (validation flow) */}
           <TouchableOpacity
             style={styles.validateBtn}
             onPress={() => onValidate(order)}
@@ -99,7 +101,7 @@ function ValidationCard({ order, index, onValidate }) {
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             />
             <Ionicons name="checkmark-circle" size={15} color="#fff" />
-            <Text style={styles.validateBtnText}>Valider</Text>
+            <Text style={styles.validateBtnText}>Valider la livraison</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -115,8 +117,8 @@ export default function PendingValidationsScreen() {
   const orders = route.params?.orders ?? [];
   const total  = orders.reduce((s, o) => s + (o.amount ?? 0), 0);
 
-  function handleValidate(order) {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  // Construit l'objet mission+freelancer depuis un order
+  function buildMissionAndFreelancer(order) {
     const mission = {
       id:              order.id,
       title:           order.title,
@@ -134,7 +136,21 @@ export default function PendingValidationsScreen() {
       name:     order.freelancerName,
       initials: order.freelancerName?.charAt(0)?.toUpperCase() ?? '?',
     };
+    return { mission, freelancer };
+  }
+
+  // "Voir" — contexte complet dans MissionTracking
+  function handleView(order) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const { mission, freelancer } = buildMissionAndFreelancer(order);
     navigation.navigate('MissionTracking', { mission, freelancer });
+  }
+
+  // "Valider la livraison" — va directement sur Delivery (validation flow)
+  function handleValidate(order) {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const { mission, freelancer } = buildMissionAndFreelancer(order);
+    navigation.navigate('Delivery', { mission, freelancer });
   }
 
   return (
@@ -207,6 +223,7 @@ export default function PendingValidationsScreen() {
               key={order.id}
               order={order}
               index={i}
+              onView={handleView}
               onValidate={handleValidate}
             />
           ))}
@@ -315,8 +332,8 @@ const styles = StyleSheet.create({
   // Actions
   actions: { flexDirection: 'row', gap: 8 },
   trackBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1,
-    paddingVertical: 10, paddingHorizontal: 12,
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingVertical: 10, paddingHorizontal: 14,
     backgroundColor: COLORS.primary + '12',
     borderWidth: 1, borderColor: COLORS.primary + '30',
     borderRadius: RADIUS.lg, justifyContent: 'center',
@@ -327,5 +344,5 @@ const styles = StyleSheet.create({
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     paddingVertical: 11, borderRadius: RADIUS.lg, overflow: 'hidden',
   },
-  validateBtnText: { fontSize: 13, fontWeight: '800', color: '#fff' },
+  validateBtnText: { fontSize: 12, fontWeight: '800', color: '#fff' },
 });

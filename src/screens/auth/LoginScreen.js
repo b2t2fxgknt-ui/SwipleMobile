@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
-import { activateDemoMode } from '../../navigation/AppNavigator';
+import { activateDemoMode } from '../../lib/demoMode';
 import { COLORS, SPACING, FONT, RADIUS } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
 

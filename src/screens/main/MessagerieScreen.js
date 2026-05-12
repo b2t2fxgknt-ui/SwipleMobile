@@ -18,6 +18,7 @@ import { COLORS, SPACING, FONT, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
 import { useMissions }      from '../../lib/MissionsContext';
 import { useConversations } from '../../lib/ConversationsContext';
+import { useSession }        from '../../lib/SessionContext';
 
 
 // ─── buildInitialMessages ───────────────────────────────────────────────────────
@@ -181,8 +182,23 @@ function CollapsibleSection({ title, count, accent, icon, children, defaultOpen 
 export default function MessagerieScreen() {
   const navigation = useNavigation();
   const route      = useRoute();
-  const { acceptedMissions }                             = useMissions();
-  const { conversations, initConversation, pushMessage } = useConversations();
+  const session    = useSession();
+  const { acceptedMissions }  = useMissions();
+  const {
+    conversations,
+    initConversation,
+    pushMessage,
+    loadConversation,
+    sendMessage:                ctxSendMessage,
+    subscribeToConversation,
+    unsubscribeFromConversation,
+  } = useConversations();
+
+  // Infos expéditeur (courant)
+  const userId        = session?.user?.id ?? null;
+  const userMeta      = session?.user?.user_metadata ?? {};
+  const senderName    = userMeta.nom ?? userMeta.full_name ?? 'Moi';
+  const senderInitials = senderName.charAt(0).toUpperCase();
 
   const [selectedId, setSelectedId] = useState(null);
   const [inputText,  setInputText]  = useState('');
@@ -191,7 +207,7 @@ export default function MessagerieScreen() {
   // ── Pré-peupler depuis les missions freelance ─────────────────────────────
   useEffect(() => {
     acceptedMissions.forEach(m => {
-      initConversation(m.id, {
+      const meta = {
         name:     m.clientName     ?? 'Client',
         initials: m.clientInitials ?? m.clientName?.charAt(0) ?? '?',
         color:    m.color          ?? COLORS.prestataire,
@@ -199,9 +215,12 @@ export default function MessagerieScreen() {
         title:    m.title          ?? 'Mission',
         budget:   m.budget         ?? 0,
         raw:      m,
-      }, buildInitialMessages(m));
+      };
+      initConversation(m.id, meta, buildInitialMessages(m));
+      // Tente de charger l'historique Supabase si on a un userId
+      if (userId) loadConversation(m.id, meta, userId);
     });
-  }, [acceptedMissions.length]);
+  }, [acceptedMissions.length, userId]);
 
   // ── Auto-ouvrir depuis un param de navigation ─────────────────────────────
   useEffect(() => {
@@ -209,7 +228,7 @@ export default function MessagerieScreen() {
     if (!missionId) return;
     const m = acceptedMissions.find(x => x.id === missionId);
     if (m) {
-      initConversation(m.id, {
+      const meta = {
         name:     m.clientName     ?? 'Client',
         initials: m.clientInitials ?? m.clientName?.charAt(0) ?? '?',
         color:    m.color          ?? COLORS.prestataire,
@@ -217,11 +236,16 @@ export default function MessagerieScreen() {
         title:    m.title          ?? 'Mission',
         budget:   m.budget         ?? 0,
         raw:      m,
-      }, buildInitialMessages(m));
+      };
+      initConversation(m.id, meta, buildInitialMessages(m));
+      if (userId) {
+        loadConversation(m.id, meta, userId);
+        subscribeToConversation(m.id, userId);
+      }
     }
     setSelectedId(missionId);
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: false }), 100);
-  }, [route.params?.missionId]);
+  }, [route.params?.missionId, userId]);
 
   // ── Conversations contexte → section "En cours" ───────────────────────────
   const ctxConvs = Object.entries(conversations)
@@ -255,7 +279,7 @@ export default function MessagerieScreen() {
   // ── Ouvrir une conversation ───────────────────────────────────────────────
   function openConversation(conv) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // Pour les mocks, on initialise une conv vide si inexistante
+    // Initialise en RAM si inexistant (fallback messages visibles immédiatement)
     if (!conversations[conv.id]) {
       initConversation(conv.id, conv.meta, [
         {
@@ -270,17 +294,22 @@ export default function MessagerieScreen() {
       ]);
     }
     setSelectedId(conv.id);
+    // Charge l'historique Supabase + abonnement temps réel
+    if (userId) {
+      loadConversation(conv.id, conv.meta, userId);
+      subscribeToConversation(conv.id, userId);
+    }
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: false }), 100);
   }
 
-  function sendMessage() {
+  // ── Envoyer un message ─────────────────────────────────────────────────────
+  function handleSend() {
     if (!inputText.trim() || !selectedId) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    pushMessage(selectedId, {
-      id:   Date.now(),
-      from: 'me',
-      text: inputText.trim(),
-      ts:   'À l\'instant',
+    ctxSendMessage(selectedId, inputText.trim(), {
+      userId:   userId   ?? 'anonymous',
+      name:     senderName,
+      initials: senderInitials,
     });
     setInputText('');
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
@@ -307,7 +336,11 @@ export default function MessagerieScreen() {
           {/* TopBar */}
           <View style={styles.convTopBar}>
             <TouchableOpacity
-              onPress={() => { setSelectedId(null); setInputText(''); }}
+              onPress={() => {
+                unsubscribeFromConversation(selectedId);
+                setSelectedId(null);
+                setInputText('');
+              }}
               style={styles.iconBtn}
               activeOpacity={0.7}
             >
@@ -349,12 +382,12 @@ export default function MessagerieScreen() {
                 placeholder="Écrire un message…"
                 placeholderTextColor={COLORS.textMuted}
                 returnKeyType="send"
-                onSubmitEditing={sendMessage}
+                onSubmitEditing={handleSend}
                 multiline
               />
               <TouchableOpacity
                 style={[styles.sendBtn, { backgroundColor: accentColor, opacity: inputText.trim() ? 1 : 0.32 }]}
-                onPress={sendMessage}
+                onPress={handleSend}
                 activeOpacity={0.85}
               >
                 <Ionicons name="send" size={15} color="#fff" />

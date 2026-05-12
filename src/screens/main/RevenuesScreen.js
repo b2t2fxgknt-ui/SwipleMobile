@@ -8,15 +8,19 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
- StatusBar, Animated, TouchableOpacity,
+  StatusBar, Animated, TouchableOpacity,
   TextInput, Platform, KeyboardAvoidingView, Keyboard,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { COLORS, SPACING, FONT, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
+import { supabase }      from '../../lib/supabase';
+import { useSession }    from '../../lib/SessionContext';
+import { useMissions }   from '../../lib/MissionsContext';
 
 // ── Données mock ──────────────────────────────────────────────────────────────
 
@@ -72,11 +76,37 @@ const COMPLETED_MISSIONS = [
   },
 ];
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatRelDate(iso) {
+  if (!iso) return 'Récemment';
+  const diff = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(diff / 86_400_000);
+  if (days === 0) return "Aujourd'hui";
+  if (days === 1) return 'Hier';
+  if (days < 7)  return `Il y a ${days}j`;
+  return `Il y a ${Math.floor(days / 7)} sem`;
+}
+
+function buildWeeklyBars(orders) {
+  const LABELS = ['D', 'L', 'M', 'Me', 'J', 'V', 'S'];
+  const today  = new Date();
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - (6 - i));
+    const day = d.toISOString().split('T')[0];
+    const amount = orders
+      .filter(o => o.created_at?.startsWith(day))
+      .reduce((s, o) => s + (Number(o.budget) || 0), 0);
+    return { day: LABELS[d.getDay()], amount, isToday: i === 6 };
+  });
+}
+
 // ── Barre animée (graphique) ──────────────────────────────────────────────────
 
-function WeekBar({ bar, delay }) {
+function WeekBar({ bar, delay, maxBar }) {
   const anim = useRef(new Animated.Value(0)).current;
-  const pct  = MAX_BAR > 0 ? bar.amount / MAX_BAR : 0;
+  const pct  = maxBar > 0 ? bar.amount / maxBar : 0;
 
   useEffect(() => {
     Animated.timing(anim, {
@@ -119,7 +149,7 @@ const BANKS_MOCK = [
   { id: 'b1', name: 'BNP Paribas', iban: 'FR76 3000 4028 ****  **** **** 943', default: true },
 ];
 
-function WithdrawalSheet({ visible, onClose }) {
+function WithdrawalSheet({ visible, onClose, availableBalance = AVAILABLE_BALANCE }) {
   const sheetY   = useRef(new Animated.Value(700)).current;
   const backdrop = useRef(new Animated.Value(0)).current;
   const [amount,   setAmount]  = useState('');
@@ -140,7 +170,7 @@ function WithdrawalSheet({ visible, onClose }) {
     }
   }, [visible]);
 
-  const requested = Number(amount) || AVAILABLE_BALANCE;
+  const requested = Number(amount) || availableBalance;
   const fee       = 0; // pas de frais
 
   const handleConfirm = useCallback(() => {
@@ -222,7 +252,7 @@ function WithdrawalSheet({ visible, onClose }) {
           // ── Formulaire ──
           <>
             <Text style={wStyles.sheetTitle}>Retirer mes gains</Text>
-            <Text style={wStyles.sheetSub}>Solde disponible : <Text style={{ color: COLORS.prestataire, fontWeight: '700' }}>{AVAILABLE_BALANCE}€</Text></Text>
+            <Text style={wStyles.sheetSub}>Solde disponible : <Text style={{ color: COLORS.prestataire, fontWeight: '700' }}>{availableBalance}€</Text></Text>
 
             {/* Montant */}
             <View style={wStyles.amountSection}>
@@ -233,14 +263,14 @@ function WithdrawalSheet({ visible, onClose }) {
                     style={wStyles.amountField}
                     value={amount}
                     onChangeText={v => setAmount(v.replace(/[^0-9]/g, ''))}
-                    placeholder={String(AVAILABLE_BALANCE)}
+                    placeholder={String(availableBalance)}
                     placeholderTextColor={COLORS.textLight}
                     keyboardType="number-pad"
                     maxLength={6}
                   />
                   <Text style={wStyles.euroSign}>€</Text>
                 </View>
-                <TouchableOpacity style={wStyles.allBtn} onPress={() => { setAmount(String(AVAILABLE_BALANCE)); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}>
+                <TouchableOpacity style={wStyles.allBtn} onPress={() => { setAmount(String(availableBalance)); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}>
                   <Text style={wStyles.allBtnText}>Tout retirer</Text>
                 </TouchableOpacity>
               </View>
@@ -375,20 +405,131 @@ const wStyles = StyleSheet.create({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function RevenuesScreen() {
+  const session  = useSession();
+  const userId   = session?.user?.id ?? null;
+  const { acceptedMissions } = useMissions();
   const earningsAnim = useRef(new Animated.Value(0)).current;
   const [showWithdrawal, setShowWithdrawal] = useState(false);
 
-  // Compteur revenus
+  // ── Données (mock par défaut, remplacées par Supabase dès que disponible) ──
+  const [totalEarnings,     setTotalEarnings]     = useState(TOTAL_EARNINGS);
+  const [availableBalance,  setAvailableBalance]  = useState(AVAILABLE_BALANCE);
+  const [stats,             setStats]             = useState(STATS);
+  const [weeklyBars,        setWeeklyBars]        = useState(WEEKLY_BARS);
+  const [completedMissions, setCompletedMissions] = useState(COMPLETED_MISSIONS);
+
+  const maxBar = Math.max(...weeklyBars.map(b => b.amount), 1);
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const ICON_MAP = {
+    'Script seul':      'document-text-outline',
+    'Script + Montage': 'film-outline',
+    'Pack mensuel':     'calendar-outline',
+    'Montage seul':     'cut-outline',
+    'Stratégie':        'bulb-outline',
+    'Sous-titres':      'text-outline',
+  };
+  const COLOR_MAP = {
+    'Script seul': '#10B981', 'Script + Montage': '#8B5CF6',
+    'Pack mensuel': '#3B82F6', 'Montage seul': '#EF4444',
+    'Stratégie': '#F59E0B',   'Sous-titres': '#6366F1',
+  };
+
+  // ── Applique les stats à partir d'une liste d'ordres normalisés ───────────
+  const applyOrders = useCallback((orders) => {
+    if (!orders.length) {
+      setTotalEarnings(0);
+      setAvailableBalance(0);
+      setStats(s => ({ ...s, missionsDone: 0, acceptanceRate: 0 }));
+      setWeeklyBars(buildWeeklyBars([]));
+      setCompletedMissions([]);
+      return;
+    }
+
+    const total = orders.reduce((s, o) => s + (Number(o.budget) || 0), 0);
+    setTotalEarnings(total);
+
+    const recent = orders.filter(o => {
+      const diff = Date.now() - new Date(o.created_at ?? 0).getTime();
+      return diff < 30 * 86_400_000;
+    });
+    setAvailableBalance(recent.reduce((s, o) => s + (Number(o.budget) || 0), 0));
+
+    const ratings   = orders.filter(o => o.rating).map(o => Number(o.rating));
+    const avgRating = ratings.length
+      ? parseFloat((ratings.reduce((s, r) => s + r, 0) / ratings.length).toFixed(1))
+      : STATS.avgRating;
+    setStats(prev => ({
+      ...prev,
+      missionsDone:   orders.length,
+      avgRating,
+      acceptanceRate: Math.min(100, Math.round((orders.length / Math.max(orders.length + 2, 1)) * 100)),
+    }));
+
+    const bars = buildWeeklyBars(orders);
+    setWeeklyBars(bars.some(b => b.amount > 0) ? bars : buildWeeklyBars([]));
+
+    setCompletedMissions(orders.slice(0, 6).map(o => ({
+      id:     o.id ?? String(Math.random()),
+      type:   o.type ?? 'Script',
+      icon:   ICON_MAP[o.type] ?? 'document-text-outline',
+      color:  COLOR_MAP[o.type] ?? '#10B981',
+      title:  o.title ?? 'Mission TikTok',
+      client: o.client_name ?? 'Client',
+      budget: Number(o.budget) || 0,
+      rating: Number(o.rating) || 5.0,
+      date:   formatRelDate(o.created_at),
+      status: 'Livré',
+    })));
+  }, []);
+
+  // ── Fetch Supabase + fusion avec le contexte RAM ───────────────────────────
+  const fetchRevenues = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const { data: dbOrders } = await supabase
+        .from('orders')
+        .select('id, budget, status, title, type, client_name, rating, created_at')
+        .eq('freelancer_id', userId)
+        .in('status', ['completed', 'valide', 'validated', 'paid'])
+        .order('created_at', { ascending: false });
+
+      // Missions validées en RAM mais pas encore confirmées en DB
+      // (ex. : mission mock validée avant que l'insert Supabase soit terminé)
+      const dbIds = new Set((dbOrders ?? []).map(o => o.id));
+      const localValide = acceptedMissions
+        .filter(m => m.status === 'valide' && !dbIds.has(m.id))
+        .map(m => ({
+          id:          m.id,
+          budget:      m.budget,
+          title:       m.title,
+          type:        m.type,
+          client_name: m.clientName ?? 'Client',
+          rating:      null,
+          created_at:  m.acceptedAt ?? new Date().toISOString(),
+        }));
+
+      const orders = [...(dbOrders ?? []), ...localValide];
+      applyOrders(orders);
+
+    } catch (err) {
+      console.warn('[RevenuesScreen] fetchRevenues error:', err?.message ?? err);
+    }
+  }, [userId, acceptedMissions, applyOrders]);
+
+  // Chargement initial quand le userId devient disponible
+  useEffect(() => { fetchRevenues(); }, [fetchRevenues]);
+
+  // Rafraîchit aussi à chaque fois que l'onglet passe au premier plan
+  useFocusEffect(useCallback(() => { fetchRevenues(); }, [fetchRevenues]));
+
+  // Compteur revenus (reset à 0 puis anime vers le total réel)
   useEffect(() => {
+    earningsAnim.setValue(0);
     Animated.timing(earningsAnim, {
       toValue: 1, duration: 1400, useNativeDriver: false,
     }).start();
-  }, []);
-
-  const displayEarnings = earningsAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, TOTAL_EARNINGS],
-  });
+  }, [totalEarnings]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -417,7 +558,7 @@ export default function RevenuesScreen() {
           </View>
           <View style={[styles.streakPill, { borderColor: '#F59E0B40' }]}>
             <Ionicons name="flame" size={14} color="#F59E0B" />
-            <Text style={styles.streakNum}>{STATS.streak}</Text>
+            <Text style={styles.streakNum}>{stats.streak}</Text>
             <Text style={styles.streakLabel}>jours</Text>
           </View>
         </View>
@@ -430,12 +571,14 @@ export default function RevenuesScreen() {
             borderRadius={RADIUS.xl}
           />
           <Text style={styles.earningsLabel}>Gains totaux ce mois</Text>
-          <AnimatedEarnings anim={earningsAnim} total={TOTAL_EARNINGS} />
+          <AnimatedEarnings anim={earningsAnim} total={totalEarnings} />
           <Text style={styles.earningsCurrency}>euros</Text>
-          <View style={styles.earningsTrend}>
-            <Ionicons name="trending-up" size={14} color="#22C55E" />
-            <Text style={styles.earningsTrendText}>+23 % vs mois dernier</Text>
-          </View>
+          {totalEarnings > 0 && (
+            <View style={styles.earningsTrend}>
+              <Ionicons name="trending-up" size={14} color="#22C55E" />
+              <Text style={styles.earningsTrendText}>Revenus en croissance</Text>
+            </View>
+          )}
         </View>
 
         {/* ── SOLDE DISPONIBLE + RETRAIT ── */}
@@ -455,7 +598,7 @@ export default function RevenuesScreen() {
             </View>
             <View>
               <Text style={styles.withdrawLabel}>Solde disponible</Text>
-              <Text style={styles.withdrawAmount}>{AVAILABLE_BALANCE}€</Text>
+              <Text style={styles.withdrawAmount}>{availableBalance}€</Text>
             </View>
           </View>
           <View style={[styles.withdrawBtn, { backgroundColor: COLORS.prestataire }]}>
@@ -467,18 +610,18 @@ export default function RevenuesScreen() {
         {/* ── STATS RAPIDES ── */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={[styles.statNum, { color: '#22C55E' }]}>{STATS.acceptanceRate}%</Text>
+            <Text style={[styles.statNum, { color: '#22C55E' }]}>{stats.acceptanceRate}%</Text>
             <Text style={styles.statLabel}>Acceptation</Text>
           </View>
           <View style={styles.statCard}>
             <View style={styles.statRatingRow}>
               <Ionicons name="star" size={14} color="#F59E0B" />
-              <Text style={[styles.statNum, { color: '#F59E0B' }]}>{STATS.avgRating}</Text>
+              <Text style={[styles.statNum, { color: '#F59E0B' }]}>{stats.avgRating}</Text>
             </View>
             <Text style={styles.statLabel}>Note moy.</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={[styles.statNum, { color: COLORS.prestataire }]}>{STATS.missionsDone}</Text>
+            <Text style={[styles.statNum, { color: COLORS.prestataire }]}>{stats.missionsDone}</Text>
             <Text style={styles.statLabel}>Missions</Text>
           </View>
         </View>
@@ -487,11 +630,11 @@ export default function RevenuesScreen() {
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
             <Text style={styles.chartTitle}>Revenus 7 derniers jours</Text>
-            <Text style={styles.chartTotal}>+{WEEKLY_BARS.reduce((s, b) => s + b.amount, 0)}€</Text>
+            <Text style={styles.chartTotal}>+{weeklyBars.reduce((s, b) => s + b.amount, 0)}€</Text>
           </View>
           <View style={styles.barsRow}>
-            {WEEKLY_BARS.map((bar, i) => (
-              <WeekBar key={bar.day} bar={bar} delay={i * 80} />
+            {weeklyBars.map((bar, i) => (
+              <WeekBar key={bar.day} bar={bar} delay={i * 80} maxBar={maxBar} />
             ))}
           </View>
         </View>
@@ -522,7 +665,7 @@ export default function RevenuesScreen() {
             {'  Voir toutes les missions'}
           </Text>
 
-          {COMPLETED_MISSIONS.map(m => (
+          {completedMissions.map(m => (
             <View key={m.id} style={styles.historyCard}>
               <View style={[styles.historyIconBox, { backgroundColor: m.color + '18' }]}>
                 <Ionicons name={m.icon} size={18} color={m.color} />
@@ -551,7 +694,7 @@ export default function RevenuesScreen() {
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
-    <WithdrawalSheet visible={showWithdrawal} onClose={() => setShowWithdrawal(false)} />
+    <WithdrawalSheet visible={showWithdrawal} onClose={() => setShowWithdrawal(false)} availableBalance={availableBalance} />
     </View>
   );
 }

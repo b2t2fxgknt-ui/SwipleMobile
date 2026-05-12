@@ -132,12 +132,12 @@ export default function PaymentProcessingScreen() {
             <View style={styles.doneBlock}>
               <Text style={styles.doneTitle}>Mission lancée !</Text>
               <Text style={styles.doneSub}>
-                {total}€ sécurisés · Freelance notifié
+                Freelance notifié · Suivi en temps réel
               </Text>
-              <View style={[styles.doneNote, { borderColor: '#22C55E25', backgroundColor: '#22C55E0C' }]}>
-                <Ionicons name="lock-closed" size={13} color="#22C55E" />
-                <Text style={styles.doneNoteText}>
-                  Votre argent est protégé jusqu'à validation
+              <View style={[styles.doneNote, { borderColor: '#F59E0B25', backgroundColor: '#F59E0B0C' }]}>
+                <Ionicons name="card-outline" size={13} color="#F59E0B" />
+                <Text style={[styles.doneNoteText, { color: '#F59E0B' }]}>
+                  Règlement de {total ?? '—'}€ à convenir directement avec le freelance
                 </Text>
               </View>
             </View>
@@ -178,8 +178,8 @@ export default function PaymentProcessingScreen() {
                 </View>
                 <View style={styles.recapDivider} />
                 <View style={styles.recapRow}>
-                  <Text style={styles.recapLabel}>Montant sécurisé</Text>
-                  <Text style={[styles.recapValue, { color: '#22C55E' }]}>{total ?? '—'}€</Text>
+                  <Text style={styles.recapLabel}>Budget mission</Text>
+                  <Text style={[styles.recapValue, { color: COLORS.primary }]}>{total ?? '—'}€</Text>
                 </View>
               </View>
 

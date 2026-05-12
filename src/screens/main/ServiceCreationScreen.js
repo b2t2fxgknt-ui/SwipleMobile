@@ -135,19 +135,21 @@ export default function ServiceCreationScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
     try {
-      const catData = CATEGORIES.find(c => c.id === category);
-      await supabase.from('services').insert({
+      const { error } = await supabase.from('services').insert({
         freelancer_id: session?.user?.id,
-        title: title.trim(),
-        description: description.trim(),
+        title:         title.trim(),
+        description:   description.trim(),
         category,
-        price: Number(price),
+        price:         Number(price),
         delivery_time: delivery,
         revisions,
-        tags: selectedTags,
-        is_active: true,
+        tags:          selectedTags,
+        is_active:     true,
       });
-    } catch (_) {}
+      if (error) console.warn('[ServiceCreationScreen] publish error:', error.message);
+    } catch (err) {
+      console.warn('[ServiceCreationScreen] publish error:', err?.message ?? err);
+    }
 
     setLoading(false);
     setPublished(true);

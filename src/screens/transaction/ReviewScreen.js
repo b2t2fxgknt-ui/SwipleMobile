@@ -16,14 +16,16 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { COLORS, SPACING, FONT, RADIUS, SHADOW } from '../../lib/theme';
+import { supabase }   from '../../lib/supabase';
+import { useSession } from '../../lib/SessionContext';
 
 const QUICK_TAGS = [
-  { id: 'ponctuel',   label: '⏰ Ponctuel',       cat: 'positive' },
-  { id: 'creatif',    label: '✨ Créatif',          cat: 'positive' },
-  { id: 'pro',        label: '💼 Professionnel',    cat: 'positive' },
-  { id: 'reactif',    label: '⚡ Réactif',          cat: 'positive' },
-  { id: 'qualite',    label: '🎯 Qualité top',      cat: 'positive' },
-  { id: 'recommande', label: '👍 Je recommande',    cat: 'positive' },
+  { id: 'ponctuel',   label: 'Ponctuel',       cat: 'positive' },
+  { id: 'creatif',    label: 'Créatif',         cat: 'positive' },
+  { id: 'pro',        label: 'Professionnel',   cat: 'positive' },
+  { id: 'reactif',    label: 'Réactif',         cat: 'positive' },
+  { id: 'qualite',    label: 'Qualité top',     cat: 'positive' },
+  { id: 'recommande', label: 'Je recommande',   cat: 'positive' },
 ];
 
 const STAR_LABELS = ['', 'Décevant', 'Passable', 'Bien', 'Très bien', 'Excellent'];
@@ -64,6 +66,8 @@ export default function ReviewScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { mission, freelancer } = route.params ?? {};
+  const session  = useSession();
+  const userId   = session?.user?.id ?? null;
 
   const [rating, setRating]         = useState(0);
   const [comment, setComment]       = useState('');
@@ -89,14 +93,52 @@ export default function ReviewScreen() {
 
   const canSubmit = rating > 0;
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!canSubmit) return;
     Keyboard.dismiss();
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setSubmitted(true);
     Animated.spring(successAnim, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }).start();
+
+    // ── Persistance Supabase ────────────────────────────────────────────────
+    try {
+      const freelancerId = freelancer?.id ?? null;
+
+      // 1. Insérer la review
+      await supabase.from('reviews').insert({
+        mission_id:       mission?.id     ?? null,
+        reviewer_id:      userId          ?? null,
+        freelancer_id:    freelancerId,
+        freelancer_name:  freelancer?.name ?? null,
+        rating,
+        comment:          comment.trim() || null,
+        tags:             selectedTags,
+      });
+
+      // 2. Recalculer et mettre à jour la note moyenne du freelancer
+      if (freelancerId) {
+        const { data: allReviews } = await supabase
+          .from('reviews')
+          .select('rating')
+          .eq('freelancer_id', freelancerId);
+
+        if (allReviews?.length) {
+          const avg = allReviews.reduce((s, r) => s + Number(r.rating), 0) / allReviews.length;
+          await supabase
+            .from('users')
+            .update({
+              rating:         parseFloat(avg.toFixed(2)),
+              reviews_count:  allReviews.length,
+            })
+            .eq('id', freelancerId);
+        }
+      }
+    } catch (_) {
+      // Silencieux — l'UX ne change pas si Supabase est indispo
+    }
+
     setTimeout(() => navigation.navigate('Main'), 2200);
-  }, [canSubmit, successAnim, navigation]);
+  }, [canSubmit, successAnim, navigation, rating, comment, selectedTags, mission, freelancer, userId]);
 
   const handleSkip = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

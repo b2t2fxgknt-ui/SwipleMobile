@@ -200,7 +200,7 @@ export default function SwipeScreen() {
   async function saveService(serviceId) {
     if (savedIds.has(serviceId)) return;
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { showToast('Connecte-toi pour sauvegarder 😊', false); return; }
+    if (!user) { showToast('Connecte-toi pour sauvegarder', false); return; }
     const { error } = await supabase
       .from('saved_services')
       .insert({ user_id: user.id, service_id: serviceId });

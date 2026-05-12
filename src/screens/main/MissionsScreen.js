@@ -216,14 +216,18 @@ export default function MissionsScreen() {
         setLoading(true);
         const userId = session?.user?.id;
 
-        // 1. Briefs ouverts
+        // 1. Briefs ouverts + infos client via join
         const { data: rows, error } = await supabase
           .from('briefs')
-          .select('*')
+          .select('*, client:client_id(name, initials, avatar_color)')
           .eq('status', 'open')
           .order('created_at', { ascending: false });
 
-        if (error || !rows?.length) return; // garde les MOCK_BRIEFS
+        if (error) {
+          console.warn('[MissionsScreen] fetch briefs error:', error.message);
+          return; // garde les MOCK_BRIEFS
+        }
+        if (!rows?.length) return; // pas encore de vrais briefs → garde les mocks
 
         // 2. Candidatures déjà soumises par ce freelance
         let appliedIds = new Set();
@@ -238,30 +242,37 @@ export default function MissionsScreen() {
         // 3. Convertir en format local
         const briefs = rows
           .filter(r => !appliedIds.has(r.id))
-          .map(r => ({
-            id:            r.id,
-            type:          r.type,
-            color:         r.color ?? '#8B5CF6',
-            icon:          r.icon  ?? 'document-text-outline',
-            title:         r.title,
-            activity:      r.activity  ?? '',
-            audience:      r.audience  ?? '',
-            subject:       r.subject   ?? '',
-            tone:          r.tone      ?? '',
-            platform:      r.platform  ?? 'TikTok',
-            postsPerMonth: r.posts_per_month ?? 4,
-            budget:        r.budget    ?? 0,
-            deadline:      r.deadline  ?? '',
-            clientInitials: 'CL',
-            clientName:     'Client',
-          }));
+          .map(r => {
+            const clientName = r.client?.name ?? 'Client';
+            const clientInitials = r.client?.initials
+              ?? clientName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+              ?? 'CL';
+            return {
+              id:             r.id,
+              type:           r.type,
+              color:          r.color ?? r.client?.avatar_color ?? '#8B5CF6',
+              icon:           r.icon  ?? 'document-text-outline',
+              title:          r.title,
+              activity:       r.activity       ?? '',
+              audience:       r.audience       ?? '',
+              subject:        r.subject        ?? '',
+              tone:           r.tone           ?? '',
+              platform:       r.platform       ?? 'TikTok',
+              postsPerMonth:  r.posts_per_month ?? 4,
+              budget:         r.budget         ?? 0,
+              deadline:       r.deadline       ?? '48h',
+              clientInitials,
+              clientName,
+            };
+          });
 
         if (!cancelled && briefs.length > 0) {
           setDeck(briefs);
           setPhase('swiping');
         }
-      } catch (_) {
-        // pas de Supabase → reste sur MOCK_BRIEFS
+      } catch (err) {
+        console.warn('[MissionsScreen] fetchBriefs error:', err?.message ?? err);
+        // réseau indispo → reste sur MOCK_BRIEFS
       } finally {
         if (!cancelled) setLoading(false);
       }

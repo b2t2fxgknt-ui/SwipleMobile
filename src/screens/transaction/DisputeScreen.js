@@ -63,7 +63,7 @@ function FaqItem({ item }) {
 const INITIAL_MESSAGES = [
   {
     id: '1', from: 'support', time: 'maintenant',
-    text: '👋 Bonjour ! Je suis le support Swiple. Comment puis-je vous aider avec votre litige ?',
+    text: 'Bonjour, je suis le support Swiple. Comment puis-je vous aider avec votre litige ?',
   },
   {
     id: '2', from: 'support', time: 'maintenant',

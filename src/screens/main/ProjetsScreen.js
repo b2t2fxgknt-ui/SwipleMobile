@@ -4,16 +4,16 @@
  * Alimenté par MissionsContext (partagé avec MissionsScreen + transaction screens)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
- StatusBar,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../../lib/theme';
 import BubbleBackground from '../../components/ui/BubbleBackground';
 import { useMissions } from '../../lib/MissionsContext';
@@ -172,8 +172,11 @@ function ProjetCard({ mission, onOpenBrief, onValidate }) {
 export default function ProjetsScreen() {
   const navigation = useNavigation();
   const route      = useRoute();
-  const { acceptedMissions, updateStatus } = useMissions();
+  const { acceptedMissions, updateStatus, refreshMissions } = useMissions();
   const [activeTab, setActiveTab] = useState('en_cours');
+
+  // Rafraîchit les missions depuis Supabase à chaque focus de l'onglet
+  useFocusEffect(useCallback(() => { refreshMissions(); }, [refreshMissions]));
 
   // Auto-switch tab si on arrive depuis un écran transaction avec un initialTab
   useEffect(() => {

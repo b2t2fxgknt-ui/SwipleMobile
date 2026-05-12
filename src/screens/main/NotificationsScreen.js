@@ -1,14 +1,15 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Animated, Dimensions, StatusBar, Platform,
+  Animated, StatusBar, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { useFocusEffect } from '@react-navigation/native';
+import { supabase }    from '../../lib/supabase';
+import { useSession }  from '../../lib/SessionContext';
 import { COLORS, SPACING, RADIUS, FONT, SHADOW } from '../../lib/theme';
-
-const SW = Dimensions.get('window').width;
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
@@ -146,6 +147,61 @@ const NOTIFS_FREELANCER = [
   },
 ];
 
+// ─── Supabase helpers ─────────────────────────────────────────────────────────
+
+const TYPE_CFG = {
+  application: { category: 'missions',  icon: 'flash-outline',           color: '#F59E0B', action: 'Voir les candidats' },
+  message:     { category: 'messages',  icon: 'chatbubble-outline',       color: '#3B82F6', action: 'Répondre'           },
+  delivery:    { category: 'missions',  icon: 'cube-outline',             color: '#7C3AED', action: 'Voir la livraison'  },
+  validation:  { category: 'paiements', icon: 'checkmark-circle-outline', color: '#22C55E', action: null                },
+  payment:     { category: 'paiements', icon: 'wallet-outline',           color: '#22C55E', action: null                },
+  review:      { category: 'système',   icon: 'star-outline',             color: '#F59E0B', action: null                },
+  system:      { category: 'système',   icon: 'notifications-outline',    color: '#8B5CF6', action: null                },
+};
+
+function getGroup(isoStr) {
+  if (!isoStr) return 'Cette semaine';
+  const d   = new Date(isoStr);
+  const now = new Date();
+  const diffMs = now - d;
+  const sameDay = d.getDate() === now.getDate()
+    && d.getMonth() === now.getMonth()
+    && d.getFullYear() === now.getFullYear();
+  if (sameDay)             return "Aujourd'hui";
+  if (diffMs < 172800000)  return 'Hier';
+  if (diffMs < 7 * 86400000) return 'Cette semaine';
+  return 'Plus ancien';
+}
+
+function formatRelTime(isoStr) {
+  if (!isoStr) return '';
+  const d    = new Date(isoStr);
+  const diff = Date.now() - d;
+  if (diff < 60000)    return "À l'instant";
+  if (diff < 3600000)  return `Il y a ${Math.floor(diff / 60000)} min`;
+  if (diff < 86400000) return `Il y a ${Math.floor(diff / 3600000)}h`;
+  if (diff < 172800000) return 'Hier';
+  return d.toLocaleDateString('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function mapDbNotif(n) {
+  const cfg = TYPE_CFG[n.type] ?? TYPE_CFG.system;
+  return {
+    id:            n.id,
+    group:         getGroup(n.created_at),
+    read:          n.read ?? false,
+    category:      cfg.category,
+    icon:          cfg.icon,
+    color:         cfg.color,
+    title:         n.title ?? 'Notification',
+    body:          n.body  ?? '',
+    time:          formatRelTime(n.created_at),
+    action:        n.action_screen ? cfg.action : null,
+    action_screen: n.action_screen,
+    action_params: n.action_params,
+  };
+}
+
 const CATEGORIES = [
   { key: 'tout',      label: 'Tout',      icon: 'apps-outline' },
   { key: 'missions',  label: 'Missions',  icon: 'rocket-outline' },
@@ -153,7 +209,7 @@ const CATEGORIES = [
   { key: 'paiements', label: 'Paiements', icon: 'wallet-outline' },
 ];
 
-const GROUPS = ['Aujourd\'hui', 'Hier', 'Cette semaine'];
+const GROUPS = ["Aujourd'hui", 'Hier', 'Cette semaine', 'Plus ancien'];
 
 // ─── NotifItem ────────────────────────────────────────────────────────────────
 
@@ -216,6 +272,12 @@ function NotifItem({ notif, onRead, onAction }) {
 // ─── Nav target builder ───────────────────────────────────────────────────────
 
 function buildNavTarget(notif, isFreelancer) {
+  // Priorité : cible provenant de Supabase (action_screen + action_params)
+  if (notif.action_screen) {
+    return { screen: notif.action_screen, params: notif.action_params ?? {} };
+  }
+
+  // Fallback pour les mocks
   const mockMission = {
     id: `notif_${notif.id}`,
     title: notif.title,
@@ -241,6 +303,7 @@ function buildNavTarget(notif, isFreelancer) {
     case 'Répondre':
       return { screen: 'Messagerie', params: {} };
     case 'Voir la mission':
+    case 'Voir les candidats':
       return { screen: 'Main', params: {} };
     case 'Voir la demande':
       return { screen: 'MissionBrief', params: { mission: { ...mockMission, status: 'revision', type: 'Vidéo', color: '#3B82F6', icon: 'refresh-circle-outline' } } };
@@ -256,27 +319,103 @@ function buildNavTarget(notif, isFreelancer) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function NotificationsScreen({ navigation, route }) {
-  const isFreelancer = route?.params?.isFreelancer ?? false;
-  const rawNotifs = isFreelancer ? NOTIFS_FREELANCER : NOTIFS_CLIENT;
+  const session      = useSession();
+  const userId       = session?.user?.id;
+  const metaRole     = session?.user?.user_metadata?.role;
+  const isFreelancer = route?.params?.isFreelancer
+    ?? (metaRole === 'prestataire' || metaRole === 'freelancer');
 
-  const [notifs, setNotifs] = useState(rawNotifs);
+  const [notifs, setNotifs]               = useState([]);
   const [activeCategory, setActiveCategory] = useState('tout');
   const headerAnim = useRef(new Animated.Value(0)).current;
+  const channelRef = useRef(null);
 
+  // ── Fetch depuis Supabase ──────────────────────────────────────────────────
+  const fetchNotifications = useCallback(async () => {
+    if (!userId) {
+      // Pas connecté → mock data
+      setNotifs(isFreelancer ? NOTIFS_FREELANCER : NOTIFS_CLIENT);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('id, type, title, body, read, action_screen, action_params, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(60);
+
+      if (error || !data || data.length === 0) {
+        // Fallback mocks si table vide ou erreur
+        setNotifs(isFreelancer ? NOTIFS_FREELANCER : NOTIFS_CLIENT);
+      } else {
+        setNotifs(data.map(mapDbNotif));
+      }
+    } catch (_) {
+      setNotifs(isFreelancer ? NOTIFS_FREELANCER : NOTIFS_CLIENT);
+    }
+  }, [userId, isFreelancer]);
+
+  // Recharge à chaque focus
+  useFocusEffect(useCallback(() => {
+    fetchNotifications();
+  }, [fetchNotifications]));
+
+  // Realtime : nouvelles notifs en temps réel
+  useEffect(() => {
+    if (!userId) return;
+
+    channelRef.current = supabase
+      .channel(`notifs_${userId}`)
+      .on('postgres_changes', {
+        event:  'INSERT',
+        schema: 'public',
+        table:  'notifications',
+        filter: `user_id=eq.${userId}`,
+      }, (payload) => {
+        setNotifs(prev => [mapDbNotif(payload.new), ...prev]);
+      })
+      .subscribe();
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [userId]);
+
+  // ── Compteurs ─────────────────────────────────────────────────────────────
   const unreadCount = notifs.filter(n => !n.read).length;
 
   const filtered = activeCategory === 'tout'
     ? notifs
     : notifs.filter(n => n.category === activeCategory);
 
-  const markRead = useCallback((id) => {
+  // ── Marquer lu ────────────────────────────────────────────────────────────
+  const markRead = useCallback(async (id) => {
     setNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  }, []);
+    if (userId && !String(id).startsWith('n') && !String(id).startsWith('f')) {
+      // Uniquement pour les IDs Supabase (UUID), pas les mocks
+      try {
+        await supabase.from('notifications').update({ read: true }).eq('id', id);
+      } catch (_) {}
+    }
+  }, [userId]);
 
-  const markAllRead = useCallback(() => {
+  const markAllRead = useCallback(async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setNotifs(prev => prev.map(n => ({ ...n, read: true })));
-  }, []);
+    if (userId) {
+      try {
+        await supabase
+          .from('notifications')
+          .update({ read: true })
+          .eq('user_id', userId)
+          .eq('read', false);
+      } catch (_) {}
+    }
+  }, [userId]);
 
   const handleAction = useCallback((notif) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

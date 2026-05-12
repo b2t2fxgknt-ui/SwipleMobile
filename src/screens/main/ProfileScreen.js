@@ -4,17 +4,17 @@
  * Client     : hero + stats + préférences + compte
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
- StatusBar, ActivityIndicator, Image,
+  StatusBar, ActivityIndicator, Image, Linking,
   Switch, Animated, Modal, TextInput, Alert, TouchableWithoutFeedback,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../lib/supabase';
 import { useSession } from '../../lib/SessionContext';
 import { COLORS, SPACING, FONT, RADIUS, SHADOW } from '../../lib/theme';
@@ -24,6 +24,7 @@ import ScrollProgressIndicator from '../../components/ui/ScrollProgressIndicator
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
 const SPECIALTIES = ['Hook', 'Montage', 'Captions', 'VO', 'Script', 'Effets'];
+const SPECIALTY_OPTIONS = ['Hook', 'Montage', 'Script', 'VO', 'Captions', 'Effets', 'UGC', 'Stratégie', 'Sous-titres', 'Thumbnail', 'SEO', 'Ads'];
 const MISSION_TYPES = ['Court format', 'Podcast', 'Pub', 'Tutoriel'];
 
 const FREELANCER_BADGES = [
@@ -368,6 +369,152 @@ function EditProfileModal({ visible, profile, name, bio, onClose, onSave }) {
   );
 }
 
+// ── DailyRateModal ─────────────────────────────────────────────────────────────
+function DailyRateModal({ visible, currentRate, accentColor, onClose, onSave }) {
+  const [draft, setDraft] = useState(currentRate);
+  useEffect(() => { if (visible) setDraft(currentRate); }, [visible]);
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>Tarif journalier</Text>
+          <Text style={styles.fieldLabel}>Montant (€ / jour)</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <TextInput
+              style={[styles.fieldInput, { flex: 1 }]}
+              value={draft}
+              onChangeText={v => setDraft(v.replace(/[^0-9]/g, ''))}
+              keyboardType="number-pad"
+              placeholder="350"
+              placeholderTextColor={COLORS.textLight}
+              selectionColor={accentColor}
+            />
+            <Text style={{ fontSize: 22, color: COLORS.textMuted, fontWeight: '700', marginBottom: 12 }}>€</Text>
+          </View>
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancelBtn} onPress={onClose} activeOpacity={0.7}>
+              <Text style={styles.modalCancelText}>Annuler</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalSaveBtn} onPress={() => onSave(draft)} activeOpacity={0.85}>
+              <LinearGradient colors={[accentColor, accentColor + 'CC']} style={styles.modalSaveGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                <Text style={styles.modalSaveText}>Enregistrer</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+// ── AddPortfolioModal ──────────────────────────────────────────────────────────
+function AddPortfolioModal({ visible, accentColor, onClose, onAdd }) {
+  const [title, setTitle] = useState('');
+  const [url,   setUrl]   = useState('');
+  useEffect(() => { if (visible) { setTitle(''); setUrl(''); } }, [visible]);
+  const canAdd = title.trim().length > 0 && url.trim().length > 0;
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>Ajouter une vidéo</Text>
+          <Text style={styles.fieldLabel}>Titre</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Ex : Hook TikTok viral"
+            placeholderTextColor={COLORS.textLight}
+            selectionColor={accentColor}
+          />
+          <Text style={styles.fieldLabel}>URL de la vidéo</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={url}
+            onChangeText={setUrl}
+            placeholder="https://..."
+            placeholderTextColor={COLORS.textLight}
+            autoCapitalize="none"
+            keyboardType="url"
+            selectionColor={accentColor}
+          />
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancelBtn} onPress={onClose} activeOpacity={0.7}>
+              <Text style={styles.modalCancelText}>Annuler</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.modalSaveBtn, !canAdd && { opacity: 0.45 }]} onPress={() => { if (canAdd) onAdd(title.trim(), url.trim()); }} activeOpacity={0.85}>
+              <LinearGradient colors={[accentColor, accentColor + 'CC']} style={styles.modalSaveGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                <Text style={styles.modalSaveText}>Ajouter</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+// ── AddSpecialtyModal ──────────────────────────────────────────────────────────
+function AddSpecialtyModal({ visible, currentSpecialties, accentColor, onClose, onAdd }) {
+  const [custom, setCustom] = useState('');
+  useEffect(() => { if (visible) setCustom(''); }, [visible]);
+  const available = SPECIALTY_OPTIONS.filter(s => !currentSpecialties.includes(s));
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>Ajouter une spécialité</Text>
+          {available.length > 0 && (
+            <>
+              <Text style={styles.fieldLabel}>Sélectionner</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                {available.map(s => (
+                  <TouchableOpacity
+                    key={s}
+                    style={[styles.chip, { backgroundColor: accentColor + '18', borderColor: accentColor + '40' }]}
+                    onPress={() => onAdd(s)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.chipText, { color: accentColor }]}>{s}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
+          )}
+          <Text style={styles.fieldLabel}>Tag personnalisé</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={custom}
+            onChangeText={setCustom}
+            placeholder="Ex : Reels, Ads, UGC..."
+            placeholderTextColor={COLORS.textLight}
+            selectionColor={accentColor}
+            returnKeyType="done"
+            onSubmitEditing={() => { if (custom.trim()) { onAdd(custom.trim()); setCustom(''); } }}
+          />
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancelBtn} onPress={onClose} activeOpacity={0.7}>
+              <Text style={styles.modalCancelText}>Fermer</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalSaveBtn, !custom.trim() && { opacity: 0.45 }]}
+              onPress={() => { if (custom.trim()) { onAdd(custom.trim()); setCustom(''); } }}
+              activeOpacity={0.85}
+            >
+              <LinearGradient colors={[accentColor, accentColor + 'CC']} style={styles.modalSaveGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                <Text style={styles.modalSaveText}>Ajouter</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 // ── Écran principal ────────────────────────────────────────────────────────────
 
 export default function ProfileScreen() {
@@ -391,6 +538,14 @@ export default function ProfileScreen() {
   const [available,   setAvailable]   = useState(true);
   const [dailyRate,   setDailyRate]   = useState('350');
 
+  // Revenus, portfolio, spécialités
+  const [totalRevenue,          setTotalRevenue]          = useState(0);
+  const [showRateModal,         setShowRateModal]         = useState(false);
+  const [portfolioItems,        setPortfolioItems]        = useState([]);
+  const [showAddPortfolioModal, setShowAddPortfolioModal] = useState(false);
+  const [specialties,           setSpecialties]           = useState([]);
+  const [showSpecialtyModal,    setShowSpecialtyModal]    = useState(false);
+
   // Completion bar animation
   const completionAnim = useRef(new Animated.Value(0)).current;
   const scrollIndicatorY = useRef(new Animated.Value(0)).current;
@@ -401,6 +556,11 @@ export default function ProfileScreen() {
     if (!user?.id) return;
     loadProfile();
   }, [user?.id]);
+
+  // Rafraîchit les stats à chaque fois qu'on revient sur le profil
+  useFocusEffect(useCallback(() => {
+    if (user?.id) loadProfile();
+  }, [user?.id]));
 
   async function loadProfile() {
     setLoading(true);
@@ -415,20 +575,57 @@ export default function ProfileScreen() {
         setProfile(profileData);
         setDisplayName(profileData.name ?? user?.user_metadata?.nom ?? user?.email?.split('@')[0] ?? 'Utilisateur');
         setDisplayBio(profileData.bio ?? '');
+        // Charger disponibilité + tarif journalier depuis Supabase
+        if (typeof profileData.is_available === 'boolean') setAvailable(profileData.is_available);
+        if (profileData.daily_rate) setDailyRate(String(profileData.daily_rate));
+        if (Array.isArray(profileData.portfolio_items) && profileData.portfolio_items.length) setPortfolioItems(profileData.portfolio_items);
+
+        if (profileData.skills?.length) {
+          setSpecialties(profileData.skills);
+        } else {
+          // Fallback : domaines entrés à l'inscription (user_metadata) si profil pas encore enrichi
+          const meta = user?.user_metadata ?? {};
+          const DOMAIN_LABELS = {
+            business: 'Business & Coaching', formation: 'Formation & Éducation',
+            sante: 'Santé & Bien-être',      finance: 'Finance & Investissement',
+            marketing: 'Marketing & Vente',  droit: 'Droit & Juridique',
+            mode: 'Mode & Beauté',           food: 'Food & Restauration',
+            sport: 'Sport & Fitness',        tech: 'Tech & Digital',
+            immo: 'Immobilier',              devperso: 'Développement perso',
+          };
+          if (Array.isArray(meta.domains) && meta.domains.length) {
+            setSpecialties(meta.domains.map(id => DOMAIN_LABELS[id] ?? id));
+          }
+        }
       } else {
         setDisplayName(user?.user_metadata?.nom ?? user?.email?.split('@')[0] ?? 'Utilisateur');
+        // Fallback domaines si pas de profil en DB
+        const meta = user?.user_metadata ?? {};
+        const DOMAIN_LABELS = {
+          business: 'Business & Coaching', formation: 'Formation & Éducation',
+          sante: 'Santé & Bien-être',      finance: 'Finance & Investissement',
+          marketing: 'Marketing & Vente',  droit: 'Droit & Juridique',
+          mode: 'Mode & Beauté',           food: 'Food & Restauration',
+          sport: 'Sport & Fitness',        tech: 'Tech & Digital',
+          immo: 'Immobilier',              devperso: 'Développement perso',
+        };
+        if (Array.isArray(meta.domains) && meta.domains.length) {
+          setSpecialties(meta.domains.map(id => DOMAIN_LABELS[id] ?? id));
+        }
       }
 
       const role         = profileData?.role ?? user?.user_metadata?.role ?? 'client';
       const isFreelancer = role === 'freelancer' || role === 'prestataire';
 
       if (isFreelancer) {
-        const [{ count: svcCount }, { count: ordCount }] = await Promise.all([
+        const [{ count: svcCount }, { count: ordCount }, { data: completedOrds }] = await Promise.all([
           supabase.from('services').select('id', { count: 'exact', head: true }).eq('freelancer_id', user.id).eq('is_active', true),
           supabase.from('orders').select('id', { count: 'exact', head: true }).eq('freelancer_id', user.id),
+          supabase.from('orders').select('budget').eq('freelancer_id', user.id).in('status', ['completed', 'valide', 'validated']),
         ]);
         setServicesCount(svcCount ?? 0);
         setOrdersCount(ordCount ?? 0);
+        setTotalRevenue((completedOrds ?? []).reduce((s, o) => s + (Number(o.budget) || 0), 0));
       } else {
         const [{ count: savedCnt }, { count: ordCnt }] = await Promise.all([
           supabase.from('saved_services').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
@@ -461,6 +658,32 @@ export default function ProfileScreen() {
       Alert.alert('Erreur', 'Impossible de sauvegarder les modifications.');
     }
     setEditVisible(false);
+  }
+
+  async function handleSaveDailyRate(rate) {
+    const cleaned = rate.replace(/[^0-9]/g, '');
+    setDailyRate(cleaned || '0');
+    setShowRateModal(false);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    try { await supabase.from('users').update({ daily_rate: Number(cleaned) || 0 }).eq('id', user.id); } catch (_) {}
+  }
+
+  async function handleAddPortfolio(title, url) {
+    const PALETTE = ['#F59E0B', '#8B5CF6', '#3B82F6', '#EC4899', '#10B981', '#EF4444'];
+    const newItem = { id: Date.now(), title, url, views: '', color: PALETTE[portfolioItems.length % PALETTE.length] };
+    const updated = [...portfolioItems, newItem];
+    setPortfolioItems(updated);
+    setShowAddPortfolioModal(false);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    try { await supabase.from('users').update({ portfolio_items: updated }).eq('id', user.id); } catch (_) {}
+  }
+
+  async function handleAddSpecialty(specialty) {
+    if (specialties.includes(specialty)) { setShowSpecialtyModal(false); return; }
+    const updated = [...specialties, specialty];
+    setSpecialties(updated);
+    setShowSpecialtyModal(false);
+    try { await supabase.from('users').update({ skills: updated }).eq('id', user.id); } catch (_) {}
   }
 
   if (loading) {
@@ -513,6 +736,26 @@ export default function ProfileScreen() {
         user={user}
         isFreelancer={isFreelancer}
         memberYear={memberYear}
+      />
+      <DailyRateModal
+        visible={showRateModal}
+        currentRate={dailyRate}
+        accentColor={accentColor}
+        onClose={() => setShowRateModal(false)}
+        onSave={handleSaveDailyRate}
+      />
+      <AddPortfolioModal
+        visible={showAddPortfolioModal}
+        accentColor={accentColor}
+        onClose={() => setShowAddPortfolioModal(false)}
+        onAdd={handleAddPortfolio}
+      />
+      <AddSpecialtyModal
+        visible={showSpecialtyModal}
+        currentSpecialties={specialties}
+        accentColor={accentColor}
+        onClose={() => setShowSpecialtyModal(false)}
+        onAdd={handleAddSpecialty}
       />
 
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
@@ -624,11 +867,11 @@ export default function ProfileScreen() {
             {isFreelancer ? (
               <>
                 <View style={[styles.statCard, { borderColor: accentColor + '30' }]}>
-                  <Text style={[styles.statNum, { color: accentColor }]}>24</Text>
+                  <Text style={[styles.statNum, { color: accentColor }]}>{ordersCount}</Text>
                   <Text style={styles.statLabel}>Missions</Text>
                 </View>
                 <View style={[styles.statCard, { borderColor: accentColor + '30' }]}>
-                  <Text style={[styles.statNum, { color: accentColor }]}>1 847€</Text>
+                  <Text style={[styles.statNum, { color: accentColor }]}>{totalRevenue > 0 ? `${totalRevenue}€` : '0€'}</Text>
                   <Text style={styles.statLabel}>Revenus</Text>
                 </View>
                 <View style={[styles.statCard, { borderColor: accentColor + '30' }]}>
@@ -660,14 +903,14 @@ export default function ProfileScreen() {
               <SectionLabel text="Spécialités" />
               <Card>
                 <View style={styles.chipsWrap}>
-                  {SPECIALTIES.map(s => (
+                  {(specialties.length > 0 ? specialties : SPECIALTIES).map(s => (
                     <View key={s} style={[styles.chip, { backgroundColor: accentColor + '18', borderColor: accentColor + '40' }]}>
                       <Text style={[styles.chipText, { color: accentColor }]}>{s}</Text>
                     </View>
                   ))}
                   <TouchableOpacity
                     style={[styles.chip, styles.chipAdd]}
-                    onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowSpecialtyModal(true); }}
                     activeOpacity={0.7}
                   >
                     <Ionicons name="add" size={13} color={COLORS.textMuted} />
@@ -701,13 +944,18 @@ export default function ProfileScreen() {
             <View style={styles.block}>
               <View style={styles.blockHeader}>
                 <SectionLabel text="Portfolio" />
-                <TouchableOpacity activeOpacity={0.7}>
+                <TouchableOpacity activeOpacity={0.7} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowAddPortfolioModal(true); }}>
                   <Text style={[styles.seeAll, { color: accentColor }]}>+ Ajouter</Text>
                 </TouchableOpacity>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.portfolioScroll}>
-                {PORTFOLIO_ITEMS.map(item => (
-                  <View key={item.id} style={[styles.portfolioCard, { borderColor: item.color + '30' }]}>
+                {(portfolioItems.length > 0 ? portfolioItems : PORTFOLIO_ITEMS).map(item => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[styles.portfolioCard, { borderColor: item.color + '30' }]}
+                    onPress={() => { if (item.url) { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Linking.openURL(item.url).catch(() => {}); } }}
+                    activeOpacity={item.url ? 0.75 : 1}
+                  >
                     <LinearGradient
                       colors={[item.color + '25', item.color + '08']}
                       style={StyleSheet.absoluteFill}
@@ -719,12 +967,12 @@ export default function ProfileScreen() {
                     <Text style={styles.portfolioTitle}>{item.title}</Text>
                     <View style={styles.portfolioViews}>
                       <Ionicons name="eye-outline" size={11} color={COLORS.textMuted} />
-                      <Text style={styles.portfolioViewsText}>{item.views} vues</Text>
+                      <Text style={styles.portfolioViewsText}>{item.views ? `${item.views} vues` : 'Voir la vidéo'}</Text>
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 ))}
                 {/* Add card */}
-                <TouchableOpacity style={styles.portfolioAddCard} activeOpacity={0.7}>
+                <TouchableOpacity style={styles.portfolioAddCard} activeOpacity={0.7} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowAddPortfolioModal(true); }}>
                   <Ionicons name="add-circle-outline" size={28} color={COLORS.textMuted} />
                   <Text style={styles.portfolioAddText}>Ajouter{'\n'}une vidéo</Text>
                 </TouchableOpacity>
@@ -744,7 +992,16 @@ export default function ProfileScreen() {
                   rightEl={
                     <Switch
                       value={available}
-                      onValueChange={(v) => { setAvailable(v); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+                      onValueChange={async (v) => {
+                        setAvailable(v);
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        try {
+                          await supabase
+                            .from('users')
+                            .update({ is_available: v })
+                            .eq('id', user.id);
+                        } catch (_) {}
+                      }}
                       trackColor={{ false: COLORS.border, true: accentColor + '60' }}
                       thumbColor={available ? accentColor : COLORS.textMuted}
                     />
@@ -756,7 +1013,7 @@ export default function ProfileScreen() {
                   label="Tarif journalier"
                   value={`${dailyRate}€ / jour`}
                   accentColor={accentColor}
-                  onPress={() => {}}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowRateModal(true); }}
                 />
                 <View style={styles.divider} />
                 <View style={styles.missionTypesRow}>

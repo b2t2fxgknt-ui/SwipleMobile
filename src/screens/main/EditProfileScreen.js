@@ -134,14 +134,14 @@ export default function EditProfileScreen() {
     if (!user) return;
     supabase
       .from('users')
-      .select('name, bio, category, skills, daily_rate, default_delivery, portfolio_url, linkedin_url, sector, budget_range')
+      .select('name, bio, specialty, skills, daily_rate, default_delivery, portfolio_url, linkedin_url, sector, budget_range')
       .eq('id', user.id)
       .single()
       .then(({ data }) => {
         if (!data) return;
         if (data.name)             setName(data.name);
         if (data.bio)              setBio(data.bio);
-        if (data.category)         setCategory(data.category);
+        if (data.specialty)        setCategory(data.specialty);
         if (data.skills)           setSkills(data.skills);
         if (data.daily_rate)       setRate(String(data.daily_rate));
         if (data.default_delivery) setDelivery(data.default_delivery);
@@ -179,7 +179,7 @@ export default function EditProfileScreen() {
         ? {
             name: name.trim(),
             bio: bio.trim(),
-            category,
+            specialty: category,
             skills,
             daily_rate: rate ? parseInt(rate, 10) : null,
             default_delivery: delivery,

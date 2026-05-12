@@ -158,7 +158,7 @@ const BRIEF_FILTERS = [
   { id: 'Script seul',      label: 'Script seul' },
   { id: 'Script + Montage', label: 'Script + Montage' },
   { id: 'Pack mensuel',     label: 'Pack mensuel' },
-  { id: 'urgent',           label: '⚡ Urgents' },
+  { id: 'urgent',           label: 'Urgents' },
 ];
 
 const GW_FILTERS = [

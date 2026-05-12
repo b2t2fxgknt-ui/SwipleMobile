@@ -174,7 +174,10 @@ export function BriefsProvider({ children }) {
           // Remplacer le localId par le vrai UUID Supabase
           setBriefs(prev => prev.map(b => b.id === localId ? { ...b, id: data.id } : b));
         }
-      } catch (_) {}
+        if (error) console.warn('[BriefsContext] postBrief error:', error.message);
+      } catch (err) {
+        console.warn('[BriefsContext] postBrief error:', err?.message ?? err);
+      }
     }
 
     return newBrief;
@@ -207,10 +210,13 @@ export function BriefsProvider({ children }) {
       if (opts.message)      payload.message       = opts.message;
       if (opts.proposedRate) payload.proposed_rate = Number(opts.proposedRate);
 
-      await supabase.from('applications').upsert(payload, {
+      const { error } = await supabase.from('applications').upsert(payload, {
         onConflict: 'brief_id,freelancer_id',
       });
-    } catch (_) {}
+      if (error) console.warn('[BriefsContext] addApplicant error:', error.message);
+    } catch (err) {
+      console.warn('[BriefsContext] addApplicant error:', err?.message ?? err);
+    }
   }
 
   // ── Sélectionner un freelance (MATCH) ────────────────────────────────────
@@ -222,8 +228,11 @@ export function BriefsProvider({ children }) {
 
     if (useSupabase) {
       try {
-        await supabase.from('briefs').update({ status: 'matched' }).eq('id', briefId);
-      } catch (_) {}
+        const { error } = await supabase.from('briefs').update({ status: 'matched' }).eq('id', briefId);
+        if (error) console.warn('[BriefsContext] selectFreelancer error:', error.message);
+      } catch (err) {
+        console.warn('[BriefsContext] selectFreelancer error:', err?.message ?? err);
+      }
     }
   }
 

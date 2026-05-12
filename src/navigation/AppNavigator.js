@@ -10,6 +10,7 @@ import { ConversationsProvider }     from '../lib/ConversationsContext';
 import { FavoritesProvider }         from '../lib/FavoritesContext';
 import { ExpertSelectionProvider }   from '../lib/ExpertSelectionContext';
 import { BriefsProvider }            from '../lib/BriefsContext';
+import { setDemoModeActivator }      from '../lib/demoMode';
 
 import WelcomeScreen       from '../screens/auth/WelcomeScreen';
 import LoginScreen         from '../screens/auth/LoginScreen';
@@ -49,9 +50,6 @@ import ExpertsScreen             from '../screens/main/ExpertsScreen';
 
 const Stack = createNativeStackNavigator();
 
-// Module-level setter — permet à LoginScreen d'activer le mode démo sans session
-export let activateDemoMode = () => {};
-
 // Fake session pour le mode démo (role client par défaut)
 const DEMO_SESSION = {
   user: {
@@ -82,10 +80,10 @@ export default function AppNavigator() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Expose le setter au niveau module pour LoginScreen
+  // Connecte le setter demoMode au singleton demoMode.js
   useEffect(() => {
-    activateDemoMode = () => setDemoMode(true);
-    return () => { activateDemoMode = () => {}; };
+    setDemoModeActivator(() => setDemoMode(true));
+    return () => setDemoModeActivator(() => {});
   }, []);
 
   const effectiveSession = session ?? (demoMode ? DEMO_SESSION : null);
