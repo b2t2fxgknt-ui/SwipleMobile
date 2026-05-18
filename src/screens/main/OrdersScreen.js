@@ -362,9 +362,11 @@ export default function OrdersScreen() {
   const contextOrders  = acceptedMissions.map(missionToOrder);
   const dbOrders       = supabaseOrders.map(supabaseToOrder);
   const seenIds = new Set(contextOrders.map(o => o.id));
+  // Masquer les mock orders dès qu'il y a des données réelles (Supabase ou contexte)
+  const hasRealData = dbOrders.length > 0 || contextOrders.some(o => !o.id?.startsWith('mock'));
   const mergedOrders = [
     ...contextOrders,
-    ...MOCK_ORDERS.filter(o => !seenIds.has(o.id)),
+    ...(hasRealData ? [] : MOCK_ORDERS.filter(o => !seenIds.has(o.id))),
     ...dbOrders.filter(o => !seenIds.has(o.id)),
   ].sort((a, b) => new Date(b.date) - new Date(a.date));
 

@@ -100,6 +100,10 @@ function FreelancerCard({ freelancer, briefColor, onSelect, isSelected, disabled
   );
 }
 
+// ── UUID helper ───────────────────────────────────────────────────────────────
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isRealId = (id) => UUID_RE.test(String(id ?? ''));
+
 // ── Écran ─────────────────────────────────────────────────────────────────────
 
 export default function ApplicantsScreen() {
@@ -169,35 +173,43 @@ export default function ApplicantsScreen() {
 
     // 2. Créer la mission dans `orders`
     let missionId = `m${Date.now()}`;
+    const realBriefId       = isRealId(brief?.id)      ? brief.id      : null;
+    const realFreelancerId  = isRealId(freelancer?.id) ? freelancer.id : null;
+
     try {
+      const payload = {
+        freelancer_name:     freelancer.name     ?? 'Ghostwriter',
+        freelancer_initials: freelancer.initials ?? 'GW',
+        client_name:         clientName,
+        client_initials:     clientInitials,
+        title:               brief.title         ?? 'Mission TikTok',
+        type:                brief.type          ?? 'Script seul',
+        budget:              Number(brief.budget) || 0,
+        deadline:            brief.deadline      ?? '48h',
+        status:              'in_progress',
+        color:               brief.color         ?? COLORS.primary,
+      };
+      // N'inclure les FK UUID que si les IDs sont réels (évite les erreurs FK avec les IDs mock)
+      if (realBriefId)      payload.brief_id      = realBriefId;
+      if (realFreelancerId) payload.freelancer_id = realFreelancerId;
+      if (userId)           payload.client_id     = userId;
+
       const { data, error } = await supabase
         .from('orders')
-        .insert({
-          brief_id:            String(brief.id),
-          freelancer_id:       String(freelancer.id ?? 'unknown'),
-          freelancer_name:     freelancer.name     ?? 'Ghostwriter',
-          freelancer_initials: freelancer.initials ?? 'GW',
-          client_id:           userId              ?? null,
-          client_name:         clientName,
-          client_initials:     clientInitials,
-          title:               brief.title         ?? 'Mission TikTok',
-          type:                brief.type          ?? 'Script seul',
-          budget:              Number(brief.budget) || 0,
-          deadline:            brief.deadline      ?? '48h',
-          status:              'in_progress',
-          color:               brief.color         ?? COLORS.primary,
-        })
+        .insert(payload)
         .select('id')
         .single();
 
       if (data?.id) missionId = data.id;
 
-      // 3. Marquer la candidature comme acceptée
-      await supabase
-        .from('applications')
-        .update({ status: 'accepted' })
-        .eq('brief_id', String(brief.id))
-        .eq('freelancer_id', String(freelancer.id));
+      // 3. Marquer la candidature comme acceptée (seulement si IDs réels)
+      if (realBriefId && realFreelancerId) {
+        await supabase
+          .from('applications')
+          .update({ status: 'accepted' })
+          .eq('brief_id', realBriefId)
+          .eq('freelancer_id', realFreelancerId);
+      }
 
     } catch (_) {
       // Supabase indisponible → on continue avec l'ID local
